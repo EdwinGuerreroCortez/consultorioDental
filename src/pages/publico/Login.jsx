@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import Alerts from "../../components/shared/Button";
+import { validateEmail } from "../../utils/validations"; // Importa la validación de correo
 import "./bubbles.css"; // Archivo CSS para las burbujas
 
 const Login = () => {
@@ -17,9 +18,33 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [alert, setAlert] = useState({ type: "", message: "" });
+  const [errors, setErrors] = useState({ email: "", password: "" }); // Estado para los errores
+  const [bubbles, setBubbles] = useState([]); // Estado para las burbujas
+
+  // Genera las burbujas solo una vez
+  useEffect(() => {
+    const generatedBubbles = Array.from({ length: 40 }).map(() => ({
+      left: `${Math.random() * 100}%`,
+      animationDelay: `${Math.random() * 10}s`,
+      animationDuration: `${5 + Math.random() * 10}s`,
+      backgroundColor: `rgba(${Math.random() * 50 + 100}, ${Math.random() * 200}, ${
+        Math.random() * 150 + 100
+      }, 0.7)`,
+    }));
+    setBubbles(generatedBubbles);
+  }, []); // Solo se ejecuta al montar el componente
 
   const handleLogin = (e) => {
     e.preventDefault();
+
+    // Validación antes de intentar el inicio de sesión
+    if (errors.email || errors.password || !email || !password) {
+      setAlert({
+        type: "error",
+        message: "Por favor, corrige los errores antes de continuar.",
+      });
+      return;
+    }
 
     // Simulación de autenticación
     if (email === "usuario@ejemplo.com" && password === "123456") {
@@ -30,6 +55,26 @@ const Login = () => {
 
     // Ocultar alerta después de 5 segundos
     setTimeout(() => setAlert({ type: "", message: "" }), 5000);
+  };
+
+  const handleChange = (field, value) => {
+    if (field === "email") {
+      setEmail(value);
+      // Validación en tiempo real del correo
+      setErrors((prev) => ({
+        ...prev,
+        email: value.trim() === "" ? "El correo no puede estar vacío." : validateEmail(value),
+      }));
+    }
+
+    if (field === "password") {
+      setPassword(value);
+      // Validación en tiempo real de la contraseña
+      setErrors((prev) => ({
+        ...prev,
+        password: value.trim() === "" ? "La contraseña no puede estar vacía." : "",
+      }));
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -50,15 +95,15 @@ const Login = () => {
     >
       {/* Contenedor para las burbujas */}
       <div className="bubbles">
-        {Array.from({ length: 40 }).map((_, i) => (
+        {bubbles.map((bubble, i) => (
           <div
             key={i}
             className="bubble"
             style={{
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 10}s`,
-              animationDuration: `${5 + Math.random() * 10}s`,
-              backgroundColor: `rgba(${Math.random() * 50 + 100}, ${Math.random() * 200}, ${Math.random() * 150 + 100}, 0.7)`,
+              left: bubble.left,
+              animationDelay: bubble.animationDelay,
+              animationDuration: bubble.animationDuration,
+              backgroundColor: bubble.backgroundColor,
             }}
           ></div>
         ))}
@@ -89,21 +134,23 @@ const Login = () => {
               label="Correo electrónico"
               type="email"
               fullWidth
-              required
               variant="outlined"
               margin="normal"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => handleChange("email", e.target.value)} // Validación en tiempo real
+              error={!!errors.email} // Muestra error si existe
+              helperText={errors.email} // Muestra el mensaje de error
             />
             <TextField
               label="Contraseña"
               type={showPassword ? "text" : "password"}
               fullWidth
-              required
               variant="outlined"
               margin="normal"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => handleChange("password", e.target.value)} // Validación en tiempo real
+              error={!!errors.password} // Muestra error si existe
+              helperText={errors.password} // Muestra el mensaje de error
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">

@@ -159,7 +159,7 @@ const NavbarPublico = () => {
 
           <List>
             <ListItem disablePadding>
-              <ListItemButton href="/publico">
+              <ListItemButton href="/">
                 <HomeIcon sx={{ marginRight: "10px" }} />
                 <ListItemText primary="Inicio" />
               </ListItemButton>
