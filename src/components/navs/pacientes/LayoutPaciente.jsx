@@ -1,9 +1,9 @@
 import React from "react";
-import NavbarPublico from "./NavbarPublico";
-import FooterPublico from "./FooterPublico";
+import NavbarPaciente from "../pacientes/NavbarPaciente";
+import FooterPaciente from "../pacientes/FooterPaciente";
 import { Box, CssBaseline } from "@mui/material";
 
-const LayoutPublico = ({ children }) => {
+const LayoutPaciente = ({ children }) => {
   return (
     <>
       <CssBaseline />
@@ -18,21 +18,21 @@ const LayoutPublico = ({ children }) => {
           boxSizing: "border-box", // Reset general para todos los elementos
         }}
       >
-        <NavbarPublico />
+        <NavbarPaciente />
         <Box
           sx={{
             flex: 1,
-            marginTop: "64px", // Altura del Navbar
+            marginTop: "94px", // Altura del Navbar
             marginBottom: "0", // Asegura que no haya espacio antes del footer
             
           }}
         >
           {children}
         </Box>
-        <FooterPublico />
+        <FooterPaciente />
       </Box>
     </>
   );
 };
 
-export default LayoutPublico;
+export default LayoutPaciente;

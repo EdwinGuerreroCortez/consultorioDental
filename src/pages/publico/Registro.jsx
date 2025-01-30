@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+
 import {
   Box,
   Button,
@@ -11,8 +13,8 @@ import {
   MenuItem,
   Alert,
   Snackbar,
-  FormHelperText,
 } from "@mui/material";
+import axios from "axios";
 import "./bubbles.css";
 import {
   validateName,
@@ -45,6 +47,8 @@ const Registro = () => {
     level: "",
     suggestions: "",
   });
+  const navigate = useNavigate();
+
 
   const steps = ["Datos Personales", "Cuenta", "Verificación"];
 
@@ -57,10 +61,57 @@ const Registro = () => {
     setBubbles(generatedBubbles);
   }, []);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === steps.length - 1) {
-      console.log("Formulario enviado:", formData);
-      setAlert({ open: true, message: "Registro completado con éxito.", severity: "success" });
+      try {
+         // Log para verificar los datos enviados al backend
+         console.log('Datos enviados a la verificación:', {
+          email: formData.correo,
+          codigo: formData.codigoVerificacion,
+      });
+        const response = await axios.post("http://localhost:4000/api/usuarios/verificar", {
+          email: formData.correo,
+          codigo: formData.codigoVerificacion,
+        });
+
+        setAlert({ open: true, message: response.data.mensaje, severity: "success" });
+        // Redirigir a otra ruta después de unos segundos o de forma inmediata
+        setTimeout(() => {
+          navigate("/paciente");  // Reemplaza '/dashboard' por la ruta deseada
+      }, 2000);
+      } catch (error) {
+        setAlert({
+          open: true,
+          message: error.response?.data?.mensaje || "Error al verificar la cuenta.",
+          severity: "error",
+        });
+        // Log para mostrar cualquier error recibido desde el backend
+        console.error('Error en la verificación:', error.response?.data);
+      }
+    } else if (step === 1) {
+      try {
+        await axios.post("http://localhost:4000/api/usuarios/registrar", {
+          nombre: formData.nombre,
+          apellido_paterno: formData.apellidoPaterno,
+          apellido_materno: formData.apellidoMaterno,
+          edad: formData.edad,
+          sexo: formData.genero,
+          telefono: formData.telefono,
+          email: formData.correo,
+          password: formData.contrasena,
+          repetir_password: formData.repetirContrasena,  // Y aquí 'repetir_password'
+
+        });
+
+        setAlert({ open: true, message: "Registro exitoso. Revisa tu correo para el código de verificación.", severity: "success" });
+        setStep((prevStep) => prevStep + 1);
+      } catch (error) {
+        setAlert({
+          open: true,
+          message: error.response?.data?.mensaje || "Error al registrar el usuario.",
+          severity: "error",
+        });
+      }
     } else {
       setStep((prevStep) => prevStep + 1);
     }
@@ -72,61 +123,55 @@ const Registro = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-  
-    // Actualiza el valor del campo en `formData`
+
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
-  
-    // Valida en tiempo real
+
     validateField(name, value);
-  
-    // Evalúa la fortaleza de la contraseña si el campo es "contrasena"
+
     if (name === "contrasena") {
-      const strength = evaluatePasswordStrength(value); // Llama a la función de fortaleza
-      setPasswordStrength(strength); // Actualiza el estado de fortaleza
+      const strength = evaluatePasswordStrength(value);
+      setPasswordStrength(strength);
     }
   };
-  
+
   const validateField = (fieldName, value) => {
     let errorMessage = "";
-  
+
     switch (fieldName) {
       case "nombre":
       case "apellidoPaterno":
       case "apellidoMaterno":
-        errorMessage = validateName(value); // Valida nombres
+        errorMessage = validateName(value);
         break;
       case "edad":
-        errorMessage = validateAge(value); // Valida edad
+        errorMessage = validateAge(value);
         break;
       case "telefono":
-        errorMessage = validatePhoneNumber(value); // Valida teléfono
+        errorMessage = validatePhoneNumber(value);
         break;
       case "correo":
-        errorMessage = validateEmail(value); // Valida correo
+        errorMessage = validateEmail(value);
         break;
       case "contrasena":
-        errorMessage = validatePassword(value); // Valida requisitos mínimos de contraseña
+        errorMessage = validatePassword(value);
         break;
       case "repetirContrasena":
-        errorMessage = value !== formData.contrasena ? "Las contraseñas no coinciden." : ""; // Verifica coincidencia
+        errorMessage = value !== formData.contrasena ? "Las contraseñas no coinciden." : "";
         break;
       default:
         break;
     }
-  
-    // Actualiza los errores en el estado
+
     setErrors((prevErrors) => ({
       ...prevErrors,
       [fieldName]: errorMessage,
     }));
   };
-  
 
   const validateStep = () => {
-    // Verifica si hay errores en el estado `errors` o campos vacíos
     switch (step) {
       case 0:
         return (
@@ -296,9 +341,10 @@ const Registro = () => {
                 />
               </>
             )}
+
             {step === 1 && (
               <>
-               <TextField
+                <TextField
                   label="Correo Electrónico"
                   name="correo"
                   type="email"
@@ -320,10 +366,6 @@ const Registro = () => {
                   error={!!errors.contrasena}
                   helperText={errors.contrasena}
                 />
-
-                {/* Indicador visual de fortaleza */}
-                
-
                 <TextField
                   label="Repetir Contraseña"
                   name="repetirContrasena"
@@ -335,6 +377,7 @@ const Registro = () => {
                   error={!!errors.repetirContrasena}
                   helperText={errors.repetirContrasena}
                 />
+
                 <Box
                   sx={{
                     display: "flex",

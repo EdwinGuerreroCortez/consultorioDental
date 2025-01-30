@@ -9,17 +9,20 @@ import {
   IconButton,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
-import Alerts from "../../components/shared/Button";
-import { validateEmail } from "../../utils/validations"; // Importa la validación de correo
-import "./bubbles.css"; // Archivo CSS para las burbujas
+import Alerts from "../../components/shared/Button"; // Componente de alerta personalizada
+import axios from "axios";
+import { validateEmail } from "../../utils/validations"; // Validación personalizada
+import "./bubbles.css";
+import { useNavigate } from "react-router-dom"; // Importar useNavigate
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [alert, setAlert] = useState({ type: "", message: "" });
-  const [errors, setErrors] = useState({ email: "", password: "" }); // Estado para los errores
-  const [bubbles, setBubbles] = useState([]); // Estado para las burbujas
+  const [errors, setErrors] = useState({ email: "", password: "" });
+  const [bubbles, setBubbles] = useState([]);
+  const navigate = useNavigate(); // Inicializar useNavigate
 
   // Genera las burbujas solo una vez
   useEffect(() => {
@@ -32,12 +35,11 @@ const Login = () => {
       }, 0.7)`,
     }));
     setBubbles(generatedBubbles);
-  }, []); // Solo se ejecuta al montar el componente
+  }, []);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Validación antes de intentar el inicio de sesión
     if (errors.email || errors.password || !email || !password) {
       setAlert({
         type: "error",
@@ -46,21 +48,31 @@ const Login = () => {
       return;
     }
 
-    // Simulación de autenticación
-    if (email === "usuario@ejemplo.com" && password === "123456") {
-      setAlert({ type: "success", message: "Inicio de sesión exitoso." });
-    } else {
-      setAlert({ type: "error", message: "Credenciales incorrectas. Inténtalo de nuevo." });
+    try {
+      // Solicitud al backend para autenticar al usuario
+      const response = await axios.post("http://localhost:4000/api/usuarios/login", {
+        email,
+        password,
+      });
+
+      // Mostrar mensaje de éxito y redirigir al usuario
+      setAlert({ type: "success", message: `Bienvenido, ${response.data.nombre}` });
+
+      // Redirigir a la página de pacientes después de 2 segundos
+      setTimeout(() => navigate("/paciente"), 2000);
+    } catch (error) {
+      setAlert({
+        type: "error",
+        message: error.response?.data?.mensaje || "Error al iniciar sesión.",
+      });
     }
 
-    // Ocultar alerta después de 5 segundos
     setTimeout(() => setAlert({ type: "", message: "" }), 5000);
   };
 
   const handleChange = (field, value) => {
     if (field === "email") {
       setEmail(value);
-      // Validación en tiempo real del correo
       setErrors((prev) => ({
         ...prev,
         email: value.trim() === "" ? "El correo no puede estar vacío." : validateEmail(value),
@@ -69,7 +81,6 @@ const Login = () => {
 
     if (field === "password") {
       setPassword(value);
-      // Validación en tiempo real de la contraseña
       setErrors((prev) => ({
         ...prev,
         password: value.trim() === "" ? "La contraseña no puede estar vacía." : "",
@@ -90,10 +101,9 @@ const Login = () => {
         alignItems: "center",
         minHeight: "100vh",
         overflow: "hidden",
-        backgroundColor: "#e6f9f5", // Fondo relacionado con odontología
+        backgroundColor: "#e6f9f5",
       }}
     >
-      {/* Contenedor para las burbujas */}
       <div className="bubbles">
         {bubbles.map((bubble, i) => (
           <div
@@ -109,12 +119,7 @@ const Login = () => {
         ))}
       </div>
 
-      <Box
-        sx={{
-          position: "relative",
-          zIndex: 2, // Asegura que el formulario esté por encima de las burbujas
-        }}
-      >
+      <Box sx={{ position: "relative", zIndex: 2 }}>
         <Paper
           elevation={3}
           sx={{
@@ -137,9 +142,9 @@ const Login = () => {
               variant="outlined"
               margin="normal"
               value={email}
-              onChange={(e) => handleChange("email", e.target.value)} // Validación en tiempo real
-              error={!!errors.email} // Muestra error si existe
-              helperText={errors.email} // Muestra el mensaje de error
+              onChange={(e) => handleChange("email", e.target.value)}
+              error={!!errors.email}
+              helperText={errors.email}
             />
             <TextField
               label="Contraseña"
@@ -148,9 +153,9 @@ const Login = () => {
               variant="outlined"
               margin="normal"
               value={password}
-              onChange={(e) => handleChange("password", e.target.value)} // Validación en tiempo real
-              error={!!errors.password} // Muestra error si existe
-              helperText={errors.password} // Muestra el mensaje de error
+              onChange={(e) => handleChange("password", e.target.value)}
+              error={!!errors.password}
+              helperText={errors.password}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -166,14 +171,7 @@ const Login = () => {
               variant="contained"
               color="primary"
               fullWidth
-              sx={{
-                marginTop: "20px",
-                padding: "10px",
-                backgroundColor: "#0077b6",
-                "&:hover": {
-                  backgroundColor: "#005f8d",
-                },
-              }}
+              sx={{ marginTop: "20px", padding: "10px", backgroundColor: "#0077b6" }}
             >
               Iniciar Sesión
             </Button>
@@ -187,16 +185,8 @@ const Login = () => {
         </Paper>
       </Box>
 
-      {/* Alerta en la parte inferior izquierda */}
       {alert.type && (
-        <Box
-          sx={{
-            position: "fixed",
-            bottom: "20px",
-            left: "20px",
-            zIndex: 1000, // Asegura que esté encima de otros elementos
-          }}
-        >
+        <Box sx={{ position: "fixed", bottom: "20px", left: "20px", zIndex: 1000 }}>
           {alert.type === "success" && <Alerts.SuccessAlert message={alert.message} />}
           {alert.type === "error" && <Alerts.ErrorAlert message={alert.message} />}
         </Box>

@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 //Publicos 
-import LayoutPublico from "./components/publico/LayoutPublico";
+import LayoutPublico from "./components/navs/publico/LayoutPublico";
 import BienvenidaPublica from "./pages/publico/BienvenidaPublica";
 import PoliticasPrivacidad from "./pages/publico/PoliticasPrivacidad";
 import DeslindeLegal from "./pages/publico/DeslindeLegal";
@@ -13,6 +13,9 @@ import Login from "./pages/publico/Login";
 import Registro from "./pages/publico/Registro";
 import CatalogoServicios from "./pages/publico/CatalogoServicios";
 
+//Paciente
+import LayoutPaciente from "./components/navs/pacientes/LayoutPaciente";
+import Inicio from "./pages/pacientes/Inicio";
 
 import '@fontsource/geologica'; // Importa la fuente
 
@@ -84,6 +87,17 @@ const App = () => {
             <LayoutPublico>
               <CatalogoServicios />
             </LayoutPublico>
+          }
+        />
+
+      {/* Rutas paciente */}
+
+      <Route
+          path="/paciente"
+          element={
+            <LayoutPaciente>
+              <Inicio />
+            </LayoutPaciente>
           }
         />
       </Routes>
