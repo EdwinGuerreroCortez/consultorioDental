@@ -25,6 +25,8 @@ import CrearServicioOdontologia from "./pages/admin/CatalogoServicios";
 //Errores
 import Error404 from "./components/Errors/Error404";
 import Error400 from "./components/Errors/Error400";
+import Error500 from "./components/Errors/Error500";
+
 import '@fontsource/geologica'; // Importa la fuente
 
 const theme = createTheme({
@@ -128,6 +130,7 @@ const App = () => {
           {/*Rutas Errores*/}
           <Route path="/400" element={<Error400 />} /> {/* Ruta específica para error 400 */}
           <Route path="*" element={<Error404 />} /> {/* Ruta comodín para error 404 */}
+          <Route path="/500" element={<Error500 />} /> {/* Ruta para el Error 500 */}
       </Routes>
       
 

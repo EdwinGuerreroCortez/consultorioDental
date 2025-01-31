@@ -37,7 +37,7 @@
     left: 150%;
     transform: translate(-50%, -50%);
     width: 800px;
-    z-index: 1; /* Para que no se tape por las burbujas */
+    z-index: 1;
 }
 
 .error404-page .error-image2 {
@@ -46,14 +46,14 @@
     left: -50%;
     transform: translate(-50%, -50%);
     width: 800px;
-    z-index: 1; /* Para que no se tape por las burbujas */
+    z-index: 1; 
 }
 
 /* Estilos de texto */
 .error404-page h1 {
     font-size: 220px;
     color: #ff4a4a;
-    z-index: 3; /* Asegura que el texto esté encima */
+    z-index: 3;
 }
 
 .error404-page h2 {
@@ -83,7 +83,7 @@
     transition: background 0.3s ease;
     cursor: pointer;
     position: relative;
-    z-index: 3; /* Asegura que el botón esté encima */
+    z-index: 3; 
 }
 
 .error404-page .btn-home:hover {
@@ -98,7 +98,7 @@
     top: 0;
     left: 0;
     overflow: hidden;
-    z-index: 0; /* Mantén las burbujas detrás de las imágenes y el contenido */
+    z-index: 0; 
 }
 
 .error404-page .bubbles span {
