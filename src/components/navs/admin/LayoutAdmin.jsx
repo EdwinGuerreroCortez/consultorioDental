@@ -18,29 +18,29 @@ const LayoutAdmin = ({ children }) => {
       <NavbarAdmin drawerOpen={drawerOpen} onToggleDrawer={handleDrawerToggle} />
       <Box
         sx={{
-          marginTop: "64px", // Altura del AppBar
-          height: "calc(100% - 64px)", // Ocupa todo el espacio restante debajo del AppBar
+          marginTop: "64px",
+          height: "calc(100vh - 64px)", // Ajuste para ocupar toda la pantalla debajo del AppBar
           display: "flex",
           flexDirection: "column",
           backgroundColor: "#ffffff",
-          padding: "16px",
-          transition: "all 0.3s ease-in-out",
           marginLeft: drawerOpen ? `${drawerWidth}px` : `${drawerCollapsedWidth}px`,
-          width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : `calc(100% - ${drawerCollapsedWidth}px)`,
+          transition: "all 0.3s ease-in-out",
+          overflow: "hidden", // Evita que los hijos desborden el contenedor principal
         }}
       >
         <Box
           sx={{
             flexGrow: 1,
             width: "100%",
-            maxWidth: "1800px", // Ancho máximo del contenido incrementado
-            margin: "0 auto", // Centrado horizontal
+            maxWidth: "1800px",
+            margin: "0 auto",
             backgroundColor: "#ffffff",
             borderRadius: "16px",
             padding: "40px",
-            overflowY: "auto",
+            overflowY: "auto", // Agregar desplazamiento vertical
             display: "flex",
             flexDirection: "column",
+            height: "100%", // Asegura que el contenedor crezca con el padre
           }}
         >
           {children}
