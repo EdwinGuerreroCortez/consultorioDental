@@ -22,6 +22,8 @@ import LayoutAdmin from "./components/navs/admin/LayoutAdmin";
 import BienvenidaAdmin from "./pages/admin/BienvenidaAdmin";
 import CrearServicioOdontologia from "./pages/admin/CatalogoServicios";
 
+//Errores
+import Error404 from "./components/Errors/Error404";
 
 import '@fontsource/geologica'; // Importa la fuente
 
@@ -123,6 +125,8 @@ const App = () => {
               </LayoutAdmin>
             }
           />
+          {/*Rutas Errores*/}
+          <Route path="*" element={<Error404 />} />
       </Routes>
       
 
