@@ -88,3 +88,35 @@ export const validateEmail = (email) => {
   }
   return "";
 };
+export const validarNombre = (nombre) => {
+  if (!nombre) return "El nombre es obligatorio";
+  if (nombre.length < 3) return "El nombre debe tener al menos 3 caracteres";
+  if (nombre.length > 50) return "El nombre no debe superar los 50 caracteres";
+  return "";
+};
+
+export const validarDuracion = (duracion) => {
+  if (!duracion) return "La duración es obligatoria";
+  if (!/^\d+$/.test(duracion)) return "La duración debe ser un número entero positivo";
+  if (parseInt(duracion, 10) <= 0) return "La duración debe ser mayor que 0";
+  return "";
+};
+
+export const validarDescripcion = (descripcion) => {
+  if (!descripcion) return "La descripción es obligatoria";
+  return "";
+};
+
+export const validarPrecio = (precio) => {
+  if (!precio) return "El precio es obligatorio";
+  if (!/^\d+$/.test(precio)) return "El precio debe ser un número entero positivo";
+  if (parseInt(precio, 10) <= 0) return "El precio debe ser mayor que 0";
+  return "";
+};
+
+export const validarCitasRequeridas = (citas) => {
+  if (!citas) return "El número de citas es obligatorio";
+  if (!/^\d+$/.test(citas)) return "El número de citas debe ser un número entero positivo";
+  if (parseInt(citas, 10) <= 0) return "El número de citas debe ser mayor que 0";
+  return "";
+};

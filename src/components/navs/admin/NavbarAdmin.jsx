@@ -46,7 +46,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
 
   // Definición de los ítems del menú
   const menuItems = [
-    { text: "Dashboard", icon: <HomeIcon />, href: "/admin/dashboard" },
+    { text: "Dashboard", icon: <HomeIcon />, href: "/admin" },
     {
       text: "Citas",
       icon: <CalendarMonthIcon />,
@@ -88,6 +88,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
       icon: <LibraryBooksIcon />,
       submenu: [
         { text: "Gestionar Tratamientos", href: "/admin/catalogos-tratamientos" },
+        { text: "Mis Tratamientos", href: "/admin/mis-tratamientos" },
         
       ],
     },
