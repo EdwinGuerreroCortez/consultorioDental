@@ -1,0 +1,123 @@
+/* Estilos generales dentro de la clase .error400-page */
+.error400-page * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.error400-page html, .error400-page body {
+    width: 100%;
+    height: 100%;
+    background-color: #6a7072; /* Azul claro */
+    overflow: hidden;
+    font-family: 'Geologica', sans-serif;
+}
+
+/* Página de error 400 */
+.error400-page .error-page2 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+    position: relative;
+}
+
+.error400-page .error-content2 {
+    position: relative;
+    padding: 30px;
+    z-index: 2; 
+}
+
+/* Imagen centrada */
+.error400-page .error-image2 {
+    width: 300px;  
+    margin-bottom: 2px; 
+}
+
+/* Estilos de texto */
+.error400-page h1 {
+    font-size: 220px;
+    color: #ff4a4a;
+    z-index: 3; /* Asegura que el texto esté encima */
+}
+
+.error400-page h2 {
+    font-size: 34px;
+    color: #333;
+    margin-bottom: 10px;
+    z-index: 3;
+}
+
+.error400-page p {
+    font-size: 20px;
+    color: #666;
+    margin-bottom: 20px;
+    z-index: 3;
+}
+
+/* Botón */
+.error400-page .btn-home {
+    display: inline-block;
+    padding: 12px 24px;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    background-color: #4e96e2;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    z-index: 3; /* Asegura que el botón esté encima */
+}
+
+.error400-page .btn-home:hover {
+    background-color: #4a8ed6;
+}
+
+/* Animación de burbujas */
+.error400-page .bubbles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    z-index: 0; 
+}
+
+.error400-page .bubbles span {
+    position: absolute;
+    bottom: -10px;
+    background: rgba(41, 189, 189, 0.5);
+    border-radius: 50%;
+    opacity: 0.6;
+    animation: bubbleRise 5s infinite ease-in-out;
+}
+
+/* Personalización de cada burbuja */
+.error400-page .bubbles span:nth-child(1) { left: 10%; animation-duration: 6s; width: 50px; height: 50px; }
+.error400-page .bubbles span:nth-child(2) { left: 20%; animation-duration: 4s; width: 30px; height: 30px; }
+.error400-page .bubbles span:nth-child(3) { left: 35%; animation-duration: 5.5s; width: 40px; height: 40px; }
+.error400-page .bubbles span:nth-child(4) { left: 50%; animation-duration: 6.2s; width: 35px; height: 35px; }
+.error400-page .bubbles span:nth-child(5) { left: 65%; animation-duration: 4.8s; width: 25px; height: 25px; }
+.error400-page .bubbles span:nth-child(6) { left: 75%; animation-duration: 5.3s; width: 45px; height: 45px; }
+.error400-page .bubbles span:nth-child(7) { left: 85%; animation-duration: 4.5s; width: 30px; height: 30px; }
+.error400-page .bubbles span:nth-child(8) { left: 90%; animation-duration: 6s; width: 40px; height: 40px; }
+.error400-page .bubbles span:nth-child(9) { left: 95%; animation-duration: 5.7s; width: 20px; height: 20px; }
+.error400-page .bubbles span:nth-child(10) { left: 50%; animation-duration: 6.5s; width: 30px; height: 30px; }
+
+@keyframes bubbleRise {
+    0% {
+        transform: translateY(0);
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 0.4;
+    }
+    100% {
+        transform: translateY(-100vh);
+        opacity: 0;
+    }
+}
