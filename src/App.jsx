@@ -21,6 +21,7 @@ import Inicio from "./pages/pacientes/Inicio";
 import LayoutAdmin from "./components/navs/admin/LayoutAdmin";
 import BienvenidaAdmin from "./pages/admin/BienvenidaAdmin";
 import CrearServicioOdontologia from "./pages/admin/CatalogoServicios";
+import MisCatalogos from "./pages/admin/MisCatalogos";
 
 //Errores
 import Error404 from "./components/Errors/Error404";
@@ -124,6 +125,14 @@ const App = () => {
             element={
               <LayoutAdmin>
                 <CrearServicioOdontologia/>
+              </LayoutAdmin>
+            }
+          />
+          <Route
+            path="/admin/mis-tratamientos"
+            element={
+              <LayoutAdmin>
+                <MisCatalogos/>
               </LayoutAdmin>
             }
           />
