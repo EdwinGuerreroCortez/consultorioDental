@@ -4,7 +4,7 @@ import DienteConfundido from "../../assets/images/DienteConfundido.png";
 
 const Error404 = () => {
   return (
-    <div className="error404-page"> {/* Asegúrate de que esta clase esté aquí */}
+    <div className="error404-page"> 
       <div className="error-page">
         <div className="error-content">
           <img src={DienteConfundido} alt="Diente confundido" className="error-image" />

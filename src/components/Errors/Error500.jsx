@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import "../styles/error500.css";  // Asegúrate de que el archivo CSS se importa correctamente
-import Buscando from "../../assets/images/Buscando.gif"; // Imagen para el error 500
+import "../styles/error500.css";  
+import Buscando from "../../assets/images/Buscando.gif"; 
 
 const Error500 = () => {
   return (

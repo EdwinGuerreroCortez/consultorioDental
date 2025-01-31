@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 import "../styles/error400.css";
-import DienteMuerto from "../../assets/images/DienDead.png"; // Imagen para el error 400
+import DienteMuerto from "../../assets/images/DienDead.png"; 
 
 const Error400 = () => {
   return (
-    <div className="error400-page"> {/* Asegúrate de que esta clase esté aquí */}
+    <div className="error400-page"> 
       <div className="error-page2">
         <div className="error-content2">
           <img src={DienteMuerto} alt="Diente muerto" className="error-image2" />
