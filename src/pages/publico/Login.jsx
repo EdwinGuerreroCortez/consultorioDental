@@ -50,7 +50,7 @@ const Login = () => {
 
     try {
       // Solicitud al backend para autenticar al usuario
-      const response = await axios.post("https://backenddent.onrender.com/api/usuarios/login", {
+      const response = await axios.post("http://localhost:4000/api/usuarios/login", {
         email,
         password,
       });
@@ -180,6 +180,12 @@ const Login = () => {
             ¿No tienes una cuenta?{" "}
             <a href="/registro" style={{ color: "#0077b6", textDecoration: "none" }}>
               Regístrate
+            </a>
+          </Typography>
+          <Typography variant="body2" sx={{ marginTop: "20px", color: "#555" }}>
+            ¿Olvidate tu contraseña?{" "}
+            <a href="/recuperar-password" style={{ color: "#0077b6", textDecoration: "none" }}>
+              Presione aquí
             </a>
           </Typography>
         </Paper>
