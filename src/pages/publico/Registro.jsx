@@ -69,7 +69,7 @@ const Registro = () => {
           email: formData.correo,
           codigo: formData.codigoVerificacion,
       });
-        const response = await axios.post("http://localhost:4000/api/usuarios/verificar", {
+        const response = await axios.post("https://backenddent.onrender.com/api/usuarios/verificar", {
           email: formData.correo,
           codigo: formData.codigoVerificacion,
         });
@@ -90,7 +90,7 @@ const Registro = () => {
       }
     } else if (step === 1) {
       try {
-        await axios.post("http://localhost:4000/api/usuarios/registrar", {
+        await axios.post("https://backenddent.onrender.com/api/usuarios/registrar", {
           nombre: formData.nombre,
           apellido_paterno: formData.apellidoPaterno,
           apellido_materno: formData.apellidoMaterno,

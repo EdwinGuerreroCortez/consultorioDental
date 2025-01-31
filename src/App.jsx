@@ -17,6 +17,12 @@ import CatalogoServicios from "./pages/publico/CatalogoServicios";
 import LayoutPaciente from "./components/navs/pacientes/LayoutPaciente";
 import Inicio from "./pages/pacientes/Inicio";
 
+//Admin
+import LayoutAdmin from "./components/navs/admin/LayoutAdmin";
+import BienvenidaAdmin from "./pages/admin/BienvenidaAdmin";
+import CrearServicioOdontologia from "./pages/admin/CatalogoServicios";
+
+
 import '@fontsource/geologica'; // Importa la fuente
 
 const theme = createTheme({
@@ -100,7 +106,28 @@ const App = () => {
             </LayoutPaciente>
           }
         />
+        {/* Rutas admin */}
+        <Route
+            path="/admin"
+            element={
+              <LayoutAdmin>
+                <BienvenidaAdmin />
+              </LayoutAdmin>
+            }
+          />
+          <Route
+            path="/admin/catalogos-tratamientos"
+            element={
+              <LayoutAdmin>
+                <CrearServicioOdontologia/>
+              </LayoutAdmin>
+            }
+          />
       </Routes>
+      
+
+
+      
     </Router>
     </ThemeProvider>
   );
