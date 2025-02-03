@@ -26,7 +26,6 @@ const LayoutPaciente = ({ children }) => {
       <Box
         sx={{
           marginTop: "94px",  // Altura del Navbar para evitar que el breadcrumb quede oculto
-          padding: "10px",
           backgroundColor: "#ffffff",
           zIndex: 2,
           position: "relative",
@@ -34,16 +33,8 @@ const LayoutPaciente = ({ children }) => {
       >
         <BreadcrumbNav userType="paciente" />
       </Box>
-        <Box
-          sx={{
-            flex: 1,
-            marginTop: "94px", // Altura del Navbar
-            marginBottom: "0", // Asegura que no haya espacio antes del footer
-            
-          }}
-        >
+       
           {children}
-        </Box>
         <FooterPaciente />
       </Box>
     </>

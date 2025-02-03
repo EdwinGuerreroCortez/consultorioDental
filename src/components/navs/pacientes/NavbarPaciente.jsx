@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   AppBar,
   Toolbar,
@@ -13,11 +13,15 @@ import {
   ListItemText,
   Divider,
   Collapse,
+  TextField
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import SearchIcon from "@mui/icons-material/Search";
+import InputAdornment from "@mui/material/InputAdornment";
+
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
@@ -35,6 +39,46 @@ const NavbarPaciente = () => {
   const [servicesOpen, setServicesOpen] = useState(false);
   const [subMenuOpen, setSubMenuOpen] = useState(false);
   const [paymentsOpen, setPaymentsOpen] = useState(false); // Nueva variable para el submenú de Pagos
+  const [searchTerm, setSearchTerm] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const searchBoxRef = useRef(null);  // Referencia para la caja de búsqueda
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(event.target)) {
+        setSearchResults([]);  // Cierra el cuadro de resultados
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Función para manejar la búsqueda
+  const handleSearch = async (event) => {
+    const term = event.target.value;
+    setSearchTerm(term);
+
+    if (term.length > 0) {
+      try {
+        const response = await fetch(`http://localhost:4000/api/tratamientos/buscar?search=${term}`);
+        const results = await response.json();
+        // Filtrar en el frontend para asegurar coincidencias exactas (opcional si el backend ya lo hace)
+        const filteredResults = results.filter((result) => {
+          const regex = new RegExp(term, "i");  // Coincidencias consecutivas y sin distinguir mayúsculas
+          return regex.test(result.nombre);
+        });
+        setSearchResults(results);
+      } catch (error) {
+        console.error("Error en la búsqueda:", error);
+      }
+    } else {
+      setSearchResults([]);
+    }
+
+  };
 
 
   const toggleDrawer = (open) => (event) => {
@@ -64,7 +108,31 @@ const NavbarPaciente = () => {
       fontFamily: "Poppins, Arial, sans-serif",
     },
   });
+  // Función para resaltar coincidencias
+  const highlightMatch = (text, searchTerm) => {
+    if (!searchTerm) return text;
 
+    // Escapar caracteres especiales y crear una expresión regular
+    const regex = new RegExp(`(${searchTerm})`, "gi");
+
+    // Dividir el texto en partes
+    const parts = text.split(regex);
+
+    // Mapear las partes, subrayando las que coincidan
+    return parts.map((part, index) =>
+      part.toLowerCase() === searchTerm.toLowerCase() ? (
+        <Typography
+          key={index}
+          component="span"
+          sx={{ fontWeight: "bold", textDecoration: "underline", color: "#d32f2f" }}
+        >
+          {part}
+        </Typography>
+      ) : (
+        part
+      )
+    );
+  };
   return (
     <ThemeProvider theme={theme}>
       <AppBar
@@ -100,6 +168,67 @@ const NavbarPaciente = () => {
             <Typography variant="h6" sx={{ fontWeight: "bold", color: "#ffffff" }}>
               Consultorio Dental
             </Typography>
+            <Box sx={{ marginLeft: "16px", flexGrow: 1, maxWidth: "400px", position: "relative" }} ref={searchBoxRef}>
+              <TextField
+                fullWidth
+                variant="outlined"
+                placeholder="Buscar tratamientos..."
+                value={searchTerm}
+                onChange={handleSearch}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: "#0077b6" }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  backgroundColor: "#ffffff",
+                  borderRadius: "8px",
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "#0077b6" },
+                    "&:hover fieldset": { borderColor: "#005f8a" },
+                  },
+                }}
+              />
+              {searchResults.length > 0 && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: "100%",
+                    left: 0,
+                    backgroundColor: "#ffffff",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                    borderRadius: "8px",
+                    marginTop: "8px",
+                    width: "100%",
+                    zIndex: 9999,
+                    padding: "8px 0",
+                  }}
+                >
+                  <List>
+                    {/* Limitar a 5 resultados */}
+                    {searchResults.slice(0, 5).map((result) => (
+                      <ListItem key={result.id} disablePadding>
+                        <ListItemButton href={`servicio/${result.hash}`}>
+                          <ListItemText
+                            primary={highlightMatch(result.nombre, searchTerm)}
+                            sx={{
+                              color: "#0077b6",
+                              "&:hover": {
+                                color: "#ffffff",
+                                backgroundColor: "#0077b6",
+                              },
+                            }}
+                          />
+                        </ListItemButton>
+                      </ListItem>
+                    ))}
+                  </List>
+                </Box>
+              )}
+            </Box>
+
           </Box>
 
           {/* Menú en pantalla grande */}
@@ -271,7 +400,7 @@ const NavbarPaciente = () => {
             >
               <Button
                 color="inherit"
-                startIcon={<AttachMoneyIcon/>}
+                startIcon={<AttachMoneyIcon />}
                 sx={{
                   fontWeight: "bold",
                   fontSize: "16px",
@@ -330,12 +459,12 @@ const NavbarPaciente = () => {
                 </List>
               </Box>
             </Box>
-            
+
             {/* Botón con submenú */}
             <Button
               color="inherit"
               startIcon={<ListAltIcon />}
-              href="/catalogo-servicios"
+              href="/paciente/catalogo-servicios"
               sx={{
                 fontWeight: "bold",
                 fontSize: "16px",
@@ -350,7 +479,7 @@ const NavbarPaciente = () => {
             </Button>
             <Button
               color="inherit"
-              startIcon={<AccountCircleIcon/>}
+              startIcon={<AccountCircleIcon />}
               href="/perfil"
               sx={{
                 fontWeight: "bold",
@@ -371,199 +500,199 @@ const NavbarPaciente = () => {
 
       {/* Menú lateral */}
 
-<Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
-  <Box
-    sx={{
-      width: 250,
-      backgroundColor: "#e0f7fa",
-      height: "100%",
-    }}
-    role="presentation"
-  >
-    <Typography
-      variant="h6"
-      sx={{
-        padding: "16px",
-        fontWeight: "bold",
-        textAlign: "center",
-        background: "linear-gradient(90deg, #0077b6, #00aaff)",
-        color: "#ffffff",
-      }}
-    >
-      Consultorio Dental
-    </Typography>
-    <Divider />
-
-    <List>
-      {/* Opción de Inicio */}
-      <ListItem disablePadding>
-        <ListItemButton href="/paciente" onClick={toggleDrawer(false)}>
-          <HomeIcon sx={{ marginRight: "10px", color: "#01579b" }} />
-          <ListItemText
-            primary="Inicio"
+      <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
+        <Box
+          sx={{
+            width: 250,
+            backgroundColor: "#e0f7fa",
+            height: "100%",
+          }}
+          role="presentation"
+        >
+          <Typography
+            variant="h6"
             sx={{
-              color: "#01579b",
-              "& .MuiListItemText-primary": { fontWeight: "bold" },
+              padding: "16px",
+              fontWeight: "bold",
+              textAlign: "center",
+              background: "linear-gradient(90deg, #0077b6, #00aaff)",
+              color: "#ffffff",
             }}
-          />
-        </ListItemButton>
-      </ListItem>
+          >
+            Consultorio Dental
+          </Typography>
+          <Divider />
 
-      {/* Submenú para Mis Citas */}
-      <ListItem disablePadding>
-        <ListItemButton onClick={(event) => { event.stopPropagation(); setServicesOpen(!servicesOpen); }}>
-          <CalendarMonthIcon sx={{ marginRight: "10px", color: "#01579b" }} />
-          <ListItemText
-            primary="Mis Citas"
-            sx={{
-              color: "#01579b",
-              "& .MuiListItemText-primary": { fontWeight: "bold" },
-            }}
-          />
-          {servicesOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-        </ListItemButton>
-      </ListItem>
+          <List>
+            {/* Opción de Inicio */}
+            <ListItem disablePadding>
+              <ListItemButton href="/paciente" onClick={toggleDrawer(false)}>
+                <HomeIcon sx={{ marginRight: "10px", color: "#01579b" }} />
+                <ListItemText
+                  primary="Inicio"
+                  sx={{
+                    color: "#01579b",
+                    "& .MuiListItemText-primary": { fontWeight: "bold" },
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
 
-      <Collapse in={servicesOpen} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding>
-          <ListItem disablePadding>
-            <ListItemButton href="/citas-agendadas" sx={{ paddingLeft: 4 }} onClick={toggleDrawer(false)}>
-              <ListItemText
-                primary="Citas Agendadas"
-                sx={{
-                  color: "#0077b6",
-                  "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton href="/agendar-cita" sx={{ paddingLeft: 4 }} onClick={toggleDrawer(false)}>
-              <ListItemText
-                primary="Agendar Cita"
-                sx={{
-                  color: "#0077b6",
-                  "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-        </List>
-      </Collapse>
+            {/* Submenú para Mis Citas */}
+            <ListItem disablePadding>
+              <ListItemButton onClick={(event) => { event.stopPropagation(); setServicesOpen(!servicesOpen); }}>
+                <CalendarMonthIcon sx={{ marginRight: "10px", color: "#01579b" }} />
+                <ListItemText
+                  primary="Mis Citas"
+                  sx={{
+                    color: "#01579b",
+                    "& .MuiListItemText-primary": { fontWeight: "bold" },
+                  }}
+                />
+                {servicesOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </ListItemButton>
+            </ListItem>
 
-      {/* Submenú para Tratamientos */}
-      <ListItem disablePadding>
-        <ListItemButton onClick={(event) => { event.stopPropagation(); setSubMenuOpen(!subMenuOpen); }}>
-          <ReceiptLongIcon sx={{ marginRight: "10px", color: "#01579b" }} />
-          <ListItemText
-            primary="Tratamientos"
-            sx={{
-              color: "#01579b",
-              "& .MuiListItemText-primary": { fontWeight: "bold" },
-            }}
-          />
-          {subMenuOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-        </ListItemButton>
-      </ListItem>
+            <Collapse in={servicesOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem disablePadding>
+                  <ListItemButton href="/citas-agendadas" sx={{ paddingLeft: 4 }} onClick={toggleDrawer(false)}>
+                    <ListItemText
+                      primary="Citas Agendadas"
+                      sx={{
+                        color: "#0077b6",
+                        "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemButton href="/agendar-cita" sx={{ paddingLeft: 4 }} onClick={toggleDrawer(false)}>
+                    <ListItemText
+                      primary="Agendar Cita"
+                      sx={{
+                        color: "#0077b6",
+                        "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              </List>
+            </Collapse>
 
-      <Collapse in={subMenuOpen} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding>
-          <ListItem disablePadding>
-            <ListItemButton href="/tratamientos-activos" sx={{ paddingLeft: 4 }} onClick={toggleDrawer(false)}>
-              <ListItemText
-                primary="Tratamientos Activos"
-                sx={{
-                  color: "#0077b6",
-                  "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton href="/historial-tratamientos" sx={{ paddingLeft: 4 }} onClick={toggleDrawer(false)}>
-              <ListItemText
-                primary="Historial de Tratamientos"
-                sx={{
-                  color: "#0077b6",
-                  "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-        </List>
-      </Collapse>
+            {/* Submenú para Tratamientos */}
+            <ListItem disablePadding>
+              <ListItemButton onClick={(event) => { event.stopPropagation(); setSubMenuOpen(!subMenuOpen); }}>
+                <ReceiptLongIcon sx={{ marginRight: "10px", color: "#01579b" }} />
+                <ListItemText
+                  primary="Tratamientos"
+                  sx={{
+                    color: "#01579b",
+                    "& .MuiListItemText-primary": { fontWeight: "bold" },
+                  }}
+                />
+                {subMenuOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </ListItemButton>
+            </ListItem>
 
-      {/* Submenú para Pagos */}
-      <ListItem disablePadding>
-        <ListItemButton onClick={(event) => { event.stopPropagation(); setPaymentsOpen(!paymentsOpen); }}>
-          <AttachMoneyIcon sx={{ marginRight: "10px", color: "#01579b" }} />
-          <ListItemText
-            primary="Pagos"
-            sx={{
-              color: "#01579b",
-              "& .MuiListItemText-primary": { fontWeight: "bold" },
-            }}
-          />
-          {paymentsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-        </ListItemButton>
-      </ListItem>
+            <Collapse in={subMenuOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem disablePadding>
+                  <ListItemButton href="/tratamientos-activos" sx={{ paddingLeft: 4 }} onClick={toggleDrawer(false)}>
+                    <ListItemText
+                      primary="Tratamientos Activos"
+                      sx={{
+                        color: "#0077b6",
+                        "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemButton href="/historial-tratamientos" sx={{ paddingLeft: 4 }} onClick={toggleDrawer(false)}>
+                    <ListItemText
+                      primary="Historial de Tratamientos"
+                      sx={{
+                        color: "#0077b6",
+                        "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              </List>
+            </Collapse>
 
-      <Collapse in={paymentsOpen} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding>
-          <ListItem disablePadding>
-            <ListItemButton href="/historial-pagos" sx={{ paddingLeft: 4 }} onClick={toggleDrawer(false)}>
-              <ListItemText
-                primary="Historial de Pagos"
-                sx={{
-                  color: "#0077b6",
-                  "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton href="/facturacion" sx={{ paddingLeft: 4 }} onClick={toggleDrawer(false)}>
-              <ListItemText
-                primary="Facturación"
-                sx={{
-                  color: "#0077b6",
-                  "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-        </List>
-      </Collapse>
-      <ListItem disablePadding>
-        <ListItemButton href="/catalogo-servicios" onClick={toggleDrawer(false)}>
-          <ListAltIcon sx={{ marginRight: "10px", color: "#01579b" }} />
-          <ListItemText
-            primary="Servicios"
-            sx={{
-              color: "#01579b",
-              "& .MuiListItemText-primary": { fontWeight: "bold" },
-            }}
-          />
-        </ListItemButton>
-      </ListItem>
-      {/* Opción de Perfil */}
-      <ListItem disablePadding>
-        <ListItemButton href="/perfil" onClick={toggleDrawer(false)}>
-          <AccountCircleIcon sx={{ marginRight: "10px", color: "#01579b" }} />
-          <ListItemText
-            primary="Perfil"
-            sx={{
-              color: "#01579b",
-              "& .MuiListItemText-primary": { fontWeight: "bold" },
-            }}
-          />
-        </ListItemButton>
-      </ListItem>
+            {/* Submenú para Pagos */}
+            <ListItem disablePadding>
+              <ListItemButton onClick={(event) => { event.stopPropagation(); setPaymentsOpen(!paymentsOpen); }}>
+                <AttachMoneyIcon sx={{ marginRight: "10px", color: "#01579b" }} />
+                <ListItemText
+                  primary="Pagos"
+                  sx={{
+                    color: "#01579b",
+                    "& .MuiListItemText-primary": { fontWeight: "bold" },
+                  }}
+                />
+                {paymentsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </ListItemButton>
+            </ListItem>
 
-      
-    </List>
-  </Box>
-</Drawer>
+            <Collapse in={paymentsOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem disablePadding>
+                  <ListItemButton href="/historial-pagos" sx={{ paddingLeft: 4 }} onClick={toggleDrawer(false)}>
+                    <ListItemText
+                      primary="Historial de Pagos"
+                      sx={{
+                        color: "#0077b6",
+                        "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemButton href="/facturacion" sx={{ paddingLeft: 4 }} onClick={toggleDrawer(false)}>
+                    <ListItemText
+                      primary="Facturación"
+                      sx={{
+                        color: "#0077b6",
+                        "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              </List>
+            </Collapse>
+            <ListItem disablePadding>
+              <ListItemButton href="/catalogo-servicios" onClick={toggleDrawer(false)}>
+                <ListAltIcon sx={{ marginRight: "10px", color: "#01579b" }} />
+                <ListItemText
+                  primary="Servicios"
+                  sx={{
+                    color: "#01579b",
+                    "& .MuiListItemText-primary": { fontWeight: "bold" },
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+            {/* Opción de Perfil */}
+            <ListItem disablePadding>
+              <ListItemButton href="/perfil" onClick={toggleDrawer(false)}>
+                <AccountCircleIcon sx={{ marginRight: "10px", color: "#01579b" }} />
+                <ListItemText
+                  primary="Perfil"
+                  sx={{
+                    color: "#01579b",
+                    "& .MuiListItemText-primary": { fontWeight: "bold" },
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+
+
+          </List>
+        </Box>
+      </Drawer>
 
 
     </ThemeProvider>

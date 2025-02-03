@@ -131,6 +131,14 @@ const App = () => {
             </LayoutPaciente>
           }
         />
+              <Route
+          path="/paciente/catalogo-servicios"
+          element={
+            <LayoutPaciente>
+              <CatalogoServicios />
+            </LayoutPaciente>
+          }
+        />
         {/* Rutas admin */}
         <Route
             path="/admin"
