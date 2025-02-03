@@ -20,6 +20,7 @@ import RecuperarPassword from "./pages/publico/RecuperarPassword";
 //Paciente
 import LayoutPaciente from "./components/navs/pacientes/LayoutPaciente";
 import Inicio from "./pages/pacientes/Inicio";
+import DetalleServicio from "./pages/pacientes/DetalleServicio";
 
 //Admin
 import LayoutAdmin from "./components/navs/admin/LayoutAdmin";
@@ -44,103 +45,111 @@ const theme = createTheme({
 const App = () => {
   return (
     <ThemeProvider theme={theme}>
-    <Router>
-      <Routes>
-        
-        {/* Rutas públicas */}
-        <Route
-          path="/"
-          element={
-            <LayoutPublico>
-              <BienvenidaPublica />
-            </LayoutPublico>
-          }
-        />
-        <Route
-          path="/politicas-privacidad"
-          element={
-            <LayoutPublico>
-              <PoliticasPrivacidad />
-            </LayoutPublico>
-          }
-        />
-        <Route
-          path="/deslinde-legal"
-          element={
-            <LayoutPublico>
-              <DeslindeLegal />
-            </LayoutPublico>
-          }
-        />
-        <Route
-          path="/terminos-condiciones"
-          element={
-            <LayoutPublico>
-              <TerminosCondiciones />
-            </LayoutPublico>
-          }
-        />
-        <Route
-          path="/login"
-          element={
-            <LayoutPublico>
-              <Login />
-            </LayoutPublico>
-          }
-        />
-        <Route
-          path="/registro"
-          element={
-            <LayoutPublico>
-              <Registro />
-            </LayoutPublico>
-          }
-        />
-         <Route
-          path="/catalogo-servicios"
-          element={
-            <LayoutPublico>
-              <CatalogoServicios />
-            </LayoutPublico>
-          }
-        />
-        <Route
-          path="/recuperar-password"
-          element={
-            <LayoutPublico>
-              <RecuperarPassword />
-            </LayoutPublico>
-          }
-        />
-        <Route
-          path="/cambiar-password"
-          element={
-            <LayoutPublico>
-              <CambioPassword />
-            </LayoutPublico>
-          }
-        />
+      <Router>
+        <Routes>
 
-      {/* Rutas paciente */}
+          {/* Rutas públicas */}
+          <Route
+            path="/"
+            element={
+              <LayoutPublico>
+                <BienvenidaPublica />
+              </LayoutPublico>
+            }
+          />
+          <Route
+            path="/politicas-privacidad"
+            element={
+              <LayoutPublico>
+                <PoliticasPrivacidad />
+              </LayoutPublico>
+            }
+          />
+          <Route
+            path="/deslinde-legal"
+            element={
+              <LayoutPublico>
+                <DeslindeLegal />
+              </LayoutPublico>
+            }
+          />
+          <Route
+            path="/terminos-condiciones"
+            element={
+              <LayoutPublico>
+                <TerminosCondiciones />
+              </LayoutPublico>
+            }
+          />
+          <Route
+            path="/login"
+            element={
+              <LayoutPublico>
+                <Login />
+              </LayoutPublico>
+            }
+          />
+          <Route
+            path="/registro"
+            element={
+              <LayoutPublico>
+                <Registro />
+              </LayoutPublico>
+            }
+          />
+          <Route
+            path="/catalogo-servicios"
+            element={
+              <LayoutPublico>
+                <CatalogoServicios />
+              </LayoutPublico>
+            }
+          />
+          <Route
+            path="/recuperar-password"
+            element={
+              <LayoutPublico>
+                <RecuperarPassword />
+              </LayoutPublico>
+            }
+          />
+          <Route
+            path="/cambiar-password"
+            element={
+              <LayoutPublico>
+                <CambioPassword />
+              </LayoutPublico>
+            }
+          />
 
-      <Route
-          path="/paciente"
-          element={
-            <LayoutPaciente>
-              <Inicio />
-            </LayoutPaciente>
-          }
-        />
-              <Route
-          path="/paciente/catalogo-servicios"
-          element={
-            <LayoutPaciente>
-              <CatalogoServicios />
-            </LayoutPaciente>
-          }
-        />
-        {/* Rutas admin */}
-        <Route
+          {/* Rutas paciente */}
+
+          <Route
+            path="/paciente"
+            element={
+              <LayoutPaciente>
+                <Inicio />
+              </LayoutPaciente>
+            }
+          />
+          <Route
+            path="/paciente/catalogo-servicios"
+            element={
+              <LayoutPaciente>
+                <CatalogoServicios />
+              </LayoutPaciente>
+            }
+          />
+          <Route
+            path="/paciente/servicio/:hash"
+            element={
+              <LayoutPaciente>
+                <DetalleServicio />
+              </LayoutPaciente>
+            }
+          />
+          {/* Rutas admin */}
+          <Route
             path="/admin"
             element={
               <LayoutAdmin>
@@ -152,7 +161,7 @@ const App = () => {
             path="/admin/catalogos-tratamientos"
             element={
               <LayoutAdmin>
-                <CrearServicioOdontologia/>
+                <CrearServicioOdontologia />
               </LayoutAdmin>
             }
           />
@@ -160,7 +169,7 @@ const App = () => {
             path="/admin/mis-tratamientos"
             element={
               <LayoutAdmin>
-                <MisCatalogos/>
+                <MisCatalogos />
               </LayoutAdmin>
             }
           />
@@ -168,12 +177,12 @@ const App = () => {
           <Route path="/400" element={<Error400 />} /> {/* Ruta específica para error 400 */}
           <Route path="*" element={<Error404 />} /> {/* Ruta comodín para error 404 */}
           <Route path="/500" element={<Error500 />} /> {/* Ruta para el Error 500 */}
-      </Routes>
-      
+        </Routes>
 
 
-      
-    </Router>
+
+
+      </Router>
     </ThemeProvider>
   );
 };

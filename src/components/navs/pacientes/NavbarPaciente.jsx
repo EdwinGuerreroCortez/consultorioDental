@@ -210,7 +210,11 @@ const NavbarPaciente = () => {
                     {/* Limitar a 5 resultados */}
                     {searchResults.slice(0, 5).map((result) => (
                       <ListItem key={result.id} disablePadding>
-                        <ListItemButton href={`servicio/${result.hash}`}>
+                        <ListItemButton 
+                        href={`/paciente/servicio/${result.hash}`}
+                        onClick={() => console.log('Hash enviado al endpoint:', result.hash)}
+
+                        >
                           <ListItemText
                             primary={highlightMatch(result.nombre, searchTerm)}
                             sx={{
