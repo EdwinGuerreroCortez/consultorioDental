@@ -1,6 +1,8 @@
 import React from "react";
 import NavbarPaciente from "../pacientes/NavbarPaciente";
 import FooterPaciente from "../pacientes/FooterPaciente";
+import BreadcrumbNav from '../../Breadcrumbs';
+
 import { Box, CssBaseline } from "@mui/material";
 
 const LayoutPaciente = ({ children }) => {
@@ -18,7 +20,20 @@ const LayoutPaciente = ({ children }) => {
           boxSizing: "border-box", // Reset general para todos los elementos
         }}
       >
+
         <NavbarPaciente />
+        {/* Breadcrumb */}
+      <Box
+        sx={{
+          marginTop: "94px",  // Altura del Navbar para evitar que el breadcrumb quede oculto
+          padding: "10px",
+          backgroundColor: "#ffffff",
+          zIndex: 2,
+          position: "relative",
+        }}
+      >
+        <BreadcrumbNav userType="paciente" />
+      </Box>
         <Box
           sx={{
             flex: 1,

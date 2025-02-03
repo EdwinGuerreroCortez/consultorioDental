@@ -67,9 +67,16 @@ export const validatePhoneNumber = (phone) => {
  * @returns {string} Mensaje de error o vacío si es válida.
  */
 export const validateAge = (age) => {
+   // Verificar que la edad solo contenga dígitos (sin puntos ni otros caracteres)
+   if (!/^\d+$/.test(age)) {
+    return "La edad debe ser un número entero.";
+  }
   const numericAge = parseInt(age, 10);
   if (!numericAge || numericAge < 18) {
     return "Debes ser mayor de 18 años.";
+  } else if (numericAge > 100) {
+    return "Debe cumplir con el rango de edad permitido."; 
+
   }
   return "";
 };
@@ -108,9 +115,14 @@ export const validarDescripcion = (descripcion) => {
 };
 
 export const validarPrecio = (precio) => {
-  if (!precio) return "El precio es obligatorio";
-  if (!/^\d+$/.test(precio)) return "El precio debe ser un número entero positivo";
-  if (parseInt(precio, 10) <= 0) return "El precio debe ser mayor que 0";
+  if (!precio.trim()) return "El precio es obligatorio";
+  
+  // Permitir números enteros o con hasta dos decimales
+  if (!/^\d+(\.\d{1,2})?$/.test(precio)) {
+    return "El precio debe ser un número positivo con hasta dos decimales";
+  }
+
+  if (parseFloat(precio) <= 0) return "El precio debe ser mayor que 0";
   return "";
 };
 

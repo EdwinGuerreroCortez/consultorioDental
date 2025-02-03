@@ -15,7 +15,7 @@ import {
     Snackbar,
     Alert,
 } from "@mui/material";
-import { CheckCircle } from "@mui/icons-material";
+import { CloudUpload, CheckCircle } from "@mui/icons-material";
 
 import {
     validarNombre,
@@ -170,11 +170,11 @@ const CrearServicioOdontologia = () => {
 
     return (
         <Box sx={{ maxWidth: 900, margin: "2rem auto", padding: "1rem" }}>
-            <Card sx={{ boxShadow: 8, borderRadius: "16px", overflow: "hidden", padding: "2rem" }}>
-                <Typography variant="h4" align="center" gutterBottom sx={{ fontWeight: "bold", color: "#0073e6" }}>
+            <Card sx={{ boxShadow: 10, borderRadius: "12px", padding: "2rem", backgroundColor: "#fafafa" }}>
+                <Typography variant="h4" align="center" gutterBottom sx={{ fontWeight: "bold", color: "#005f73" }}>
                     Registrar Nuevo Servicio Odontológico
                 </Typography>
-                <Divider sx={{ marginBottom: "2rem" }} />
+                <Divider sx={{ marginBottom: "1.5rem" }} />
 
                 <form onSubmit={handleSubmit}>
                     <Grid container spacing={4}>
@@ -264,7 +264,13 @@ const CrearServicioOdontologia = () => {
 
                         <Grid item xs={12}>
                             <Typography variant="h6">Imagen del servicio</Typography>
-                            <Button variant="outlined" component="label" fullWidth>
+                            <Button
+                                variant="outlined"
+                                component="label"
+                                fullWidth
+                                startIcon={<CloudUpload />}
+                                sx={{ marginTop: "0.5rem", padding: "10px" }}
+                            >
                                 Subir imagen del servicio
                                 <input type="file" hidden onChange={handleImageChange} accept="image/*" />
                             </Button>
@@ -281,7 +287,19 @@ const CrearServicioOdontologia = () => {
                         </Grid>
 
                         <Grid item xs={12}>
-                            <Button type="submit" variant="contained" color="primary" size="large" fullWidth>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="primary"
+                                size="large"
+                                fullWidth
+                                sx={{
+                                    backgroundColor: "#0077b6",
+                                    "&:hover": {
+                                        backgroundColor: "#005f8c",
+                                    },
+                                }}
+                            >
                                 Registrar Servicio
                             </Button>
                         </Grid>

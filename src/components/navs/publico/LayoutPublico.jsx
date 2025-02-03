@@ -1,36 +1,33 @@
 import React from "react";
 import NavbarPublico from "../publico/NavbarPublico";
 import FooterPublico from "../publico/FooterPublico";
+import BreadcrumbNav from "../../Breadcrumbs";
+
 import { Box, CssBaseline } from "@mui/material";
 
 const LayoutPublico = ({ children }) => {
   return (
     <>
       <CssBaseline />
+      <NavbarPublico />
+
+      {/* Breadcrumb */}
       <Box
         sx={{
-          display: "flex",
-          flexDirection: "column",
-          minHeight: "100vh",
-          width: "100%",
-          margin: 0,
-          padding: 0,
-          boxSizing: "border-box", // Reset general para todos los elementos
+          marginTop: "94px",  // Altura del Navbar para evitar que el breadcrumb quede oculto
+          padding: "0px",
+          backgroundColor: "#ffffff",
+          zIndex: 2,
+          position: "relative",
         }}
       >
-        <NavbarPublico />
-        <Box
-          sx={{
-            flex: 1,
-            marginTop: "94px", // Altura del Navbar
-            marginBottom: "0", // Asegura que no haya espacio antes del footer
-            
-          }}
-        >
-          {children}
-        </Box>
-        <FooterPublico />
+        <BreadcrumbNav userType="publico" />
       </Box>
+
+      {/* Contenido principal */}
+      {children}
+
+      <FooterPublico />
     </>
   );
 };

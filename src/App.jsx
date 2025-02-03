@@ -13,6 +13,10 @@ import Login from "./pages/publico/Login";
 import Registro from "./pages/publico/Registro";
 import CatalogoServicios from "./pages/publico/CatalogoServicios";
 
+import CambioPassword from "./pages/publico/CambioPassword";
+
+
+import RecuperarPassword from "./pages/publico/RecuperarPassword";
 //Paciente
 import LayoutPaciente from "./components/navs/pacientes/LayoutPaciente";
 import Inicio from "./pages/pacientes/Inicio";
@@ -97,6 +101,22 @@ const App = () => {
           element={
             <LayoutPublico>
               <CatalogoServicios />
+            </LayoutPublico>
+          }
+        />
+        <Route
+          path="/recuperar-password"
+          element={
+            <LayoutPublico>
+              <RecuperarPassword />
+            </LayoutPublico>
+          }
+        />
+        <Route
+          path="/cambiar-password"
+          element={
+            <LayoutPublico>
+              <CambioPassword />
             </LayoutPublico>
           }
         />

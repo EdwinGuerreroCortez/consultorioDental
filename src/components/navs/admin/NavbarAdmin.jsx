@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Drawer,
   Toolbar,
@@ -14,6 +14,7 @@ import {
   IconButton,
   Collapse,
 } from "@mui/material";
+import { useNavigate, useLocation } from "react-router-dom";
 
 // Iconos importados de MUI
 import MenuIcon from "@mui/icons-material/Menu";
@@ -29,17 +30,35 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import LogoutIcon from "@mui/icons-material/Logout";
 
-// Importa el logo del consultorio
 import logo from "../../../assets/images/logo.png";
 
-// Definición de anchos del panel lateral
 const drawerWidth = 280;
 const drawerCollapsedWidth = 72;
 
 const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [openSubmenus, setOpenSubmenus] = useState({});
 
-  // Función para alternar el estado de un submenu
+  // Detectar la ruta activa para mantener los submenús abiertos
+  useEffect(() => {
+    menuItems.forEach((item, index) => {
+      if (item.submenu) {
+        const isActive = item.submenu.some((subItem) => location.pathname.includes(subItem.href));
+        if (isActive) {
+          setOpenSubmenus((prev) => ({ ...prev, [index]: true }));
+        }
+      }
+    });
+  }, [location.pathname]);
+
+  // Cerrar los submenús automáticamente si el Drawer se colapsa
+  useEffect(() => {
+    if (!drawerOpen) {
+      setOpenSubmenus({});
+    }
+  }, [drawerOpen]);
+
   const toggleSubmenu = (key) => {
     setOpenSubmenus((prev) => ({ ...prev, [key]: !prev[key] }));
   };
@@ -89,7 +108,6 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
       submenu: [
         { text: "Gestionar Tratamientos", href: "/admin/catalogos-tratamientos" },
         { text: "Mis Tratamientos", href: "/admin/mis-tratamientos" },
-        
       ],
     },
     {
@@ -113,12 +131,11 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
         { text: "Reporte de Evaluaciones Médicas", href: "/admin/reportes/evaluaciones" },
       ],
     },
-    { text: "Cerrar Sesión", icon: <LogoutIcon />, href: "/admin/logout" },
+    { text: "Cerrar Sesión", icon: <LogoutIcon />, href: "/" },
   ];
 
   return (
     <Box sx={{ display: "flex" }}>
-      {/* AppBar superior */}
       <AppBar
         position="fixed"
         sx={{
@@ -126,7 +143,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
           ml: drawerOpen ? `${drawerWidth}px` : `${drawerCollapsedWidth}px`,
           background: "#006d77",
           boxShadow: "0 6px 12px rgba(0, 0, 0, 0.15)",
-          transition: "all 0.3s ease-in-out",
+          transition: "all 0.2s ease-in-out",
         }}
       >
         <Toolbar>
@@ -139,7 +156,6 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
         </Toolbar>
       </AppBar>
 
-      {/* Drawer lateral */}
       <Drawer
         variant="permanent"
         sx={{
@@ -152,18 +168,20 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
             flexDirection: "column",
             backgroundColor: "rgba(3, 68, 94, 0.9)",
             color: "#d2f4ea",
-            transition: "all 0.3s ease-in-out",
+            transition: "width 0.2s ease-in-out",
           },
         }}
       >
-        {/* Encabezado del Drawer */}
         <Toolbar
           sx={{
+            height: "180px",
             justifyContent: "center",
-            padding: drawerOpen ? "16px" : "8px",
+            padding: "16px",
             background: "#0096c7",
             flexDirection: "column",
             alignItems: "center",
+            textAlign: "center",
+            flexShrink: 0,
           }}
         >
           <Box
@@ -171,37 +189,62 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
             src={logo}
             alt="Logo Consultorio Dental Velázquez"
             sx={{
-              width: drawerOpen ? "100px" : "40px",
-              height: drawerOpen ? "100px" : "40px",
+              width: drawerOpen ? "90px" : "40px",
+              height: drawerOpen ? "90px" : "40px",
+              objectFit: "contain",
               borderRadius: "50%",
+              transition: "all 0.2s ease-in-out",
+              marginBottom: "8px",
             }}
           />
           {drawerOpen && (
-            <Typography variant="h6" sx={{ fontWeight: "bold", color: "#e0f7fa", marginTop: "8px" }}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: "bold",
+                color: "#e0f7fa",
+                textAlign: "center",
+                wordWrap: "break-word",
+                whiteSpace: "normal",
+                maxWidth: "220px",
+              }}
+            >
               Consultorio Dental Velázquez
             </Typography>
           )}
         </Toolbar>
 
-        {/* Menú del Drawer */}
         <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
           <Divider sx={{ backgroundColor: "#78c1c8" }} />
           <List>
             {menuItems.map((item, index) => (
               <React.Fragment key={index}>
                 <ListItem disablePadding>
-                  <ListItemButton onClick={() => item.submenu && toggleSubmenu(index)}>
+                  <ListItemButton
+                    onClick={() => {
+                      if (item.submenu) {
+                        toggleSubmenu(index);
+                      } else {
+                        navigate(item.href);
+                      }
+                    }}
+                  >
                     <ListItemIcon>{item.icon}</ListItemIcon>
                     <ListItemText primary={item.text} sx={{ display: drawerOpen ? "block" : "none" }} />
                     {item.submenu && drawerOpen && (openSubmenus[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />)}
                   </ListItemButton>
                 </ListItem>
+
                 {item.submenu && (
-                  <Collapse in={openSubmenus[index] && drawerOpen} timeout="auto" unmountOnExit>
+                  <Collapse in={openSubmenus[index]} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding>
                       {item.submenu.map((subItem, subIndex) => (
                         <ListItem key={subIndex} disablePadding>
-                          <ListItemButton href={subItem.href} sx={{ pl: 4 }}>
+                          <ListItemButton
+                            href={subItem.href}
+                            onClick={() => navigate(subItem.href)}
+                            sx={{ pl: 4 }}
+                          >
                             <ListItemText primary={subItem.text} />
                           </ListItemButton>
                         </ListItem>

@@ -20,6 +20,8 @@ import LoginIcon from "@mui/icons-material/Login";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import "@fontsource/poppins";
 import logo from "../../../assets/images/logo.png";
+import BreadcrumbNav from '../../Breadcrumbs';
+
 
 const NavbarPublico = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
