@@ -163,7 +163,7 @@ const NavbarPaciente = () => {
             <img
               src={logo}
               alt="Consultorio Dental"
-              style={{ height: "60px", width: "auto", marginRight: "12px" }}
+              style={{ height: "100px", width: "auto", marginRight: "12px",borderRadius:"50px"  }}
             />
             <Typography variant="h6" sx={{ fontWeight: "bold", color: "#ffffff" }}>
               Consultorio Dental
@@ -172,7 +172,7 @@ const NavbarPaciente = () => {
               <TextField
                 fullWidth
                 variant="outlined"
-                placeholder="Buscar tratamientos..."
+                placeholder="Buscar servicios..."
                 value={searchTerm}
                 onChange={handleSearch}
                 InputProps={{
@@ -207,21 +207,23 @@ const NavbarPaciente = () => {
                   }}
                 >
                   <List>
-                    {/* Limitar a 5 resultados */}
                     {searchResults.slice(0, 5).map((result) => (
                       <ListItem key={result.id} disablePadding>
-                        <ListItemButton 
-                        href={`/paciente/servicio/${result.hash}`}
-                        onClick={() => console.log('Hash enviado al endpoint:', result.hash)}
-
+                        <ListItemButton
+                          href={`/paciente/catalogo-servicios/${result.hash}`}
+                          sx={{
+                            color: "#0077b6",
+                            "&:hover": {
+                              backgroundColor: "#0077b6",
+                              color: "#ffffff",
+                            },
+                          }}
                         >
                           <ListItemText
                             primary={highlightMatch(result.nombre, searchTerm)}
                             sx={{
-                              color: "#0077b6",
-                              "&:hover": {
-                                color: "#ffffff",
-                                backgroundColor: "#0077b6",
+                              "& .MuiListItemText-primary": {
+                                fontWeight: "bold",
                               },
                             }}
                           />

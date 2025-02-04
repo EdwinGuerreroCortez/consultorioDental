@@ -1,11 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import Typography from '@mui/material/Typography';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Box } from '@mui/material';
 
-// Definición de nombres para cada tipo de usuario
 const routeNames = {
   publico: {
     "": "Inicio",
@@ -39,7 +38,31 @@ const BreadcrumbNav = ({ userType = "publico" }) => {
   const location = useLocation();
   const pathnames = location.pathname.split('/').filter((x) => x);
 
+  const [dynamicName, setDynamicName] = useState(null);
   const userRoutes = routeNames[userType] || {};
+
+  useEffect(() => {
+    const fetchServiceName = async (hash) => {
+      try {
+        const response = await fetch(`http://localhost:4000/api/tratamientos/${hash}/detalle`);
+        if (response.ok) {
+          const data = await response.json();
+          setDynamicName(data.nombre || 'Servicio desconocido');
+        } else {
+          setDynamicName('Servicio desconocido');
+        }
+      } catch {
+        setDynamicName('Servicio desconocido');
+      }
+    };
+
+    const lastSegment = pathnames[pathnames.length - 1];
+    if (lastSegment && lastSegment.length === 64) {
+      fetchServiceName(lastSegment);
+    } else {
+      setDynamicName('');
+    }
+  }, [pathnames]);
 
   return (
     <Box sx={{ padding: 2, backgroundColor: "#f5f5f5", borderRadius: "8px" }}>
@@ -58,22 +81,27 @@ const BreadcrumbNav = ({ userType = "publico" }) => {
           },
         }}
       >
-        {/* Enlace dinámico según el tipo de usuario */}
         <Link to={`/${userType === "publico" ? "" : userType}`}>Inicio</Link>
-        
+
         {pathnames.map((value, index) => {
-          // Generar la ruta completa actual
           const fullPath = `/${pathnames.slice(0, index + 1).join('/')}`;
           const isLast = index === pathnames.length - 1;
 
-          return isLast ? (
-            <Typography key={fullPath} color="text.primary" sx={{ fontWeight: 'bold', color: '#023e8a' }}>
-              {userRoutes[fullPath.substring(1)] || value.replace(/-/g, ' ')}
+          let displayName;
+          if (isLast && dynamicName !== null) {
+            displayName = dynamicName;
+          } else if (!isLast) {
+            displayName = userRoutes[value] || value.replace(/-/g, ' ');
+          }
+
+          return isLast && dynamicName === null ? (
+            <Typography key={fullPath} color="text.secondary" sx={{ fontWeight: 'bold', color: '#999' }}>
+              Cargando...
             </Typography>
           ) : (
-            <Link key={fullPath} to={fullPath}>
-              {userRoutes[fullPath.substring(1)] || value.replace(/-/g, ' ')}
-            </Link>
+            <Typography key={fullPath} color="text.primary" sx={{ fontWeight: 'bold', color: '#023e8a' }}>
+              {displayName}
+            </Typography>
           );
         })}
       </Breadcrumbs>

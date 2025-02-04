@@ -121,7 +121,14 @@ const App = () => {
               </LayoutPublico>
             }
           />
-
+          <Route
+            path="/catalogo-servicios/:hash"
+            element={
+              <LayoutPublico>
+                <DetalleServicio />
+              </LayoutPublico>
+            }
+          />
           {/* Rutas paciente */}
 
           <Route
@@ -141,7 +148,7 @@ const App = () => {
             }
           />
           <Route
-            path="/paciente/servicio/:hash"
+            path="/paciente/catalogo-servicios/:hash"
             element={
               <LayoutPaciente>
                 <DetalleServicio />
