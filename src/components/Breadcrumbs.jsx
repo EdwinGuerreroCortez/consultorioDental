@@ -8,7 +8,7 @@ import { Box } from '@mui/material';
 const routeNames = {
   publico: {
     "": "Inicio",
-    "catalogo-servicios": "Servicios",
+    "catalogo-servicios": "Catalogo de Servicios",
     "login": "Login",
     "registro": "Registro"
   },
@@ -38,7 +38,7 @@ const BreadcrumbNav = ({ userType = "publico" }) => {
   const location = useLocation();
   const pathnames = location.pathname.split('/').filter((x) => x);
 
-  const [dynamicName, setDynamicName] = useState(null);
+  const [dynamicName, setDynamicName] = useState('');
   const userRoutes = routeNames[userType] || {};
 
   useEffect(() => {
@@ -59,8 +59,6 @@ const BreadcrumbNav = ({ userType = "publico" }) => {
     const lastSegment = pathnames[pathnames.length - 1];
     if (lastSegment && lastSegment.length === 64) {
       fetchServiceName(lastSegment);
-    } else {
-      setDynamicName('');
     }
   }, [pathnames]);
 
@@ -87,21 +85,25 @@ const BreadcrumbNav = ({ userType = "publico" }) => {
           const fullPath = `/${pathnames.slice(0, index + 1).join('/')}`;
           const isLast = index === pathnames.length - 1;
 
+          // Determinar si es un hash
+          const isHash = value.length === 64;
+
+          // Mostrar nombre dinámico si es un hash, o el nombre estático si no lo es
           let displayName;
-          if (isLast && dynamicName !== null) {
-            displayName = dynamicName;
-          } else if (!isLast) {
+          if (isLast && isHash) {
+            displayName = dynamicName || '';
+          } else {
             displayName = userRoutes[value] || value.replace(/-/g, ' ');
           }
 
-          return isLast && dynamicName === null ? (
-            <Typography key={fullPath} color="text.secondary" sx={{ fontWeight: 'bold', color: '#999' }}>
-              Cargando...
-            </Typography>
-          ) : (
+          return isLast ? (
             <Typography key={fullPath} color="text.primary" sx={{ fontWeight: 'bold', color: '#023e8a' }}>
               {displayName}
             </Typography>
+          ) : (
+            <Link key={fullPath} to={fullPath}>
+              {displayName}
+            </Link>
           );
         })}
       </Breadcrumbs>

@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import RutaProtegida from './components/RutaProtegida';
 
 //Publicos 
 import LayoutPublico from "./components/navs/publico/LayoutPublico";
@@ -134,50 +135,67 @@ const App = () => {
           <Route
             path="/paciente"
             element={
-              <LayoutPaciente>
-                <Inicio />
-              </LayoutPaciente>
+              <RutaProtegida tiposPermitidos={['paciente']}>
+                <LayoutPaciente>
+                  <Inicio />
+                </LayoutPaciente>
+              </RutaProtegida>
+
             }
           />
           <Route
             path="/paciente/catalogo-servicios"
             element={
-              <LayoutPaciente>
-                <CatalogoServicios />
-              </LayoutPaciente>
+              <RutaProtegida tiposPermitidos={['paciente']}>
+                <LayoutPaciente>
+                  <CatalogoServicios />
+                </LayoutPaciente>
+              </RutaProtegida>
+
             }
           />
           <Route
             path="/paciente/catalogo-servicios/:hash"
             element={
-              <LayoutPaciente>
-                <DetalleServicio />
-              </LayoutPaciente>
+              <RutaProtegida tiposPermitidos={['paciente']}>
+                <LayoutPaciente>
+                  <DetalleServicio />
+                </LayoutPaciente>
+              </RutaProtegida>
             }
           />
           {/* Rutas admin */}
           <Route
             path="/admin"
             element={
-              <LayoutAdmin>
-                <BienvenidaAdmin />
-              </LayoutAdmin>
+              <RutaProtegida tiposPermitidos={['admin']}>
+
+                <LayoutAdmin>
+                  <BienvenidaAdmin />
+                </LayoutAdmin>
+              </RutaProtegida>
             }
           />
           <Route
             path="/admin/catalogos-tratamientos"
             element={
-              <LayoutAdmin>
-                <CrearServicioOdontologia />
-              </LayoutAdmin>
+              <RutaProtegida tiposPermitidos={['admin']}>
+
+                <LayoutAdmin>
+                  <CrearServicioOdontologia />
+                </LayoutAdmin>
+              </RutaProtegida>
             }
           />
           <Route
             path="/admin/mis-tratamientos"
             element={
-              <LayoutAdmin>
-                <MisCatalogos />
-              </LayoutAdmin>
+              <RutaProtegida tiposPermitidos={['admin']}>
+
+                <LayoutAdmin>
+                  <MisCatalogos />
+                </LayoutAdmin>
+              </RutaProtegida>
             }
           />
           {/*Rutas Errores*/}

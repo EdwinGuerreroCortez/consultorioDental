@@ -30,9 +30,8 @@ const Login = () => {
       left: `${Math.random() * 100}%`,
       animationDelay: `${Math.random() * 10}s`,
       animationDuration: `${5 + Math.random() * 10}s`,
-      backgroundColor: `rgba(${Math.random() * 50 + 100}, ${Math.random() * 200}, ${
-        Math.random() * 150 + 100
-      }, 0.7)`,
+      backgroundColor: `rgba(${Math.random() * 50 + 100}, ${Math.random() * 200}, ${Math.random() * 150 + 100
+        }, 0.7)`,
     }));
     setBubbles(generatedBubbles);
   }, []);
@@ -50,16 +49,20 @@ const Login = () => {
 
     try {
       // Solicitud al backend para autenticar al usuario
-      const response = await axios.post("http://localhost:4000/api/usuarios/login", {
-        email,
-        password,
-      });
-
+      const response = await axios.post("http://localhost:4000/api/usuarios/login",
+        { email, password, },
+        { withCredentials: true, }
+      );
+      const { nombre, tipo } = response.data;
       // Mostrar mensaje de éxito y redirigir al usuario
-      setAlert({ type: "success", message: `Bienvenido, ${response.data.nombre}` });
+      setAlert({ type: "success", message: `Bienvenido, ${nombre}` });
 
-      // Redirigir a la página de pacientes después de 2 segundos
-      setTimeout(() => navigate("/paciente"), 2000);
+      // Redirigir según el tipo de usuario
+      if (tipo === "admin") {
+        setTimeout(() => navigate("/admin"), 2000);
+      } else if (tipo === "paciente") {
+        setTimeout(() => navigate("/paciente"), 2000);
+      }
     } catch (error) {
       setAlert({
         type: "error",
