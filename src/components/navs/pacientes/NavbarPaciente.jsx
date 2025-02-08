@@ -13,7 +13,9 @@ import {
   ListItemText,
   Divider,
   Collapse,
-  TextField
+  TextField,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
@@ -42,6 +44,8 @@ const NavbarPaciente = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const searchBoxRef = useRef(null);  // Referencia para la caja de búsqueda
+  const [alertaExito, setAlertaExito] = useState(false);
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -79,7 +83,27 @@ const NavbarPaciente = () => {
     }
 
   };
+  // Función para manejar el cierre de sesión
+  const cerrarSesion = async () => {
+    try {
+      const response = await fetch('http://localhost:4000/api/usuarios/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
 
+      if (response.ok) {
+        setAlertaExito(true);  // Mostrar alerta de éxito
+        setTimeout(() => {
+          setAlertaExito(false);
+          window.location.href = '/';  // Redirigir a la página de inicio después de 2 segundos
+        }, 2000);
+      } else {
+        console.error('Error al cerrar sesión:', await response.json());
+      }
+    } catch (error) {
+      console.error('Error en la solicitud de cierre de sesión:', error);
+    }
+  };
 
   const toggleDrawer = (open) => (event) => {
     if (event.type === "keydown" && (event.key === "Tab" || event.key === "Shift")) {
@@ -163,7 +187,7 @@ const NavbarPaciente = () => {
             <img
               src={logo}
               alt="Consultorio Dental"
-              style={{ height: "100px", width: "auto", marginRight: "12px",borderRadius:"50px"  }}
+              style={{ height: "100px", width: "auto", marginRight: "12px", borderRadius: "50px" }}
             />
             <Typography variant="h6" sx={{ fontWeight: "bold", color: "#ffffff" }}>
               Consultorio Dental
@@ -501,6 +525,22 @@ const NavbarPaciente = () => {
             </Button>
 
           </Box>
+          <Button
+            color="inherit"
+            startIcon={<AccountCircleIcon />}
+            onClick={cerrarSesion}
+            sx={{
+              fontWeight: "bold",
+              fontSize: "16px",
+              color: "#ffffff",
+              borderRadius: "8px",
+              padding: "8px 16px",
+              marginX: 1,
+              "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.2)" },
+            }}
+          >
+            Cerrar Sesión
+          </Button>
         </Toolbar>
       </AppBar>
 
@@ -695,12 +735,37 @@ const NavbarPaciente = () => {
               </ListItemButton>
             </ListItem>
 
+            <List>
+              {/* Aquí va el botón de Cerrar Sesión en el menú lateral */}
+              <ListItem disablePadding>
+                <ListItemButton onClick={cerrarSesion}>
+                  <AccountCircleIcon sx={{ marginRight: "10px", color: "#01579b" }} />
+                  <ListItemText
+                    primary="Cerrar Sesión"
+                    sx={{
+                      color: "#01579b",
+                      "& .MuiListItemText-primary": { fontWeight: "bold" },
+                    }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            </List>
 
           </List>
         </Box>
       </Drawer>
 
-
+      {/* Alerta de éxito */}
+      <Snackbar
+        open={alertaExito}
+        autoHideDuration={2000}  // La alerta se cierra automáticamente después de 2 segundos
+        onClose={() => setAlertaExito(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}  // Posición inferior izquierda
+      >
+        <Alert onClose={() => setAlertaExito(false)} severity="success" sx={{ width: '100%' }}>
+          Sesión cerrada correctamente.
+        </Alert>
+      </Snackbar>
     </ThemeProvider>
   );
 };

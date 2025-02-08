@@ -13,6 +13,8 @@ import {
   Divider,
   IconButton,
   Collapse,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -39,6 +41,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [openSubmenus, setOpenSubmenus] = useState({});
+  const [alertaExito, setAlertaExito] = useState(false);
 
   // Detectar la ruta activa para mantener los submenús abiertos
   useEffect(() => {
@@ -61,6 +64,29 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
 
   const toggleSubmenu = (key) => {
     setOpenSubmenus((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+  const cerrarSesion = async () => {
+    try {
+      const response = await fetch('http://localhost:4000/api/usuarios/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        // Mostrar la alerta de éxito
+        setAlertaExito(true);
+
+        // Redirigir al login después de un tiempo
+        setTimeout(() => {
+          setAlertaExito(false);
+          navigate('/login');
+        }, 2000);  // Espera 2 segundos antes de redirigir
+      } else {
+        console.error('Error al cerrar sesión:', await response.json());
+      }
+    } catch (error) {
+      console.error('Error en la solicitud de cierre de sesión:', error);
+    }
   };
 
   // Definición de los ítems del menú
@@ -131,7 +157,12 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
         { text: "Reporte de Evaluaciones Médicas", href: "/admin/reportes/evaluaciones" },
       ],
     },
-    { text: "Cerrar Sesión", icon: <LogoutIcon />, href: "/" },
+    {
+      text: "Cerrar Sesión",
+      icon: <LogoutIcon />,
+      action: cerrarSesion,  // Llama a la función cerrarSesion
+    }
+
   ];
 
   return (
@@ -219,10 +250,12 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
           <List>
             {menuItems.map((item, index) => (
               <React.Fragment key={index}>
-                <ListItem disablePadding>
+                <ListItem disablePadding key={index}>
                   <ListItemButton
                     onClick={() => {
-                      if (item.submenu) {
+                      if (item.action) {
+                        item.action();  // Ejecutar la acción personalizada (cerrar sesión)
+                      } else if (item.submenu) {
                         toggleSubmenu(index);
                       } else {
                         navigate(item.href);
@@ -257,6 +290,17 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
           </List>
         </Box>
       </Drawer>
+      <Snackbar
+        open={alertaExito}
+        autoHideDuration={2000}  // La alerta se cierra automáticamente después de 2 segundos
+        onClose={() => setAlertaExito(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}  // Posición inferior izquierda
+      >
+        <Alert onClose={() => setAlertaExito(false)} severity="success" sx={{ width: '100%' }}>
+          Sesión cerrada correctamente.
+        </Alert>
+      </Snackbar>
+
     </Box>
   );
 };
