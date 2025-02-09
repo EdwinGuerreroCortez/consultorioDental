@@ -201,6 +201,17 @@ const App = () => {
               </RutaProtegida>
             }
           />
+          <Route
+            path="/admin/citas/ver"
+            element={
+              <RutaProtegida tiposPermitidos={['admin']}>
+
+                <LayoutAdmin>
+                  <Error400 />
+                </LayoutAdmin>
+              </RutaProtegida>
+            }
+          />
           {/*Rutas Errores*/}
           <Route path="/400" element={<Error400 />} /> {/* Ruta específica para error 400 */}
           <Route path="*" element={<Error404 />} /> {/* Ruta comodín para error 404 */}
