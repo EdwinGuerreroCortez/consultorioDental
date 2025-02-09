@@ -22,6 +22,7 @@ import RecuperarPassword from "./pages/publico/RecuperarPassword";
 import LayoutPaciente from "./components/navs/pacientes/LayoutPaciente";
 import Inicio from "./pages/pacientes/Inicio";
 import DetalleServicio from "./pages/pacientes/DetalleServicio";
+import AgendarCita from "./pages/pacientes/AgendarCita";
 
 //Admin
 import LayoutAdmin from "./components/navs/admin/LayoutAdmin";
@@ -133,8 +134,10 @@ const App = () => {
               </LayoutPublico>
             }
           />
-          {/* Rutas paciente */}
 
+
+
+          {/* Rutas paciente */}
           <Route
             path="/paciente"
             element={
@@ -167,6 +170,20 @@ const App = () => {
               </RutaProtegida>
             }
           />
+          <Route
+            path="/agendar-cita"
+            element={
+              <RutaProtegida tiposPermitidos={['paciente']}>
+                <LayoutPaciente>
+                  <AgendarCita />
+                </LayoutPaciente>
+              </RutaProtegida>
+            }
+          />
+
+
+
+
           {/* Rutas admin */}
           <Route
             path="/admin"

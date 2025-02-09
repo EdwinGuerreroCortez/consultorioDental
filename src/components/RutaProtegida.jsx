@@ -22,7 +22,7 @@ const RutaProtegida = ({ children, tiposPermitidos }) => {
     }
 
     if (!tiposPermitidos.includes(usuario.tipo)) {
-        return <Navigate to="/403" />;
+        return <Navigate to="/login" />;
     }
 
     return children;

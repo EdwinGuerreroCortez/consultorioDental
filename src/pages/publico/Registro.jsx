@@ -77,7 +77,7 @@ const Registro = () => {
         setAlert({ open: true, message: response.data.mensaje, severity: "success" });
         // Redirigir a otra ruta después de unos segundos o de forma inmediata
         setTimeout(() => {
-          navigate("/paciente");  // Reemplaza '/dashboard' por la ruta deseada
+          navigate("/login");  // Reemplaza '/dashboard' por la ruta deseada
       }, 2000);
       } catch (error) {
         setAlert({
