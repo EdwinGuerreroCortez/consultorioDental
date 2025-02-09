@@ -13,6 +13,7 @@ import {
   ListItemText,
   Divider,
   TextField,
+  Tooltip,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
@@ -124,7 +125,7 @@ const NavbarPublico = () => {
           </IconButton>
 
           <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
-            <img src={logo} alt="Consultorio Dental" style={{ height: "100px", width: "auto", marginRight: "12px", borderRadius:"50px" }} />
+            <img src={logo} alt="Consultorio Dental" style={{ height: "100px", width: "auto", marginRight: "12px", borderRadius: "50px" }} />
             <Typography variant="h6" sx={{ fontWeight: "bold", color: "#ffffff" }}>
               Consultorio Dental
             </Typography>
@@ -196,17 +197,126 @@ const NavbarPublico = () => {
             </Box>
           </Box>
 
-          <Box sx={{ display: { xs: "none", md: "flex" } }}>
-            <Button color="inherit" startIcon={<HomeIcon />} href="/" sx={{ fontWeight: "bold", fontSize: "16px", color: "#ffffff", borderRadius: "8px", padding: "8px 16px", marginX: 1 }}>
-              Inicio
-            </Button>
-            <Button color="inherit" startIcon={<ListAltIcon />} href="/catalogo-servicios" sx={{ fontWeight: "bold", fontSize: "16px", color: "#ffffff", borderRadius: "8px", padding: "8px 16px", marginX: 1 }}>
-              Servicios
-            </Button>
-            <Button color="inherit" startIcon={<LoginIcon />} href="/login" sx={{ fontWeight: "bold", fontSize: "16px", color: "#ffffff", borderRadius: "8px", padding: "8px 16px", marginX: 1 }}>
-              Login
-            </Button>
+          <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center" }}>
+            {/* Botón Inicio */}
+            <Tooltip title="Inicio" placement="top" arrow>
+              <Button
+                color="inherit"
+                href="/"
+                sx={{
+                  fontSize: "16px",
+                  color: "#ffffff",
+                  borderRadius: "8px",
+                  padding: "8px 16px",
+                  marginX: 1,
+                  position: "relative",
+                  "&:hover .menu-text": {
+                    display: "block",
+                    opacity: 1,
+                  },
+                }}
+              >
+                <HomeIcon />
+                <Box
+                  className="menu-text"
+                  sx={{
+                    display: "none",
+                    opacity: 0,
+                    transition: "opacity 0.3s ease-in-out",
+                    position: "absolute",
+                    top: "100%",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    color: "#ffffff",
+                    fontWeight: "bold",
+                    marginTop: "4px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+
+                </Box>
+              </Button>
+            </Tooltip>
+
+            {/* Botón Servicios */}
+            <Tooltip title="Servicios" placement="top" arrow>
+              <Button
+                color="inherit"
+                href="/catalogo-servicios"
+                sx={{
+                  fontSize: "16px",
+                  color: "#ffffff",
+                  borderRadius: "8px",
+                  padding: "8px 16px",
+                  marginX: 1,
+                  position: "relative",
+                  "&:hover .menu-text": {
+                    display: "block",
+                    opacity: 1,
+                  },
+                }}
+              >
+                <ListAltIcon />
+                <Box
+                  className="menu-text"
+                  sx={{
+                    display: "none",
+                    opacity: 0,
+                    transition: "opacity 0.3s ease-in-out",
+                    position: "absolute",
+                    top: "100%",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    color: "#ffffff",
+                    fontWeight: "bold",
+                    marginTop: "4px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                </Box>
+              </Button>
+            </Tooltip>
+
+            {/* Botón Login */}
+            <Tooltip title="Iniciar Sesión" placement="top" arrow>
+              <Button
+                color="inherit"
+                href="/login"
+                sx={{
+                  fontSize: "16px",
+                  color: "#ffffff",
+                  borderRadius: "8px",
+                  padding: "8px 16px",
+                  marginX: 1,
+                  position: "relative",
+                  "&:hover .menu-text": {
+                    display: "block",
+                    opacity: 1,
+                  },
+                }}
+              >
+                <LoginIcon />
+                <Box
+                  className="menu-text"
+                  sx={{
+                    display: "none",
+                    opacity: 0,
+                    transition: "opacity 0.3s ease-in-out",
+                    position: "absolute",
+                    top: "100%",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    color: "#ffffff",
+                    fontWeight: "bold",
+                    marginTop: "4px",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                </Box>
+              </Button>
+            </Tooltip>
           </Box>
+
         </Toolbar>
       </AppBar>
 

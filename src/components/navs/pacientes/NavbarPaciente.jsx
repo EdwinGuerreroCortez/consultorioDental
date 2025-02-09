@@ -16,6 +16,7 @@ import {
   TextField,
   Snackbar,
   Alert,
+  Tooltip,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
@@ -28,6 +29,7 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import LoginIcon from "@mui/icons-material/Login";
+import LogoutIcon from "@mui/icons-material/Logout";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -263,284 +265,295 @@ const NavbarPaciente = () => {
 
           {/* Menú en pantalla grande */}
           <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center" }}>
-            <Button
-              color="inherit"
-              startIcon={<HomeIcon />}
-              href="/paciente"
-              sx={{
-                fontWeight: "bold",
-                fontSize: "16px",
-                color: "#ffffff",
-                borderRadius: "8px",
-                padding: "8px 16px",
-                marginX: 1,
-                "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.2)" },
-              }}
-            >
-              Inicio
-            </Button>
-            <Box
-              sx={{
-                position: "relative",
-                marginX: 1,
-                "&:hover .submenu": {
-                  display: "block",
-                },
-              }}
-            >
-              <Button
-                color="inherit"
-                startIcon={<CalendarMonthIcon />}
-                sx={{
-                  fontWeight: "bold",
-                  fontSize: "16px",
-                  color: "#ffffff",
-                  borderRadius: "8px",
-                  padding: "8px 16px",
-                }}
-              >
-                Mis citas
-              </Button>
-              <Box
-                className="submenu"
-                sx={{
-                  display: "none",
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  background: "#e0f7fa",
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                  borderRadius: "8px",
-                  overflow: "hidden",
-                  zIndex: 20,
-                  width: "200px",
-                  transition: "all 0.3s ease-in-out",
-                }}
-              >
-                <List>
-                  <ListItem disablePadding>
-                    <ListItemButton href="/citas-agendadas" sx={{ padding: "10px 16px" }}>
-                      <ListItemText
-                        primary="Citas Agendadas"
-                        sx={{
-                          color: "#01579b",
-                          "&:hover": {
-                            color: "#ffffff",
-                            backgroundColor: "#80deea",
-                          },
-                        }}
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                  <ListItem disablePadding>
-                    <ListItemButton href="/agendar-cita" sx={{ padding: "10px 16px" }}>
-                      <ListItemText
-                        primary="Agendar Cita"
-                        sx={{
-                          color: "#01579b",
-                          "&:hover": {
-                            color: "#ffffff",
-                            backgroundColor: "#80deea",
-                          },
-                        }}
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                </List>
-              </Box>
-            </Box>
-            <Box
-              sx={{
-                position: "relative",
-                marginX: 1,
-                "&:hover .submenu": {
-                  display: "block",
-                },
-              }}
-            >
-              <Button
-                color="inherit"
-                startIcon={<ReceiptLongIcon />}
-                sx={{
-                  fontWeight: "bold",
-                  fontSize: "16px",
-                  color: "#ffffff",
-                  borderRadius: "8px",
-                  padding: "8px 16px",
-                }}
-              >
-                Tratamientos
-              </Button>
-              <Box
-                className="submenu"
-                sx={{
-                  display: "none",
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  background: "#e0f7fa",
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                  borderRadius: "8px",
-                  overflow: "hidden",
-                  zIndex: 20,
-                  width: "200px",
-                  transition: "all 0.3s ease-in-out",
-                }}
-              >
-                <List>
-                  <ListItem disablePadding>
-                    <ListItemButton href="/tratamientos-activos" sx={{ padding: "10px 16px" }}>
-                      <ListItemText
-                        primary="Tratamientos Activos"
-                        sx={{
-                          color: "#01579b",
-                          "&:hover": {
-                            color: "#ffffff",
-                            backgroundColor: "#80deea",
-                          },
-                        }}
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                  <ListItem disablePadding>
-                    <ListItemButton href="/historial-tratamientos" sx={{ padding: "10px 16px" }}>
-                      <ListItemText
-                        primary="Historial de tratamientos"
-                        sx={{
-                          color: "#01579b",
-                          "&:hover": {
-                            color: "#ffffff",
-                            backgroundColor: "#80deea",
-                          },
-                        }}
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                </List>
-              </Box>
-            </Box>
-            <Box
-              sx={{
-                position: "relative",
-                marginX: 1,
-                "&:hover .submenu": {
-                  display: "block",
-                },
-              }}
-            >
-              <Button
-                color="inherit"
-                startIcon={<AttachMoneyIcon />}
-                sx={{
-                  fontWeight: "bold",
-                  fontSize: "16px",
-                  color: "#ffffff",
-                  borderRadius: "8px",
-                  padding: "8px 16px",
-                }}
-              >
-                Pagos
-              </Button>
-              <Box
-                className="submenu"
-                sx={{
-                  display: "none",
-                  position: "absolute",
-                  top: "100%",
-                  left: 0,
-                  background: "#e0f7fa",
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                  borderRadius: "8px",
-                  overflow: "hidden",
-                  zIndex: 20,
-                  width: "200px",
-                  transition: "all 0.3s ease-in-out",
-                }}
-              >
-                <List>
-                  <ListItem disablePadding>
-                    <ListItemButton href="/historial-pagos" sx={{ padding: "10px 16px" }}>
-                      <ListItemText
-                        primary="Historial de Pagos"
-                        sx={{
-                          color: "#01579b",
-                          "&:hover": {
-                            color: "#ffffff",
-                            backgroundColor: "#80deea",
-                          },
-                        }}
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                  <ListItem disablePadding>
-                    <ListItemButton href="/facturacion" sx={{ padding: "10px 16px" }}>
-                      <ListItemText
-                        primary="Facturación"
-                        sx={{
-                          color: "#01579b",
-                          "&:hover": {
-                            color: "#ffffff",
-                            backgroundColor: "#80deea",
-                          },
-                        }}
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                </List>
-              </Box>
-            </Box>
+  {/* Botón Inicio */}
+  <Tooltip title="Inicio" placement="top" arrow>
+    <Button
+      color="inherit"
+      href="/paciente"
+      sx={{
+        fontWeight: "bold",
+        fontSize: "16px",
+        color: "#ffffff",
+        borderRadius: "8px",
+        padding: "8px 16px",
+        marginX: 1,
+        "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.2)" },
+      }}
+    >
+      <HomeIcon />
+    </Button>
+  </Tooltip>
 
-            {/* Botón con submenú */}
-            <Button
-              color="inherit"
-              startIcon={<ListAltIcon />}
-              href="/paciente/catalogo-servicios"
-              sx={{
-                fontWeight: "bold",
-                fontSize: "16px",
-                color: "#ffffff",
-                borderRadius: "8px",
-                padding: "8px 16px",
-                marginX: 1,
-                "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.2)" },
-              }}
-            >
-              Servicios
-            </Button>
-            <Button
-              color="inherit"
-              startIcon={<AccountCircleIcon />}
-              href="/perfil"
-              sx={{
-                fontWeight: "bold",
-                fontSize: "16px",
-                color: "#ffffff",
-                borderRadius: "8px",
-                padding: "8px 16px",
-                marginX: 1,
-                "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.2)" },
-              }}
-            >
-              Perfil
-            </Button>
+  {/* Botón Mis Citas con submenú */}
+  <Box
+    sx={{
+      position: "relative",
+      marginX: 1,
+      "&:hover .submenu": {
+        display: "block",
+      },
+    }}
+  >
+    <Tooltip  placement="top" arrow>
+      <Button
+        color="inherit"
+        sx={{
+          fontWeight: "bold",
+          fontSize: "16px",
+          color: "#ffffff",
+          borderRadius: "8px",
+          padding: "8px 16px",
+          display: "flex",
+          alignItems: "center",
+          "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.2)" },
+        }}
+      >
+        <CalendarMonthIcon />
+      </Button>
+    </Tooltip>
 
-          </Box>
-          <Button
-            color="inherit"
-            startIcon={<AccountCircleIcon />}
-            onClick={cerrarSesion}
-            sx={{
-              fontWeight: "bold",
-              fontSize: "16px",
-              color: "#ffffff",
-              borderRadius: "8px",
-              padding: "8px 16px",
-              marginX: 1,
-              "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.2)" },
-            }}
-          >
-            Cerrar Sesión
-          </Button>
+    <Box
+      className="submenu"
+      sx={{
+        display: "none",
+        position: "absolute",
+        top: "100%",
+        left: 0,
+        background: "#e0f7fa",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+        borderRadius: "8px",
+        overflow: "hidden",
+        zIndex: 20,
+        width: "200px",
+        transition: "all 0.3s ease-in-out",
+      }}
+    >
+      <List>
+        <ListItem disablePadding>
+          <ListItemButton href="/citas-agendadas">
+            <ListItemText
+              primary="Citas Agendadas"
+              sx={{
+                color: "#01579b",
+                "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton href="/agendar-cita">
+            <ListItemText
+              primary="Agendar Cita"
+              sx={{
+                color: "#01579b",
+                "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
+      </List>
+    </Box>
+  </Box>
+
+  {/* Botón Tratamientos con submenú */}
+  <Box
+    sx={{
+      position: "relative",
+      marginX: 1,
+      "&:hover .submenu": {
+        display: "block",
+      },
+    }}
+  >
+    <Tooltip  placement="top" arrow>
+      <Button
+        color="inherit"
+        sx={{
+          fontWeight: "bold",
+          fontSize: "16px",
+          color: "#ffffff",
+          borderRadius: "8px",
+          padding: "8px 16px",
+          display: "flex",
+          alignItems: "center",
+          "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.2)" },
+        }}
+      >
+        <ReceiptLongIcon />
+      </Button>
+    </Tooltip>
+
+    <Box
+      className="submenu"
+      sx={{
+        display: "none",
+        position: "absolute",
+        top: "100%",
+        left: 0,
+        background: "#e0f7fa",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+        borderRadius: "8px",
+        overflow: "hidden",
+        zIndex: 20,
+        width: "200px",
+        transition: "all 0.3s ease-in-out",
+      }}
+    >
+      <List>
+        <ListItem disablePadding>
+          <ListItemButton href="/tratamientos-activos">
+            <ListItemText
+              primary="Tratamientos Activos"
+              sx={{
+                color: "#01579b",
+                "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton href="/historial-tratamientos">
+            <ListItemText
+              primary="Historial de Tratamientos"
+              sx={{
+                color: "#01579b",
+                "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
+      </List>
+    </Box>
+  </Box>
+
+  {/* Botón Pagos con submenú */}
+  <Box
+    sx={{
+      position: "relative",
+      marginX: 1,
+      "&:hover .submenu": {
+        display: "block",
+      },
+    }}
+  >
+    <Tooltip  placement="top" arrow>
+      <Button
+        color="inherit"
+        sx={{
+          fontWeight: "bold",
+          fontSize: "16px",
+          color: "#ffffff",
+          borderRadius: "8px",
+          padding: "8px 16px",
+          display: "flex",
+          alignItems: "center",
+          "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.2)" },
+        }}
+      >
+        <AttachMoneyIcon />
+      </Button>
+    </Tooltip>
+
+    <Box
+      className="submenu"
+      sx={{
+        display: "none",
+        position: "absolute",
+        top: "100%",
+        left: 0,
+        background: "#e0f7fa",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+        borderRadius: "8px",
+        overflow: "hidden",
+        zIndex: 20,
+        width: "200px",
+        transition: "all 0.3s ease-in-out",
+      }}
+    >
+      <List>
+        <ListItem disablePadding>
+          <ListItemButton href="/historial-pagos">
+            <ListItemText
+              primary="Historial de Pagos"
+              sx={{
+                color: "#01579b",
+                "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding>
+          <ListItemButton href="/facturacion">
+            <ListItemText
+              primary="Facturación"
+              sx={{
+                color: "#01579b",
+                "&:hover": { color: "#ffffff", backgroundColor: "#80deea" },
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
+      </List>
+    </Box>
+  </Box>
+
+  {/* Botón Servicios */}
+  <Tooltip title="Servicios" placement="top" arrow>
+    <Button
+      color="inherit"
+      href="/paciente/catalogo-servicios"
+      sx={{
+        fontWeight: "bold",
+        fontSize: "16px",
+        color: "#ffffff",
+        borderRadius: "8px",
+        padding: "8px 16px",
+        marginX: 1,
+        "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.2)" },
+      }}
+    >
+      <ListAltIcon />
+    </Button>
+  </Tooltip>
+
+  {/* Botón Perfil */}
+  <Tooltip title="Perfil" placement="top" arrow>
+    <Button
+      color="inherit"
+      href="/perfil"
+      sx={{
+        fontWeight: "bold",
+        fontSize: "16px",
+        color: "#ffffff",
+        borderRadius: "8px",
+        padding: "8px 16px",
+        marginX: 1,
+        "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.2)" },
+      }}
+    >
+      <AccountCircleIcon />
+    </Button>
+  </Tooltip>
+
+  {/* Botón Cerrar Sesión */}
+  <Tooltip title="Cerrar Sesión" placement="top" arrow>
+    <Button
+      color="inherit"
+      onClick={cerrarSesion}
+      sx={{
+        fontWeight: "bold",
+        fontSize: "16px",
+        color: "#ffffff",
+        borderRadius: "8px",
+        padding: "8px 16px",
+        marginX: 1,
+        "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.2)" },
+      }}
+    >
+      <LogoutIcon />
+    </Button>
+  </Tooltip>
+</Box>
         </Toolbar>
       </AppBar>
 
@@ -739,7 +752,7 @@ const NavbarPaciente = () => {
               {/* Aquí va el botón de Cerrar Sesión en el menú lateral */}
               <ListItem disablePadding>
                 <ListItemButton onClick={cerrarSesion}>
-                  <AccountCircleIcon sx={{ marginRight: "10px", color: "#01579b" }} />
+                  <LogoutIcon sx={{ marginRight: "10px", color: "#01579b" }} />
                   <ListItemText
                     primary="Cerrar Sesión"
                     sx={{
