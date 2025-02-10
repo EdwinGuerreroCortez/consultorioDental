@@ -79,15 +79,10 @@ const AgendarCita = () => {
             try {
                 const tratamientoSeleccionado = servicios.find(s => s.nombre === servicioSeleccionado);
     
-                // Determinar el estado del tratamiento
-                let estadoTratamiento;
-                if (tratamientoSeleccionado.requiere_evaluacion || !tratamientoSeleccionado.citas_requeridas) {
-                    estadoTratamiento = 'pendiente';  // Requiere evaluación o no tiene citas definidas
-                } else {
-                    estadoTratamiento = 'en progreso';  // Tiene citas definidas
-                }
+                const estadoTratamiento = tratamientoSeleccionado.requiere_evaluacion
+                    ? 'pendiente'
+                    : 'en progreso';
     
-                // Convertir la hora seleccionada al formato de 24 horas
                 const [hora, periodo] = horaSeleccionada.split(' ');
                 let [horas, minutos] = hora.split(':').map(Number);
     
@@ -97,9 +92,9 @@ const AgendarCita = () => {
                 const fechaHora = new Date(fechaSeleccionada);
                 fechaHora.setHours(horas, minutos, 0, 0);
     
-                // Enviar solicitud para crear el tratamiento del paciente
+                // Enviar solicitud para crear tratamiento-paciente y citas
                 const respuestaTratamiento = await axiosInstance.post('/tratamientos-pacientes/crear', {
-                    usuarioId: usuarioId,
+                    usuarioId,
                     tratamientoId: tratamientoSeleccionado.id,
                     citasTotales: tratamientoSeleccionado.citas_requeridas || 0,
                     fechaInicio: fechaHora.toISOString(),
@@ -108,20 +103,31 @@ const AgendarCita = () => {
     
                 const tratamientoPacienteId = respuestaTratamiento.data.tratamientoPacienteId;
     
-                // Crear citas solo si el estado es "en progreso"
                 if (estadoTratamiento === 'en progreso') {
-                    await axiosInstance.post('/citas/crear', {
-                        tratamientoPacienteId: tratamientoPacienteId,
-                        fechaHora: fechaHora.toISOString(), // Solo para la primera cita
+                    const respuestaCitas = await axiosInstance.post('/citas/crear', {
+                        tratamientoPacienteId,
+                        fechaHora: fechaHora.toISOString(),
                         citasTotales: tratamientoSeleccionado.citas_requeridas,
                     });
-                }
     
-                setAlerta({
-                    mostrar: true,
-                    mensaje: 'Cita agendada correctamente.',
-                    tipo: 'success',
-                });
+                    // Obtener las citas creadas (ejemplo)
+                    const citas = respuestaCitas.data.citas || [];
+    
+                    // Crear pagos basados en las citas
+                    await axiosInstance.post('/pagos/crear', {
+                        usuarioId,
+                        tratamientoPacienteId,
+                        citas,
+                        precio: tratamientoSeleccionado.precio,
+                        metodo: null,
+                    });
+    
+                    setAlerta({
+                        mostrar: true,
+                        mensaje: 'Cita agendada correctamente.',
+                        tipo: 'success',
+                    });
+                }
             } catch (error) {
                 console.error('Error al agendar la cita:', error.response || error.message);
                 setAlerta({
@@ -139,7 +145,7 @@ const AgendarCita = () => {
         }
     };
     
-
+    
     return (
         <Box
             sx={{
