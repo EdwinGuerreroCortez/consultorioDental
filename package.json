@@ -21,6 +21,8 @@
     "axios": "^1.7.9",
     "chart.js": "^4.4.7",
     "date-fns": "^2.29.3",
+    "js-cookie": "^3.0.5",
+    "jwt-decode": "^4.0.0",
     "pwnedpasswords": "^1.0.6",
     "react": "^18.3.1",
     "react-chartjs-2": "^5.3.0",

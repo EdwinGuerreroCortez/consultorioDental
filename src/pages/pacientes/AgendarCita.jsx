@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import Cookies from 'js-cookie';
+import {jwtDecode} from 'jwt-decode';  // Importación correcta
 import {
     Box,
     Typography,
@@ -8,15 +11,12 @@ import {
     InputLabel,
     TextField,
     Button,
-    Tooltip,
-    IconButton,
-    InputAdornment,
     Snackbar,
     Alert,
-    AlertTitle,
 } from "@mui/material";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
+import InputAdornment from '@mui/material/InputAdornment';
+
 import MedicalServicesOutlinedIcon from "@mui/icons-material/MedicalServicesOutlined";
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -25,34 +25,120 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { es } from 'date-fns/locale';
 
 const AgendarCita = () => {
-    const [servicios, setServicios] = useState([
-        { id: 1, nombre: 'Limpieza dental', duracion: 30, precio: 500 },
-        { id: 2, nombre: 'Extracción de muela', duracion: 60, precio: 1200 },
-        { id: 3, nombre: 'Blanqueamiento dental', duracion: 90, precio: 1500 },
-    ]);
+    const [servicios, setServicios] = useState([]);
     const [servicioSeleccionado, setServicioSeleccionado] = useState('');
     const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
     const [horaSeleccionada, setHoraSeleccionada] = useState('');
     const [disponibilidad, setDisponibilidad] = useState([
-        '09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM'
+        '09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM',
     ]);
     const [alerta, setAlerta] = useState({ mostrar: false, mensaje: '', tipo: '' });
 
-    const handleAgendarCita = () => {
-        if (servicioSeleccionado && fechaSeleccionada && horaSeleccionada) {
+    // Obtener y decodificar el token de sesión desde la cookie
+    const token = Cookies.get('sessionToken');
+    const decodedToken = token ? jwtDecode(token) : null;
+    const usuarioId = decodedToken?.id || null;
+
+    useEffect(() => {
+        if (!usuarioId) {
             setAlerta({
                 mostrar: true,
-                mensaje: `Cita agendada para el servicio "${servicioSeleccionado}" el ${fechaSeleccionada.toLocaleDateString()} a las ${horaSeleccionada}.`,
-                tipo: 'success',
+                mensaje: 'No se ha encontrado la sesión del usuario. Inicia sesión nuevamente.',
+                tipo: 'error',
             });
+        }
+    }, [usuarioId]);
+
+    // Configurar Axios para solicitudes a la API
+    const axiosInstance = axios.create({
+        baseURL: 'http://localhost:4000/api',
+        withCredentials: true,
+    });
+
+    // Obtener tratamientos desde el backend
+    useEffect(() => {
+        const obtenerTratamientos = async () => {
+            try {
+                const response = await axiosInstance.get('/tratamientos');
+                const tratamientosActivos = response.data.filter(tratamiento => tratamiento.estado === 1);
+                setServicios(tratamientosActivos);
+            } catch (error) {
+                setAlerta({
+                    mostrar: true,
+                    mensaje: 'Error al cargar los tratamientos.',
+                    tipo: 'error',
+                });
+            }
+        };
+
+        if (usuarioId) obtenerTratamientos();
+    }, [usuarioId]);
+
+    const handleAgendarCita = async () => {
+        if (servicioSeleccionado && fechaSeleccionada && horaSeleccionada) {
+            try {
+                const tratamientoSeleccionado = servicios.find(s => s.nombre === servicioSeleccionado);
+    
+                // Determinar el estado del tratamiento
+                let estadoTratamiento;
+                if (tratamientoSeleccionado.requiere_evaluacion || !tratamientoSeleccionado.citas_requeridas) {
+                    estadoTratamiento = 'pendiente';  // Requiere evaluación o no tiene citas definidas
+                } else {
+                    estadoTratamiento = 'en progreso';  // Tiene citas definidas
+                }
+    
+                // Convertir la hora seleccionada al formato de 24 horas
+                const [hora, periodo] = horaSeleccionada.split(' ');
+                let [horas, minutos] = hora.split(':').map(Number);
+    
+                if (periodo === 'PM' && horas !== 12) horas += 12;
+                if (periodo === 'AM' && horas === 12) horas = 0;
+    
+                const fechaHora = new Date(fechaSeleccionada);
+                fechaHora.setHours(horas, minutos, 0, 0);
+    
+                // Enviar solicitud para crear el tratamiento del paciente
+                const respuestaTratamiento = await axiosInstance.post('/tratamientos-pacientes/crear', {
+                    usuarioId: usuarioId,
+                    tratamientoId: tratamientoSeleccionado.id,
+                    citasTotales: tratamientoSeleccionado.citas_requeridas || 0,
+                    fechaInicio: fechaHora.toISOString(),
+                    estado: estadoTratamiento,
+                });
+    
+                const tratamientoPacienteId = respuestaTratamiento.data.tratamientoPacienteId;
+    
+                // Crear citas solo si el estado es "en progreso"
+                if (estadoTratamiento === 'en progreso') {
+                    await axiosInstance.post('/citas/crear', {
+                        tratamientoPacienteId: tratamientoPacienteId,
+                        fechaHora: fechaHora.toISOString(), // Solo para la primera cita
+                        citasTotales: tratamientoSeleccionado.citas_requeridas,
+                    });
+                }
+    
+                setAlerta({
+                    mostrar: true,
+                    mensaje: 'Cita agendada correctamente.',
+                    tipo: 'success',
+                });
+            } catch (error) {
+                console.error('Error al agendar la cita:', error.response || error.message);
+                setAlerta({
+                    mostrar: true,
+                    mensaje: 'Error al agendar la cita. Inténtalo nuevamente.',
+                    tipo: 'error',
+                });
+            }
         } else {
             setAlerta({
                 mostrar: true,
-                mensaje: 'Por favor, completa todos los campos antes de agendar la cita.',
+                mensaje: 'Por favor, completa todos los campos.',
                 tipo: 'error',
             });
         }
     };
+    
 
     return (
         <Box
@@ -108,16 +194,9 @@ const AgendarCita = () => {
                 }}
             >
                 <FormControl fullWidth sx={{ marginBottom: "20px" }}>
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333" }}>
-                            Servicio
-                        </Typography>
-                        <Tooltip title="Consulta más detalles en la sección de servicios." arrow>
-                            <IconButton size="small">
-                                <InfoOutlinedIcon color="info" />
-                            </IconButton>
-                        </Tooltip>
-                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333" }}>
+                        Servicio
+                    </Typography>
                     <Select
                         value={servicioSeleccionado}
                         onChange={(e) => setServicioSeleccionado(e.target.value)}
@@ -126,7 +205,6 @@ const AgendarCita = () => {
                             marginTop: "10px",
                             borderRadius: "12px",
                             backgroundColor: "#e6f7ff",
-                            '& .MuiSelect-icon': { color: '#0077b6' },
                         }}
                         startAdornment={
                             <InputAdornment position="start">
@@ -139,7 +217,12 @@ const AgendarCita = () => {
                         </MenuItem>
                         {servicios.map((servicio) => (
                             <MenuItem key={servicio.id} value={servicio.nombre}>
-                                {servicio.nombre} - ${servicio.precio} MXN
+                                {servicio.nombre} -{' '}
+                                {servicio.requiere_evaluacion ? (
+                                    <em>Requiere evaluación</em>
+                                ) : (
+                                    `$${servicio.precio} MXN`
+                                )}
                             </MenuItem>
                         ))}
                     </Select>
@@ -201,19 +284,13 @@ const AgendarCita = () => {
                         padding: "14px",
                         fontWeight: "bold",
                         borderRadius: "12px",
-                        textTransform: "none",
                         backgroundColor: "#0077b6",
-                        boxShadow: "0 6px 16px rgba(0, 0, 0, 0.1)",
-                        '&:hover': {
-                            backgroundColor: '#005f8d',
-                        },
                     }}
                 >
                     Confirmar Cita
                 </Button>
             </Box>
 
-            {/* Snackbar para mostrar alertas */}
             <Snackbar
                 open={alerta.mostrar}
                 onClose={() => setAlerta({ mostrar: false, mensaje: '', tipo: '' })}
@@ -221,7 +298,6 @@ const AgendarCita = () => {
                 autoHideDuration={5000}
             >
                 <Alert severity={alerta.tipo} onClose={() => setAlerta({ mostrar: false, mensaje: '', tipo: '' })}>
-                    <AlertTitle>{alerta.tipo === 'success' ? 'Éxito' : 'Error'}</AlertTitle>
                     {alerta.mensaje}
                 </Alert>
             </Snackbar>
