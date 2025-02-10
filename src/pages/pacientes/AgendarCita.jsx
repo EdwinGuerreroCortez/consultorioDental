@@ -92,39 +92,28 @@ const AgendarCita = () => {
                 const fechaHora = new Date(fechaSeleccionada);
                 fechaHora.setHours(horas, minutos, 0, 0);
     
-                // Enviar solicitud para crear tratamiento-paciente y citas
-                const respuestaTratamiento = await axiosInstance.post('/tratamientos-pacientes/crear', {
+                // Enviar solicitud para crear el tratamiento
+                const respuesta = await axiosInstance.post('/tratamientos-pacientes/crear', {
                     usuarioId,
                     tratamientoId: tratamientoSeleccionado.id,
                     citasTotales: tratamientoSeleccionado.citas_requeridas || 0,
                     fechaInicio: fechaHora.toISOString(),
                     estado: estadoTratamiento,
+                    precio: tratamientoSeleccionado.precio,
+                    requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
                 });
     
-                const tratamientoPacienteId = respuestaTratamiento.data.tratamientoPacienteId;
-    
-                if (estadoTratamiento === 'en progreso') {
-                    const respuestaCitas = await axiosInstance.post('/citas/crear', {
-                        tratamientoPacienteId,
-                        fechaHora: fechaHora.toISOString(),
-                        citasTotales: tratamientoSeleccionado.citas_requeridas,
-                    });
-    
-                    // Obtener las citas creadas (ejemplo)
-                    const citas = respuestaCitas.data.citas || [];
-    
-                    // Crear pagos basados en las citas
-                    await axiosInstance.post('/pagos/crear', {
-                        usuarioId,
-                        tratamientoPacienteId,
-                        citas,
-                        precio: tratamientoSeleccionado.precio,
-                        metodo: null,
-                    });
-    
+                // Mensaje según el tipo de tratamiento
+                if (tratamientoSeleccionado.requiere_evaluacion) {
                     setAlerta({
                         mostrar: true,
-                        mensaje: 'Cita agendada correctamente.',
+                        mensaje: 'Tratamiento creado correctamente, pendiente de evaluación.',
+                        tipo: 'info',
+                    });
+                } else {
+                    setAlerta({
+                        mostrar: true,
+                        mensaje: 'Tratamiento, citas y pagos creados correctamente.',
                         tipo: 'success',
                     });
                 }
@@ -144,7 +133,6 @@ const AgendarCita = () => {
             });
         }
     };
-    
     
     return (
         <Box
