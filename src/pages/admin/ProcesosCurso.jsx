@@ -13,7 +13,10 @@ import {
     Alert,
     Button,
     Pagination,
+    Stack
 } from "@mui/material";
+import CircularProgress from '@mui/material/CircularProgress';
+
 import axios from "axios";
 
 const TratamientosEnCurso = () => {
@@ -49,8 +52,8 @@ const TratamientosEnCurso = () => {
 
     return (
         <Box sx={{ padding: "2rem", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-            
-            <Box 
+
+            <Box
                 sx={{
                     width: "100%",
                     maxWidth: "900px",
@@ -63,7 +66,7 @@ const TratamientosEnCurso = () => {
                     textAlign: "left",
                     marginBottom: "2rem"  // <-- Agregar este margen para mayor separación
 
-                    
+
                 }}
             >
                 <Typography
@@ -74,15 +77,25 @@ const TratamientosEnCurso = () => {
                         textShadow: "1px 1px 6px rgba(0, 0, 0, 0.2)",
                     }}
                 >
-                TRATAMIENTOS EN CURSO
+                    TRATAMIENTOS EN CURSO
                 </Typography>
-               
+
             </Box>
 
             <Box sx={{ flexGrow: 1 }}>
                 {loading ? (
                     <Typography align="center" sx={{ marginTop: "2rem", color: "#666" }}>
-                        Cargando tratamientos...
+                        <svg width={0} height={0}>
+                            <defs>
+                                <linearGradient id="my_gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" stopColor="#e01cd5" />
+                                    <stop offset="100%" stopColor="#1CB5E0" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <CircularProgress
+                            sx={{ 'svg circle': { stroke: 'url(#my_gradient)' } }}
+                        />
                     </Typography>
                 ) : (
                     <TableContainer component={Paper} sx={{ borderRadius: "12px", boxShadow: 3 }}>
