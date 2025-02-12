@@ -105,9 +105,9 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
       text: "Tratamientos",
       icon: <ReceiptLongIcon />,
       submenu: [
-        { text: "Gestionar Tratamientos Activos", href: "/admin/tratamientos/activos" },
-        { text: "Tratamientos Pendientes de Evaluación", href: "/admin/tratamientos/pendientes" },
-        { text: "Historial de Tratamientos", href: "/admin/tratamientos/historial" },
+        { text: "Procesos en Curso", href: "/admin/tratamientos/activos" },
+        { text: "Procesos Pendientes de Evaluación", href: "/admin/tratamientos/pendientes" },
+        { text: "Historial de Procesos Terminados", href: "/admin/tratamientos/historial" },
       ],
     },
     {
@@ -129,11 +129,11 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
       ],
     },
     {
-      text: "Catálogos",
+      text: "Mis Procesos",
       icon: <LibraryBooksIcon />,
       submenu: [
-        { text: "Gestionar Tratamientos", href: "/admin/catalogos-tratamientos" },
-        { text: "Mis Tratamientos", href: "/admin/mis-tratamientos" },
+        { text: "Subir Nuevo Proceso", href: "/admin/catalogos-tratamientos" },
+        { text: "Lista de Procesos", href: "/admin/mis-tratamientos" },
       ],
     },
     {

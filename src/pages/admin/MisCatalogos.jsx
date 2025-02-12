@@ -169,7 +169,7 @@ const MisCatalogos = () => {
                     textShadow: "2px 2px 4px rgba(0, 0, 0, 0.1)",
                 }}
             >
-                Catálogo de Tratamientos
+                Catálogo de Procesos
             </Typography>
 
             <Box sx={{ flexGrow: 1 }}>
