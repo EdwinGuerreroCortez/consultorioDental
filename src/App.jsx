@@ -30,6 +30,7 @@ import BienvenidaAdmin from "./pages/admin/BienvenidaAdmin";
 import CrearServicioOdontologia from "./pages/admin/CatalogoServicios";
 import MisCatalogos from "./pages/admin/MisCatalogos";
 
+import TratamientosEnCurso from "./pages/admin/ProcesosCurso";
 //Errores
 import Error404 from "./components/Errors/Error404";
 import Error400 from "./components/Errors/Error400";
@@ -225,6 +226,17 @@ const App = () => {
 
                 <LayoutAdmin>
                   <Error400 />
+                </LayoutAdmin>
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/admin/procesos-en-curso"
+            element={
+              <RutaProtegida tiposPermitidos={['admin']}>
+
+                <LayoutAdmin>
+                  <TratamientosEnCurso />
                 </LayoutAdmin>
               </RutaProtegida>
             }

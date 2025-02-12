@@ -105,7 +105,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
       text: "Tratamientos",
       icon: <ReceiptLongIcon />,
       submenu: [
-        { text: "Procesos en Curso", href: "/admin/tratamientos/activos" },
+        { text: "Procesos en Curso", href: "/admin/procesos-en-curso" },
         { text: "Procesos Pendientes de Evaluación", href: "/admin/tratamientos/pendientes" },
         { text: "Historial de Procesos Terminados", href: "/admin/tratamientos/historial" },
       ],
