@@ -32,6 +32,7 @@ import MisCatalogos from "./pages/admin/MisCatalogos";
 
 import TratamientosEnCurso from "./pages/admin/ProcesosCurso";
 import TratamientosPendientes from "./pages/admin/TratamientosPendientes";
+import CitasAgendadas from "./pages/pacientes/CitasAgendadas";
 //Errores
 import Error404 from "./components/Errors/Error404";
 import Error400 from "./components/Errors/Error400";
@@ -182,6 +183,16 @@ const App = () => {
               </RutaProtegida>
             }
           />
+           <Route
+            path="/citas-agendadas"
+            element={
+              <RutaProtegida tiposPermitidos={['paciente']}>
+                <LayoutPaciente>
+                  <CitasAgendadas />
+                </LayoutPaciente>
+              </RutaProtegida>
+            }
+          />
 
 
 
@@ -238,6 +249,17 @@ const App = () => {
 
                 <LayoutAdmin>
                   <TratamientosEnCurso />
+                </LayoutAdmin>
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/admin/tratamientos/pendientes"
+            element={
+              <RutaProtegida tiposPermitidos={['admin']}>
+
+                <LayoutAdmin>
+                  <TratamientosPendientes />
                 </LayoutAdmin>
               </RutaProtegida>
             }
