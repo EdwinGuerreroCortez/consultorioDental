@@ -103,7 +103,7 @@ const TratamientosEnCurso = () => {
                             <TableHead sx={{ backgroundColor: "#d8eaff" }}>
                                 <TableRow>
                                     <TableCell sx={{ fontWeight: "bold", textAlign: "center" }}>#</TableCell>
-                                    {["Nombre", "Apellido Paterno", "Apellido Materno", "Teléfono", "Email", "Edad", "Sexo", "Tratamiento", "Citas Totales", "Citas Asistidas", "Estado", "Fecha de Inicio"].map((header) => (
+                                    {["Nombre", "Apellido Paterno", "Apellido Materno",  "Edad", "Sexo","Teléfono", "Email", "Tratamiento", "Fecha de Inicio","Citas Totales", "Citas Asistidas", "Estado" ].map((header) => (
                                         <TableCell key={header} sx={{ fontWeight: "bold", textAlign: "center" }}>{header}</TableCell>
                                     ))}
                                 </TableRow>
@@ -112,7 +112,7 @@ const TratamientosEnCurso = () => {
                                 {tratamientosPaginados.map((tratamiento, index) => (
                                     <TableRow key={tratamiento.id} sx={{ "&:hover": { backgroundColor: "#eef3ff" } }}>
                                         <TableCell sx={{ textAlign: "center" }}>{(pagina - 1) * elementosPorPagina + index + 1}</TableCell>
-                                        {[tratamiento.nombre, tratamiento.apellido_paterno, tratamiento.apellido_materno, tratamiento.telefono, tratamiento.email || "N/A", tratamiento.edad || "N/A", tratamiento.sexo, tratamiento.tratamiento_nombre, tratamiento.citas_totales, tratamiento.citas_asistidas, tratamiento.estado, tratamiento.fecha_inicio || "N/A"].map((value, i) => (
+                                        {[tratamiento.nombre, tratamiento.apellido_paterno, tratamiento.apellido_materno, tratamiento.edad || "N/A", tratamiento.sexo,  tratamiento.telefono, tratamiento.email || "N/A",tratamiento.tratamiento_nombre, tratamiento.fecha_inicio || "N/A",tratamiento.citas_totales, tratamiento.citas_asistidas, tratamiento.estado].map((value, i) => (
                                             <TableCell key={i} sx={{ textAlign: "center" }}>{value}</TableCell>
                                         ))}
                                     </TableRow>
