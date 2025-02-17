@@ -33,6 +33,7 @@ import MisCatalogos from "./pages/admin/MisCatalogos";
 import TratamientosEnCurso from "./pages/admin/ProcesosCurso";
 import TratamientosPendientes from "./pages/admin/TratamientosPendientes";
 import CitasAgendadas from "./pages/pacientes/CitasAgendadas";
+import ProximasCitas from "./pages/admin/ProximasCitas";
 //Errores
 import Error404 from "./components/Errors/Error404";
 import Error400 from "./components/Errors/Error400";
@@ -232,12 +233,12 @@ const App = () => {
             }
           />
           <Route
-            path="/admin/citas/ver"
+            path="/admin/citas-ver"
             element={
               <RutaProtegida tiposPermitidos={['admin']}>
 
                 <LayoutAdmin>
-                  <Error400 />
+                  <ProximasCitas />
                 </LayoutAdmin>
               </RutaProtegida>
             }
@@ -254,7 +255,7 @@ const App = () => {
             }
           />
           <Route
-            path="/admin/tratamientos/pendientes"
+            path="/admin/tratamientos-pendientes"
             element={
               <RutaProtegida tiposPermitidos={['admin']}>
 

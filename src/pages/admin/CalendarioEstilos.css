@@ -1,0 +1,95 @@
+/* 🌟 Diseño llamativo y profesional para un consultorio dental */
+
+/* Fondo general del calendario */
+.rbc-calendar {
+    background: #F9FBFD; /* Blanco perla */
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+    border: 2px solid #00A8E8; /* Azul caribe */
+}
+
+/* Botones de navegación */
+.rbc-toolbar button {
+    background: #00A8E8 !important; /* Azul caribe */
+    color: white !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    padding: 8px 16px !important;
+    transition: all 0.3s ease-in-out;
+    border: 1px solid transparent;
+}
+
+.rbc-toolbar button:hover {
+    background: #0077B6 !important; /* Azul profundo */
+    border: 1px solid #00C49A !important; /* Verde esmeralda */
+}
+
+/* Texto del encabezado */
+.rbc-toolbar-label {
+    font-size: 20px !important;
+    font-weight: bold;
+    color: #0077B6 !important; /* Azul profundo */
+    text-transform: uppercase;
+}
+
+/* Celdas del calendario */
+.rbc-month-view {
+    border-radius: 10px;
+    border: 2px solid #0077B6;
+    background: white;
+}
+
+/* Encabezados de días */
+.rbc-header {
+    background: #00A8E8 !important;
+    color: white !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    padding: 14px !important;
+    text-align: center;
+    border-bottom: 2px solid white !important;
+}
+
+/* Días del calendario */
+.rbc-day-bg {
+    border: 1px solid #00A8E8 !important; /* Azul caribe */
+    background: #F9FBFD !important;
+    transition: all 0.3s;
+}
+
+/* Día seleccionado */
+.rbc-day-bg.rbc-today {
+    background: #B3E5FC !important; /* Azul celeste suave */
+    border: 2px solid #0077B6 !important;
+}
+
+/* Eventos */
+.rbc-event {
+    font-size: 14px !important;
+    font-weight: 600;
+    border-radius: 8px !important;
+    padding: 6px !important;
+    text-align: center;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+}
+
+/* Eventos "Pagados" en verde esmeralda */
+.rbc-event.paid {
+    background: #00C49A !important;
+    color: white !important;
+}
+
+/* Eventos "Pendientes" en naranja vibrante */
+.rbc-event.pending {
+    background: #FFA62B !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+/* Semana, día y agenda */
+.rbc-time-view {
+    border-radius: 10px;
+    border: 1px solid #0077B6;
+}

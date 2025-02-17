@@ -96,7 +96,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
       text: "Citas",
       icon: <CalendarMonthIcon />,
       submenu: [
-        { text: "Ver Citas Programadas", href: "/admin/citas/ver" },
+        { text: "Ver Citas Programadas", href: "/admin/citas-ver" },
         { text: "Registrar Nueva Cita", href: "/admin/citas/registrar" },
         { text: "Evaluar Citas Pendientes", href: "/admin/citas/evaluar" },
       ],
@@ -106,8 +106,8 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
       icon: <ReceiptLongIcon />,
       submenu: [
         { text: "Procesos en Curso", href: "/admin/procesos-en-curso" },
-        { text: "Procesos Pendientes de Evaluación", href: "/admin/tratamientos/pendientes" },
-        { text: "Historial de Procesos Terminados", href: "/admin/tratamientos/historial" },
+        { text: "Procesos Pendientes de Evaluación", href: "/admin/tratamientos-pendientes" },
+        { text: "Historial de Procesos Terminados", href: "/admin/tratamientos-historial" },
       ],
     },
     {
