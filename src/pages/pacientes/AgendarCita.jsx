@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Cookies from 'js-cookie';
-import {jwtDecode} from 'jwt-decode';  // Importación correcta
+import { verificarAutenticacion } from '../../utils/auth';
 import {
     Box,
     Typography,
@@ -25,52 +24,59 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { es } from 'date-fns/locale';
 
 const AgendarCita = () => {
-    const [tratamientoActivo, setTratamientoActivo] = useState(false); // ✅ Estado para bloquear el formulario si hay un tratamiento en curso
-
+    const [usuarioId, setUsuarioId] = useState(null);
+    const [tratamientoActivo, setTratamientoActivo] = useState(false);
     const [servicios, setServicios] = useState([]);
     const [servicioSeleccionado, setServicioSeleccionado] = useState('');
     const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
     const [horaSeleccionada, setHoraSeleccionada] = useState('');
     const [disponibilidad, setDisponibilidad] = useState([
-        '09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM',
+        '09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM'
     ]);
     const [alerta, setAlerta] = useState({ mostrar: false, mensaje: '', tipo: '' });
 
-    // Obtener y decodificar el token de sesión desde la cookie
-    const token = Cookies.get('sessionToken');
-    const decodedToken = token ? jwtDecode(token) : null;
-    const usuarioId = decodedToken?.id || null;
-
+    // ✅ Obtiene el usuario autenticado al montar el componente
     useEffect(() => {
-        if (!usuarioId) {
-            setAlerta({
-                mostrar: true,
-                mensaje: 'No se ha encontrado la sesión del usuario. Inicia sesión nuevamente.',
-                tipo: 'error',
-            });
-        }else {
-            verificarTratamientoActivo(); // ✅ Llamamos la función aquí
-        }
-    }, [usuarioId]);
+        const obtenerUsuario = async () => {
+            const usuario = await verificarAutenticacion();
+            if (usuario) {
+                setUsuarioId(usuario.id);
+            } else {
+                setAlerta({
+                    mostrar: true,
+                    mensaje: 'No se ha encontrado la sesión del usuario. Inicia sesión nuevamente.',
+                    tipo: 'error',
+                });
+            }
+        };
+        obtenerUsuario();
+    }, []);
 
-    // Configurar Axios para solicitudes a la API
+    // ✅ Configurar Axios con la URL de producción
     const axiosInstance = axios.create({
         baseURL: 'http://localhost:4000/api',
         withCredentials: true,
     });
+
+    // ✅ Ejecuta las peticiones solo cuando `usuarioId` tiene valor
+    useEffect(() => {
+        if (usuarioId) {
+            verificarTratamientoActivo();
+            obtenerTratamientos();
+        }
+    }, [usuarioId]);
+
     const verificarTratamientoActivo = async () => {
+        if (!usuarioId) return;
         try {
             const response = await axiosInstance.get(`/tratamientos-pacientes/verificar/${usuarioId}`);
-            
+            setTratamientoActivo(response.data.tieneTratamientoActivo);
             if (response.data.tieneTratamientoActivo) {
                 setAlerta({
                     mostrar: true,
                     mensaje: 'Ya tienes un tratamiento activo. Finalízalo antes de agendar otro.',
                     tipo: 'warning',
                 });
-                setTratamientoActivo(true); // 🚫 Bloquea el formulario
-            } else {
-                setTratamientoActivo(false); // ✅ Permite usar el formulario
             }
         } catch (error) {
             console.error('Error al verificar tratamiento:', error);
@@ -81,81 +87,67 @@ const AgendarCita = () => {
             });
         }
     };
-    
-    // Obtener tratamientos desde el backend
-    useEffect(() => {
-        const obtenerTratamientos = async () => {
-            try {
-                const response = await axiosInstance.get('/tratamientos');
-                const tratamientosActivos = response.data.filter(tratamiento => tratamiento.estado === 1);
-                setServicios(tratamientosActivos);
-            } catch (error) {
-                setAlerta({
-                    mostrar: true,
-                    mensaje: 'Error al cargar los tratamientos.',
-                    tipo: 'error',
-                });
-            }
-        };
 
-        if (usuarioId) obtenerTratamientos();
-    }, [usuarioId]);
+    const obtenerTratamientos = async () => {
+        if (!usuarioId) return;
+        try {
+            const response = await axiosInstance.get('/tratamientos');
+            setServicios(response.data.filter(tratamiento => tratamiento.estado === 1));
+        } catch (error) {
+            setAlerta({
+                mostrar: true,
+                mensaje: 'Error al cargar los tratamientos.',
+                tipo: 'error',
+            });
+        }
+    };
 
     const handleAgendarCita = async () => {
-        if (servicioSeleccionado && fechaSeleccionada && horaSeleccionada) {
-            try {
-                const tratamientoSeleccionado = servicios.find(s => s.nombre === servicioSeleccionado);
-    
-                const estadoTratamiento = tratamientoSeleccionado.requiere_evaluacion
-                    ? 'pendiente'
-                    : 'en progreso';
-    
-                const [hora, periodo] = horaSeleccionada.split(' ');
-                let [horas, minutos] = hora.split(':').map(Number);
-    
-                if (periodo === 'PM' && horas !== 12) horas += 12;
-                if (periodo === 'AM' && horas === 12) horas = 0;
-    
-                const fechaHora = new Date(fechaSeleccionada);
-                fechaHora.setHours(horas, minutos, 0, 0);
-    
-                // Enviar solicitud para crear el tratamiento
-                const respuesta = await axiosInstance.post('/tratamientos-pacientes/crear', {
-                    usuarioId,
-                    tratamientoId: tratamientoSeleccionado.id,
-                    citasTotales: tratamientoSeleccionado.citas_requeridas || 0,
-                    fechaInicio: fechaHora.toISOString(),
-                    estado: estadoTratamiento,
-                    precio: tratamientoSeleccionado.precio,
-                    requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
-                });
-    
-                // Mensaje según el tipo de tratamiento
-                if (tratamientoSeleccionado.requiere_evaluacion) {
-                    setAlerta({
-                        mostrar: true,
-                        mensaje: 'Tratamiento creado correctamente, pendiente de evaluación.',
-                        tipo: 'info',
-                    });
-                } else {
-                    setAlerta({
-                        mostrar: true,
-                        mensaje: 'Tratamiento, citas y pagos creados correctamente.',
-                        tipo: 'success',
-                    });
-                }
-            } catch (error) {
-                console.error('Error al agendar la cita:', error.response || error.message);
-                setAlerta({
-                    mostrar: true,
-                    mensaje: 'Error al agendar la cita. Inténtalo nuevamente.',
-                    tipo: 'error',
-                });
-            }
-        } else {
+        if (!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada) {
             setAlerta({
                 mostrar: true,
                 mensaje: 'Por favor, completa todos los campos.',
+                tipo: 'error',
+            });
+            return;
+        }
+
+        try {
+            const tratamientoSeleccionado = servicios.find(s => s.nombre === servicioSeleccionado);
+            const estadoTratamiento = tratamientoSeleccionado.requiere_evaluacion ? 'pendiente' : 'en progreso';
+
+            const [hora, periodo] = horaSeleccionada.split(' ');
+            let [horas, minutos] = hora.split(':').map(Number);
+            if (periodo === 'PM' && horas !== 12) horas += 12;
+            if (periodo === 'AM' && horas === 12) horas = 0;
+
+            const fechaHora = new Date(fechaSeleccionada);
+            fechaHora.setHours(horas, minutos, 0, 0);
+
+            // Enviar solicitud para crear el tratamiento
+            await axiosInstance.post('/tratamientos-pacientes/crear', {
+                usuarioId,
+                tratamientoId: tratamientoSeleccionado.id,
+                citasTotales: tratamientoSeleccionado.citas_requeridas || 0,
+                fechaInicio: fechaHora.toISOString(),
+                estado: estadoTratamiento,
+                precio: tratamientoSeleccionado.precio,
+                requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
+            });
+
+            setAlerta({
+                mostrar: true,
+                mensaje: tratamientoSeleccionado.requiere_evaluacion
+                    ? 'Tratamiento creado correctamente, pendiente de evaluación.'
+                    : 'Tratamiento, citas y pagos creados correctamente.',
+                tipo: 'success',
+            });
+
+        } catch (error) {
+            console.error('Error al agendar la cita:', error);
+            setAlerta({
+                mostrar: true,
+                mensaje: 'Error al agendar la cita. Inténtalo nuevamente.',
                 tipo: 'error',
             });
         }

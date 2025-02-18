@@ -31,30 +31,29 @@ export default defineConfig({
         ]
       },
       workbox: {
+        maximumFileSizeToCacheInBytes: 4000000, // 🔹 Aumenta el límite a 4MB
         runtimeCaching: [
-          // Cachear TODAS las rutas de la aplicación automáticamente
           {
             urlPattern: ({ url }) => url.pathname.startsWith('/'),
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'app-cache',
               expiration: {
-                maxEntries: 100, // Mayor número para más rutas
-                maxAgeSeconds: 60 * 60 * 24 * 7 // Cache por 7 días
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 7
               }
             }
           },
-          // Cachear TODAS las llamadas a la API
           {
-            urlPattern: /^http:\/\/localhost:4000\/api\/.*/, // Cubre cualquier ruta en /api/
+            urlPattern: /^http:\/\/localhost:4000\/api\/.*/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
               expiration: {
-                maxEntries: 100, // Almacena hasta 100 peticiones
-                maxAgeSeconds: 60 * 60 * 24 * 3 // Cache por 3 días
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 3
               },
-              networkTimeoutSeconds: 5 // Si la API no responde en 5s, usa cache
+              networkTimeoutSeconds: 5
             }
           }
         ]
