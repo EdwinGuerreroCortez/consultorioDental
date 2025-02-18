@@ -164,14 +164,14 @@ const AgendarCita = () => {
     return (
         <Box
             sx={{
-                padding: "40px",
+                padding: { xs: "20px", md: "40px" }, // 🔹 Menos padding en móviles
                 backgroundColor: "#f0f9ff",
-                minHeight: "100vh", // 🔹 Asegura que cubra toda la pantalla
+                minHeight: "100vh",
                 boxSizing: "border-box",
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "flex-start", // 🔹 Inicia desde arriba
+                alignItems: "column",
+                justifyContent: "flex-start",
             }}
         >
             {/* 🔹 Título del componente */}
@@ -182,24 +182,32 @@ const AgendarCita = () => {
                     background: "linear-gradient(135deg, #0077b6, #48cae4)",
                     clipPath: "polygon(0 0, 100% 0, 80% 100%, 0% 100%)",
                     color: "#ffffff",
-                    padding: "20px 40px",
+                    padding: { xs: "15px 20px", md: "20px 40px" }, // 🔹 Ajuste en padding
                     borderRadius: "12px",
                     boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
                     textAlign: "left",
-                    marginTop: "10px", // 🔹 Se acerca más arriba
+                    marginTop: { xs: "5px", md: "10px" },
                 }}
             >
                 <Typography
                     variant="h4"
                     sx={{
                         fontWeight: "bold",
+                        fontSize: { xs: "22px", md: "28px" }, // 🔹 Tamaño menor en móviles
                         fontFamily: "'Poppins', sans-serif",
                         textShadow: "1px 1px 6px rgba(0, 0, 0, 0.2)",
                     }}
                 >
                     Agendar Cita Dental
                 </Typography>
-                <Typography variant="subtitle1" sx={{ fontStyle: "italic", marginTop: "4px" }}>
+                <Typography
+                    variant="subtitle1"
+                    sx={{
+                        fontSize: { xs: "14px", md: "16px" }, // 🔹 Reducir texto en móviles
+                        fontStyle: "italic",
+                        marginTop: "4px",
+                    }}
+                >
                     ¡Cuidamos tu sonrisa con tratamientos personalizados!
                 </Typography>
             </Box>
@@ -212,16 +220,30 @@ const AgendarCita = () => {
                         maxWidth: "600px",
                         textAlign: "center",
                         backgroundColor: "#fff",
-                        padding: "20px",
+                        padding: { xs: "15px", md: "20px" }, // 🔹 Ajusta padding en móviles
                         borderRadius: "12px",
                         boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
-                        marginTop: "15px", // 🔹 Lo acerca más al título
+                        marginTop: "15px",
                     }}
                 >
-                    <Typography variant="h5" sx={{ fontWeight: "bold", color: "#d32f2f" }}>
+                    <Typography
+                        variant="h5"
+                        sx={{
+                            fontWeight: "bold",
+                            fontSize: { xs: "18px", md: "22px" }, // 🔹 Ajuste de tamaño de texto
+                            color: "#d32f2f",
+                        }}
+                    >
                         Ya tienes un tratamiento en curso.
                     </Typography>
-                    <Typography variant="body1" sx={{ marginTop: "10px", color: "#333" }}>
+                    <Typography
+                        variant="body1"
+                        sx={{
+                            fontSize: { xs: "14px", md: "16px" },
+                            marginTop: "10px",
+                            color: "#333",
+                        }}
+                    >
                         Debes finalizar tu tratamiento actual antes de agendar otro.
                     </Typography>
                 </Box>
@@ -233,11 +255,11 @@ const AgendarCita = () => {
                     sx={{
                         width: "100%",
                         maxWidth: "900px",
-                        padding: "40px",
+                        padding: { xs: "20px", md: "40px" }, // 🔹 Ajuste de padding
                         backgroundColor: "#ffffff",
                         borderRadius: "16px",
                         boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
-                        marginTop: "15px", // 🔹 Lo acerca más al mensaje de advertencia
+                        marginTop: "15px",
                     }}
                 >
                     <FormControl fullWidth sx={{ marginBottom: "20px" }}>
@@ -351,6 +373,7 @@ const AgendarCita = () => {
             </Snackbar>
         </Box>
     );
+    
     
 };
 
