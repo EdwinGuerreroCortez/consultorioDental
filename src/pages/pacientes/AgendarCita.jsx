@@ -25,6 +25,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { es } from 'date-fns/locale';
 
 const AgendarCita = () => {
+    const [tratamientoActivo, setTratamientoActivo] = useState(false); // ✅ Estado para bloquear el formulario si hay un tratamiento en curso
+
     const [servicios, setServicios] = useState([]);
     const [servicioSeleccionado, setServicioSeleccionado] = useState('');
     const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
@@ -46,6 +48,8 @@ const AgendarCita = () => {
                 mensaje: 'No se ha encontrado la sesión del usuario. Inicia sesión nuevamente.',
                 tipo: 'error',
             });
+        }else {
+            verificarTratamientoActivo(); // ✅ Llamamos la función aquí
         }
     }, [usuarioId]);
 
@@ -54,7 +58,30 @@ const AgendarCita = () => {
         baseURL: 'http://localhost:4000/api',
         withCredentials: true,
     });
-
+    const verificarTratamientoActivo = async () => {
+        try {
+            const response = await axiosInstance.get(`/tratamientos-pacientes/verificar/${usuarioId}`);
+            
+            if (response.data.tieneTratamientoActivo) {
+                setAlerta({
+                    mostrar: true,
+                    mensaje: 'Ya tienes un tratamiento activo. Finalízalo antes de agendar otro.',
+                    tipo: 'warning',
+                });
+                setTratamientoActivo(true); // 🚫 Bloquea el formulario
+            } else {
+                setTratamientoActivo(false); // ✅ Permite usar el formulario
+            }
+        } catch (error) {
+            console.error('Error al verificar tratamiento:', error);
+            setAlerta({
+                mostrar: true,
+                mensaje: 'Error al verificar el tratamiento activo.',
+                tipo: 'error',
+            });
+        }
+    };
+    
     // Obtener tratamientos desde el backend
     useEffect(() => {
         const obtenerTratamientos = async () => {
@@ -139,15 +166,15 @@ const AgendarCita = () => {
             sx={{
                 padding: "40px",
                 backgroundColor: "#f0f9ff",
-                minHeight: "100vh",
+                minHeight: "100vh", // 🔹 Asegura que cubra toda la pantalla
                 boxSizing: "border-box",
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "flex-start",
-                gap: "20px",
+                alignItems: "center",
+                justifyContent: "flex-start", // 🔹 Inicia desde arriba
             }}
         >
-            {/* Título del componente */}
+            {/* 🔹 Título del componente */}
             <Box
                 sx={{
                     width: "100%",
@@ -159,6 +186,7 @@ const AgendarCita = () => {
                     borderRadius: "12px",
                     boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
                     textAlign: "left",
+                    marginTop: "10px", // 🔹 Se acerca más arriba
                 }}
             >
                 <Typography
@@ -175,116 +203,142 @@ const AgendarCita = () => {
                     ¡Cuidamos tu sonrisa con tratamientos personalizados!
                 </Typography>
             </Box>
-
-            {/* Formulario */}
-            <Box
-                sx={{
-                    width: "100%",
-                    maxWidth: "900px",
-                    padding: "40px",
-                    backgroundColor: "#ffffff",
-                    borderRadius: "16px",
-                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
-                }}
-            >
-                <FormControl fullWidth sx={{ marginBottom: "20px" }}>
-                    <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333" }}>
-                        Servicio
-                    </Typography>
-                    <Select
-                        value={servicioSeleccionado}
-                        onChange={(e) => setServicioSeleccionado(e.target.value)}
-                        displayEmpty
-                        sx={{
-                            marginTop: "10px",
-                            borderRadius: "12px",
-                            backgroundColor: "#e6f7ff",
-                        }}
-                        startAdornment={
-                            <InputAdornment position="start">
-                                <MedicalServicesOutlinedIcon color="primary" />
-                            </InputAdornment>
-                        }
-                    >
-                        <MenuItem disabled value="">
-                            Selecciona un servicio
-                        </MenuItem>
-                        {servicios.map((servicio) => (
-                            <MenuItem key={servicio.id} value={servicio.nombre}>
-                                {servicio.nombre} -{' '}
-                                {servicio.requiere_evaluacion ? (
-                                    <em>Requiere evaluación</em>
-                                ) : (
-                                    `$${servicio.precio} MXN`
-                                )}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-
-                <Box sx={{ marginBottom: "20px" }}>
-                    <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333", marginBottom: "10px" }}>
-                        Fecha de la cita
-                    </Typography>
-                    <LocalizationProvider dateAdapter={AdapterDateFns} locale={es}>
-                        <DatePicker
-                            value={fechaSeleccionada}
-                            onChange={(newValue) => setFechaSeleccionada(newValue)}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    fullWidth
-                                    InputProps={{
-                                        startAdornment: (
-                                            <InputAdornment position="start">
-                                                <CalendarMonthOutlinedIcon color="primary" />
-                                            </InputAdornment>
-                                        ),
-                                    }}
-                                />
-                            )}
-                            disablePast
-                            inputFormat="dd/MM/yyyy"
-                        />
-                    </LocalizationProvider>
-                </Box>
-
-                <FormControl fullWidth sx={{ marginBottom: "20px" }}>
-                    <InputLabel>Hora</InputLabel>
-                    <Select
-                        value={horaSeleccionada}
-                        onChange={(e) => setHoraSeleccionada(e.target.value)}
-                        label="Hora"
-                        startAdornment={
-                            <InputAdornment position="start">
-                                <AccessTimeIcon color="primary" />
-                            </InputAdornment>
-                        }
-                    >
-                        {disponibilidad.map((hora, index) => (
-                            <MenuItem key={index} value={hora}>
-                                {hora}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-
-                <Button
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    onClick={handleAgendarCita}
+    
+            {/* 🔴 Si el usuario tiene un tratamiento en curso, mostrar el mensaje debajo del título */}
+            {tratamientoActivo && (
+                <Box
                     sx={{
-                        padding: "14px",
-                        fontWeight: "bold",
+                        width: "100%",
+                        maxWidth: "600px",
+                        textAlign: "center",
+                        backgroundColor: "#fff",
+                        padding: "20px",
                         borderRadius: "12px",
-                        backgroundColor: "#0077b6",
+                        boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
+                        marginTop: "15px", // 🔹 Lo acerca más al título
                     }}
                 >
-                    Confirmar Cita
-                </Button>
-            </Box>
-
+                    <Typography variant="h5" sx={{ fontWeight: "bold", color: "#d32f2f" }}>
+                        Ya tienes un tratamiento en curso.
+                    </Typography>
+                    <Typography variant="body1" sx={{ marginTop: "10px", color: "#333" }}>
+                        Debes finalizar tu tratamiento actual antes de agendar otro.
+                    </Typography>
+                </Box>
+            )}
+    
+            {/* ✅ Si no tiene tratamiento activo, mostrar el formulario pegado al mensaje */}
+            {!tratamientoActivo && (
+                <Box
+                    sx={{
+                        width: "100%",
+                        maxWidth: "900px",
+                        padding: "40px",
+                        backgroundColor: "#ffffff",
+                        borderRadius: "16px",
+                        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.1)",
+                        marginTop: "15px", // 🔹 Lo acerca más al mensaje de advertencia
+                    }}
+                >
+                    <FormControl fullWidth sx={{ marginBottom: "20px" }}>
+                        <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333" }}>
+                            Servicio
+                        </Typography>
+                        <Select
+                            value={servicioSeleccionado}
+                            onChange={(e) => setServicioSeleccionado(e.target.value)}
+                            displayEmpty
+                            sx={{
+                                marginTop: "10px",
+                                borderRadius: "12px",
+                                backgroundColor: "#e6f7ff",
+                            }}
+                            startAdornment={
+                                <InputAdornment position="start">
+                                    <MedicalServicesOutlinedIcon color="primary" />
+                                </InputAdornment>
+                            }
+                        >
+                            <MenuItem disabled value="">
+                                Selecciona un servicio
+                            </MenuItem>
+                            {servicios.map((servicio) => (
+                                <MenuItem key={servicio.id} value={servicio.nombre}>
+                                    {servicio.nombre} -{' '}
+                                    {servicio.requiere_evaluacion ? (
+                                        <em>Requiere evaluación</em>
+                                    ) : (
+                                        `$${servicio.precio} MXN`
+                                    )}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+    
+                    <Box sx={{ marginBottom: "20px" }}>
+                        <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333", marginBottom: "10px" }}>
+                            Fecha de la cita
+                        </Typography>
+                        <LocalizationProvider dateAdapter={AdapterDateFns} locale={es}>
+                            <DatePicker
+                                value={fechaSeleccionada}
+                                onChange={(newValue) => setFechaSeleccionada(newValue)}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        fullWidth
+                                        InputProps={{
+                                            startAdornment: (
+                                                <InputAdornment position="start">
+                                                    <CalendarMonthOutlinedIcon color="primary" />
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                )}
+                                disablePast
+                                inputFormat="dd/MM/yyyy"
+                            />
+                        </LocalizationProvider>
+                    </Box>
+    
+                    <FormControl fullWidth sx={{ marginBottom: "20px" }}>
+                        <InputLabel>Hora</InputLabel>
+                        <Select
+                            value={horaSeleccionada}
+                            onChange={(e) => setHoraSeleccionada(e.target.value)}
+                            label="Hora"
+                            startAdornment={
+                                <InputAdornment position="start">
+                                    <AccessTimeIcon color="primary" />
+                                </InputAdornment>
+                            }
+                        >
+                            {disponibilidad.map((hora, index) => (
+                                <MenuItem key={index} value={hora}>
+                                    {hora}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+    
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        fullWidth
+                        onClick={handleAgendarCita}
+                        sx={{
+                            padding: "14px",
+                            fontWeight: "bold",
+                            borderRadius: "12px",
+                            backgroundColor: "#0077b6",
+                        }}
+                    >
+                        Confirmar Cita
+                    </Button>
+                </Box>
+            )}
+    
             <Snackbar
                 open={alerta.mostrar}
                 onClose={() => setAlerta({ mostrar: false, mensaje: '', tipo: '' })}
@@ -297,6 +351,7 @@ const AgendarCita = () => {
             </Snackbar>
         </Box>
     );
+    
 };
 
 export default AgendarCita;
