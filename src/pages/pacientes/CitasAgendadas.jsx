@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Cookies from "js-cookie";
-import { jwtDecode } from "jwt-decode";
+import { verificarAutenticacion } from "../../utils/auth"; // ✅ Importa la autenticación desde el backend
 import {
     Box,
     Table,
@@ -37,30 +36,23 @@ const MisCitas = () => {
     const elementosPorPagina = 10;
     const [usuarioId, setUsuarioId] = useState(null);
 
+    // ✅ Obtiene el usuario autenticado desde el backend
     useEffect(() => {
-        const obtenerUsuarioDesdeCookie = () => {
-            try {
-                const token = Cookies.get("sessionToken");
-                if (!token) {
-                    throw new Error("No se encontró el token de sesión.");
-                }
-                const decodedToken = jwtDecode(token);
-                if (!decodedToken?.id) {
-                    throw new Error("El token no contiene un ID de usuario válido.");
-                }
-                setUsuarioId(decodedToken.id);
-            } catch (error) {
-                console.error("Error al obtener usuario desde la cookie:", error);
+        const obtenerUsuario = async () => {
+            const usuario = await verificarAutenticacion(); // 🔹 Ahora el backend verifica la sesión
+            if (usuario) {
+                setUsuarioId(usuario.id);
+            } else {
                 setAlerta({ open: true, message: "No se pudo obtener la sesión. Inicia sesión nuevamente.", severity: "error" });
             }
         };
-
-        obtenerUsuarioDesdeCookie();
+        obtenerUsuario();
     }, []);
 
+    // ✅ Obtener citas solo cuando `usuarioId` esté definido
     useEffect(() => {
+        if (!usuarioId) return;
         const obtenerCitas = async () => {
-            if (!usuarioId) return;
             try {
                 const response = await axios.get(`http://localhost:4000/api/citas/usuario/${usuarioId}`, { withCredentials: true });
                 setCitas(response.data);
@@ -71,7 +63,6 @@ const MisCitas = () => {
                 setLoading(false);
             }
         };
-
         obtenerCitas();
     }, [usuarioId]);
 
@@ -131,8 +122,6 @@ const MisCitas = () => {
                                                 ? dayjs(cita.fecha_hora).tz("America/Mexico_City").format(" D [de] MMMM [de] YYYY [a las] hh:mm A")
                                                 : "Fecha no registrada"}
                                         </TableCell>
-
-
                                         <TableCell sx={{ textAlign: "center" }}>
                                             <Chip label={cita.estado_cita} color={cita.estado_cita === "Confirmada" ? "success" : "warning"} />
                                         </TableCell>
