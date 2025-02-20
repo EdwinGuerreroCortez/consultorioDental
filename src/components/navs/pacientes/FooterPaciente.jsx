@@ -8,7 +8,6 @@ const FooterPaciente = () => {
         backgroundColor: "#f5f5f5",
         textAlign: "center",
         padding: "15px 0",
-        position: "fixed",
         bottom: 0,
         width: "100%",
         boxShadow: "0 -2px 5px rgba(0, 0, 0, 0.1)",
