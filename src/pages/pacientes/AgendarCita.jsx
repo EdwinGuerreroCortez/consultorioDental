@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import axios from 'axios';
 import { verificarAutenticacion } from '../../utils/auth';
 import {
@@ -70,40 +70,44 @@ const AgendarCita = () => {
     const obtenerCitasOcupadas = async () => {
         try {
             const response = await axiosInstance.get('/citas/activas');
-            const citas = response.data;
-    
-            // Convertir cada fecha obtenida a zona horaria de México
+            const citas = response.data || [];
+
             const citasConZonaHoraria = citas.map(cita => {
                 const fechaUTC = new Date(cita.fecha_hora);
-                
-                // Convertir la fecha a horario de México (UTC -6)
                 const fechaMX = new Intl.DateTimeFormat('es-MX', {
                     timeZone: 'America/Mexico_City',
                     year: 'numeric', month: '2-digit', day: '2-digit',
                     hour: '2-digit', minute: '2-digit', second: '2-digit',
                     hour12: true
                 }).format(fechaUTC);
-    
-                return {
-                    ...cita,
-                    fecha_hora_mx: fechaMX
-                };
+
+                return { ...cita, fecha_hora_mx: fechaMX };
             });
-    
+
             console.log("📅 Fechas obtenidas en UTC:", citas);
             console.log("🇲🇽 Fechas convertidas a Hora Centro de México:", citasConZonaHoraria);
-    
-            setCitasOcupadas(citas);
+
+            setCitasOcupadas(citasConZonaHoraria);
         } catch (error) {
             console.error('❌ Error al obtener las citas ocupadas:', error);
+            setAlerta({
+                mostrar: true,
+                mensaje: 'Error al obtener las citas. Intenta nuevamente.',
+                tipo: 'error',
+            });
         }
     };
-    
-    
+
+
+    const ultimaFechaConsultada = useRef(null);
     useEffect(() => {
-        obtenerCitasOcupadas();
-    }, []);
-    
+        if (fechaSeleccionada && ultimaFechaConsultada.current !== fechaSeleccionada) {
+            obtenerCitasOcupadas();
+            ultimaFechaConsultada.current = fechaSeleccionada;
+        }
+    }, [fechaSeleccionada]);
+
+
     const verificarTratamientoActivo = async () => {
         if (!usuarioId) return;
         try {
@@ -126,30 +130,30 @@ const AgendarCita = () => {
         }
     };
     const obtenerHorasDisponibles = () => {
-        if (!fechaSeleccionada) return disponibilidad; // Si no hay fecha seleccionada, muestra todas las horas disponibles.
-    
-        // Convertir fecha seleccionada a formato YYYY-MM-DD
-        const fechaFormateada = new Date(fechaSeleccionada).toISOString().split('T')[0];
-    
-        // Obtener las horas ocupadas para esa fecha y formatearlas correctamente
+        if (!fechaSeleccionada) return disponibilidad;
+
+        const fechaFormateada = fechaSeleccionada ? new Date(fechaSeleccionada).toISOString().split('T')[0] : null;
+
+        if (!fechaFormateada) return disponibilidad; // Retorna disponibilidad completa si la fecha es inválida
+
         const horasOcupadas = citasOcupadas
-            .filter(cita => cita.fecha_hora.startsWith(fechaFormateada)) // Filtra solo las citas del día seleccionado
+            .filter(cita => {
+                const fechaCita = new Date(cita.fecha_hora).toISOString().split('T')[0];
+                return fechaCita === fechaFormateada;
+            })
             .map(cita => {
-                const horaMX = new Date(cita.fecha_hora).toLocaleTimeString('es-MX', {
+                return new Date(cita.fecha_hora).toLocaleTimeString('es-MX', {
                     hour: '2-digit',
                     minute: '2-digit',
                     hour12: true
-                });
-                return horaMX.toUpperCase().replace(/\./g, ""); // Convertir a formato "05:00 PM"
+                }).toUpperCase().replace(/\./g, "");
             });
-    
-        console.log("⏰ Horas ocupadas:", horasOcupadas);
-    
-        // Filtrar la disponibilidad excluyendo las horas ocupadas
+
         return disponibilidad.filter(hora => !horasOcupadas.includes(hora));
     };
-    
-    
+
+
+
     const obtenerTratamientos = async () => {
         if (!usuarioId) return;
         try {
@@ -214,6 +218,7 @@ const AgendarCita = () => {
             });
         }
     };
+    const horasDisponibles = useMemo(() => obtenerHorasDisponibles(), [fechaSeleccionada, citasOcupadas]);
 
     return (
         <Box
@@ -382,35 +387,44 @@ const AgendarCita = () => {
                                     />
                                 )}
                                 disablePast
+                                maxDate={new Date(new Date().setDate(new Date().getDate() + 30))} // 🔹 Restricción a 30 días
                                 inputFormat="dd/MM/yyyy"
                                 shouldDisableDate={(date) => {
                                     const day = date.getDay(); // Obtiene el día de la semana (0 = Domingo, 6 = Sábado)
                                     return ![1, 2, 3, 6].includes(day); // Solo permite Lunes (1), Martes (2), Miércoles (3) y Sábado (6)
                                 }}
                             />
+
                         </LocalizationProvider>
                     </Box>
 
 
                     <FormControl fullWidth sx={{ marginBottom: "20px" }}>
-    <InputLabel>Hora</InputLabel>
-    <Select
-        value={horaSeleccionada}
-        onChange={(e) => setHoraSeleccionada(e.target.value)}
-        label="Hora"
-        startAdornment={
-            <InputAdornment position="start">
-                <AccessTimeIcon color="primary" />
-            </InputAdornment>
-        }
-    >
-        {obtenerHorasDisponibles().map((hora, index) => (
-            <MenuItem key={index} value={hora}>
-                {hora}
-            </MenuItem>
-        ))}
-    </Select>
-</FormControl>
+                        <InputLabel>Hora</InputLabel>
+                        <Select
+                            value={horaSeleccionada}
+                            onChange={(e) => setHoraSeleccionada(e.target.value)}
+                            displayEmpty
+                            startAdornment={
+                                <InputAdornment position="start">
+                                    <AccessTimeIcon color="primary" />
+                                </InputAdornment>
+                            }
+                            disabled={horasDisponibles.length === 0}
+                        >
+                            {horasDisponibles.length > 0 ? (
+                                horasDisponibles.map((hora, index) => (
+                                    <MenuItem key={index} value={hora}>
+                                        {hora}
+                                    </MenuItem>
+                                ))
+                            ) : (
+                                <MenuItem disabled>No hay horarios disponibles</MenuItem>
+                            )}
+                        </Select>
+                    </FormControl>
+
+
 
                     <Button
                         variant="contained"
