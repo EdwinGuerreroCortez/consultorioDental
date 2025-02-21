@@ -31,8 +31,10 @@ const AgendarCita = () => {
     const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
     const [horaSeleccionada, setHoraSeleccionada] = useState('');
     const [disponibilidad, setDisponibilidad] = useState([
-        '09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM'
+        '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM',
+        '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM'
     ]);
+    const [citasOcupadas, setCitasOcupadas] = useState([]);
     const [alerta, setAlerta] = useState({ mostrar: false, mensaje: '', tipo: '' });
 
     // ✅ Obtiene el usuario autenticado al montar el componente
@@ -65,7 +67,43 @@ const AgendarCita = () => {
             obtenerTratamientos();
         }
     }, [usuarioId]);
-
+    const obtenerCitasOcupadas = async () => {
+        try {
+            const response = await axiosInstance.get('/citas/activas');
+            const citas = response.data;
+    
+            // Convertir cada fecha obtenida a zona horaria de México
+            const citasConZonaHoraria = citas.map(cita => {
+                const fechaUTC = new Date(cita.fecha_hora);
+                
+                // Convertir la fecha a horario de México (UTC -6)
+                const fechaMX = new Intl.DateTimeFormat('es-MX', {
+                    timeZone: 'America/Mexico_City',
+                    year: 'numeric', month: '2-digit', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit',
+                    hour12: true
+                }).format(fechaUTC);
+    
+                return {
+                    ...cita,
+                    fecha_hora_mx: fechaMX
+                };
+            });
+    
+            console.log("📅 Fechas obtenidas en UTC:", citas);
+            console.log("🇲🇽 Fechas convertidas a Hora Centro de México:", citasConZonaHoraria);
+    
+            setCitasOcupadas(citas);
+        } catch (error) {
+            console.error('❌ Error al obtener las citas ocupadas:', error);
+        }
+    };
+    
+    
+    useEffect(() => {
+        obtenerCitasOcupadas();
+    }, []);
+    
     const verificarTratamientoActivo = async () => {
         if (!usuarioId) return;
         try {
@@ -87,7 +125,31 @@ const AgendarCita = () => {
             });
         }
     };
-
+    const obtenerHorasDisponibles = () => {
+        if (!fechaSeleccionada) return disponibilidad; // Si no hay fecha seleccionada, muestra todas las horas disponibles.
+    
+        // Convertir fecha seleccionada a formato YYYY-MM-DD
+        const fechaFormateada = new Date(fechaSeleccionada).toISOString().split('T')[0];
+    
+        // Obtener las horas ocupadas para esa fecha y formatearlas correctamente
+        const horasOcupadas = citasOcupadas
+            .filter(cita => cita.fecha_hora.startsWith(fechaFormateada)) // Filtra solo las citas del día seleccionado
+            .map(cita => {
+                const horaMX = new Date(cita.fecha_hora).toLocaleTimeString('es-MX', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                return horaMX.toUpperCase().replace(/\./g, ""); // Convertir a formato "05:00 PM"
+            });
+    
+        console.log("⏰ Horas ocupadas:", horasOcupadas);
+    
+        // Filtrar la disponibilidad excluyendo las horas ocupadas
+        return disponibilidad.filter(hora => !horasOcupadas.includes(hora));
+    };
+    
+    
     const obtenerTratamientos = async () => {
         if (!usuarioId) return;
         try {
@@ -152,7 +214,7 @@ const AgendarCita = () => {
             });
         }
     };
-    
+
     return (
         <Box
             sx={{
@@ -203,7 +265,7 @@ const AgendarCita = () => {
                     ¡Cuidamos tu sonrisa con tratamientos personalizados!
                 </Typography>
             </Box>
-    
+
             {/* 🔴 Si el usuario tiene un tratamiento en curso, mostrar el mensaje debajo del título */}
             {tratamientoActivo && (
                 <Box
@@ -240,7 +302,7 @@ const AgendarCita = () => {
                     </Typography>
                 </Box>
             )}
-    
+
             {/* ✅ Si no tiene tratamiento activo, mostrar el formulario pegado al mensaje */}
             {!tratamientoActivo && (
                 <Box
@@ -288,11 +350,20 @@ const AgendarCita = () => {
                             ))}
                         </Select>
                     </FormControl>
-    
+
                     <Box sx={{ marginBottom: "20px" }}>
                         <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333", marginBottom: "10px" }}>
                             Fecha de la cita
                         </Typography>
+
+                        {/* 🔹 Mensaje de advertencia para el usuario */}
+                        <Typography
+                            variant="body2"
+                            sx={{ color: "#d32f2f", fontWeight: "bold", marginBottom: "8px" }}
+                        >
+                            Solo se pueden agendar citas en: Lunes, Martes, Miércoles y Sábado.
+                        </Typography>
+
                         <LocalizationProvider dateAdapter={AdapterDateFns} locale={es}>
                             <DatePicker
                                 value={fechaSeleccionada}
@@ -312,30 +383,35 @@ const AgendarCita = () => {
                                 )}
                                 disablePast
                                 inputFormat="dd/MM/yyyy"
+                                shouldDisableDate={(date) => {
+                                    const day = date.getDay(); // Obtiene el día de la semana (0 = Domingo, 6 = Sábado)
+                                    return ![1, 2, 3, 6].includes(day); // Solo permite Lunes (1), Martes (2), Miércoles (3) y Sábado (6)
+                                }}
                             />
                         </LocalizationProvider>
                     </Box>
-    
+
+
                     <FormControl fullWidth sx={{ marginBottom: "20px" }}>
-                        <InputLabel>Hora</InputLabel>
-                        <Select
-                            value={horaSeleccionada}
-                            onChange={(e) => setHoraSeleccionada(e.target.value)}
-                            label="Hora"
-                            startAdornment={
-                                <InputAdornment position="start">
-                                    <AccessTimeIcon color="primary" />
-                                </InputAdornment>
-                            }
-                        >
-                            {disponibilidad.map((hora, index) => (
-                                <MenuItem key={index} value={hora}>
-                                    {hora}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-    
+    <InputLabel>Hora</InputLabel>
+    <Select
+        value={horaSeleccionada}
+        onChange={(e) => setHoraSeleccionada(e.target.value)}
+        label="Hora"
+        startAdornment={
+            <InputAdornment position="start">
+                <AccessTimeIcon color="primary" />
+            </InputAdornment>
+        }
+    >
+        {obtenerHorasDisponibles().map((hora, index) => (
+            <MenuItem key={index} value={hora}>
+                {hora}
+            </MenuItem>
+        ))}
+    </Select>
+</FormControl>
+
                     <Button
                         variant="contained"
                         color="primary"
@@ -352,7 +428,7 @@ const AgendarCita = () => {
                     </Button>
                 </Box>
             )}
-    
+
             <Snackbar
                 open={alerta.mostrar}
                 onClose={() => setAlerta({ mostrar: false, mensaje: '', tipo: '' })}
@@ -365,8 +441,8 @@ const AgendarCita = () => {
             </Snackbar>
         </Box>
     );
-    
-    
+
+
 };
 
 export default AgendarCita;
