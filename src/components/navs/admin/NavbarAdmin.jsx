@@ -63,8 +63,17 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
   }, [drawerOpen]);
 
   const toggleSubmenu = (key) => {
-    setOpenSubmenus((prev) => ({ ...prev, [key]: !prev[key] }));
+    if (!drawerOpen) {
+      onToggleDrawer(); // Abre el menú si está colapsado antes de mostrar el submenú
+      setTimeout(() => {
+        setOpenSubmenus((prev) => ({ ...prev, [key]: true })); // Abre el submenú después de expandir el menú
+      }, 300); // Pequeño retraso para evitar que se vea cortado
+    } else {
+      setOpenSubmenus((prev) => ({ ...prev, [key]: !prev[key] }));
+    }
   };
+  
+  
   const cerrarSesion = async () => {
     try {
       const response = await fetch('http://localhost:4000/api/usuarios/logout', {
@@ -267,17 +276,12 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
                     {item.submenu && drawerOpen && (openSubmenus[index] ? <ExpandLessIcon /> : <ExpandMoreIcon />)}
                   </ListItemButton>
                 </ListItem>
-
-                {item.submenu && (
-                  <Collapse in={openSubmenus[index]} timeout="auto" unmountOnExit>
+                {item.submenu && drawerOpen && (
+  <Collapse in={openSubmenus[index]} timeout="auto" unmountOnExit>
                     <List component="div" disablePadding>
                       {item.submenu.map((subItem, subIndex) => (
                         <ListItem key={subIndex} disablePadding>
-                          <ListItemButton
-                            href={subItem.href}
-                            onClick={() => navigate(subItem.href)}
-                            sx={{ pl: 4 }}
-                          >
+                          <ListItemButton onClick={() => navigate(subItem.href)} sx={{ pl: 4 }}>
                             <ListItemText primary={subItem.text} />
                           </ListItemButton>
                         </ListItem>
@@ -285,6 +289,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
                     </List>
                   </Collapse>
                 )}
+
               </React.Fragment>
             ))}
           </List>
