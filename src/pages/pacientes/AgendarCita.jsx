@@ -177,30 +177,50 @@ const AgendarCita = () => {
             });
             return;
         }
-
+    
         try {
             const tratamientoSeleccionado = servicios.find(s => s.nombre === servicioSeleccionado);
             const estadoTratamiento = tratamientoSeleccionado.requiere_evaluacion ? 'pendiente' : 'en progreso';
-
-            const [hora, periodo] = horaSeleccionada.split(' ');
-            let [horas, minutos] = hora.split(':').map(Number);
-            if (periodo === 'PM' && horas !== 12) horas += 12;
-            if (periodo === 'AM' && horas === 12) horas = 0;
-
-            const fechaHora = new Date(fechaSeleccionada);
-            fechaHora.setHours(horas, minutos, 0, 0);
-
-            // Enviar solicitud para crear el tratamiento
-            await axiosInstance.post('/tratamientos-pacientes/crear', {
+    
+            // ✅ Convertir la fecha seleccionada a formato 'YYYY-MM-DD'
+            const fechaISO = new Date(fechaSeleccionada).toISOString().split('T')[0];
+    
+            // ✅ Convertir la hora seleccionada correctamente
+            const [hora, minutos] = horaSeleccionada.replace(/( AM| PM)/, '').split(':').map(Number);
+            const esPM = horaSeleccionada.includes('PM');
+    
+            let horaFinal = esPM && hora !== 12 ? hora + 12 : hora;
+            if (!esPM && hora === 12) horaFinal = 0; // Convertir 12 AM a 00:00
+    
+            // ✅ Crear la fecha final en zona horaria local (México)
+            const fechaHoraLocal = new Date(`${fechaISO}T${horaFinal.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:00`);
+    
+            // ✅ Convertir la fecha local a UTC antes de enviarla
+            const fechaHoraUTC = new Date(fechaHoraLocal.getTime() - fechaHoraLocal.getTimezoneOffset() * 60000);
+    
+            console.log("📅 Fecha y hora final en hora local (México):", fechaHoraLocal.toString());
+            console.log("🌎 Fecha y hora final en UTC:", fechaHoraUTC.toISOString());
+            console.log("📦 Datos que se enviarán al backend:", {
                 usuarioId,
                 tratamientoId: tratamientoSeleccionado.id,
                 citasTotales: tratamientoSeleccionado.citas_requeridas || 0,
-                fechaInicio: fechaHora.toISOString(),
+                fechaInicio: fechaHoraUTC.toISOString(), // ✅ Enviar fecha en formato UTC
                 estado: estadoTratamiento,
                 precio: tratamientoSeleccionado.precio,
                 requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
             });
-
+    
+            // ✅ Enviar solicitud para crear el tratamiento
+            await axiosInstance.post('/tratamientos-pacientes/crear', {
+                usuarioId,
+                tratamientoId: tratamientoSeleccionado.id,
+                citasTotales: tratamientoSeleccionado.citas_requeridas || 0,
+                fechaInicio: fechaHoraUTC.toISOString(), // ✅ Enviar en formato UTC corregido
+                estado: estadoTratamiento,
+                precio: tratamientoSeleccionado.precio,
+                requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
+            });
+    
             setAlerta({
                 mostrar: true,
                 mensaje: tratamientoSeleccionado.requiere_evaluacion
@@ -208,9 +228,9 @@ const AgendarCita = () => {
                     : 'Tratamiento, citas y pagos creados correctamente.',
                 tipo: 'success',
             });
-
+    
         } catch (error) {
-            console.error('Error al agendar la cita:', error);
+            console.error('❌ Error al agendar la cita:', error);
             setAlerta({
                 mostrar: true,
                 mensaje: 'Error al agendar la cita. Inténtalo nuevamente.',
@@ -218,6 +238,7 @@ const AgendarCita = () => {
             });
         }
     };
+    
     const horasDisponibles = useMemo(() => obtenerHorasDisponibles(), [fechaSeleccionada, citasOcupadas]);
 
     return (
@@ -400,29 +421,39 @@ const AgendarCita = () => {
 
 
                     <FormControl fullWidth sx={{ marginBottom: "20px" }}>
-                        <InputLabel>Hora</InputLabel>
-                        <Select
-                            value={horaSeleccionada}
-                            onChange={(e) => setHoraSeleccionada(e.target.value)}
-                            displayEmpty
-                            startAdornment={
-                                <InputAdornment position="start">
-                                    <AccessTimeIcon color="primary" />
-                                </InputAdornment>
-                            }
-                            disabled={horasDisponibles.length === 0}
-                        >
-                            {horasDisponibles.length > 0 ? (
-                                horasDisponibles.map((hora, index) => (
-                                    <MenuItem key={index} value={hora}>
-                                        {hora}
-                                    </MenuItem>
-                                ))
-                            ) : (
-                                <MenuItem disabled>No hay horarios disponibles</MenuItem>
-                            )}
-                        </Select>
-                    </FormControl>
+    <InputLabel>Hora</InputLabel>
+    <Select
+        value={horaSeleccionada}
+        onChange={(e) => {
+            setHoraSeleccionada(e.target.value);
+            console.log("🕒 Hora seleccionada:", e.target.value);
+            console.log("📦 Datos actuales antes de enviar:", {
+                usuarioId,
+                servicioSeleccionado,
+                fechaSeleccionada: fechaSeleccionada ? fechaSeleccionada.toISOString().split('T')[0] : "No seleccionada",
+                horaSeleccionada: e.target.value
+            });
+        }}
+        displayEmpty
+        startAdornment={
+            <InputAdornment position="start">
+                <AccessTimeIcon color="primary" />
+            </InputAdornment>
+        }
+        disabled={!fechaSeleccionada || horasDisponibles.length === 0} // 🔹 Bloquear hasta seleccionar fecha
+    >
+        {horasDisponibles.length > 0 ? (
+            horasDisponibles.map((hora, index) => (
+                <MenuItem key={index} value={hora}>
+                    {hora}
+                </MenuItem>
+            ))
+        ) : (
+            <MenuItem disabled>No hay horarios disponibles</MenuItem>
+        )}
+    </Select>
+</FormControl>
+
 
 
 
