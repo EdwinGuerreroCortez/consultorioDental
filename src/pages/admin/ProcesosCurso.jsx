@@ -28,14 +28,15 @@ const TratamientosEnCurso = () => {
 
     useEffect(() => {
         axios.get("http://localhost:4000/api/tratamientos-pacientes/en-progreso")
-            .then(response => {
-                const tratamientosEnProgreso = response.data.map(tratamiento => ({
-                    ...tratamiento,
-                    sexo: tratamiento.sexo === "femenino" ? "F" : tratamiento.sexo === "masculino" ? "M" : "N/A"
-                }));
-                setTratamientos(tratamientosEnProgreso);
-                setLoading(false);
-            })
+    .then(response => {
+        const tratamientosEnProgreso = response.data.map(tratamiento => ({
+            ...tratamiento,
+            sexo: tratamiento.sexo === "femenino" ? "F" : tratamiento.sexo === "masculino" ? "M" : "N/A"
+        }));
+        setTratamientos(tratamientosEnProgreso);
+        setLoading(false);
+    })
+
             .catch(error => {
                 console.error("Error al obtener tratamientos en curso:", error);
                 setAlerta({ open: true, message: "Error al cargar los tratamientos", severity: "error" });

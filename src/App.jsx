@@ -35,6 +35,8 @@ import TratamientosPendientes from "./pages/admin/TratamientosPendientes";
 import CitasAgendadas from "./pages/pacientes/CitasAgendadas";
 import ProximasCitas from "./pages/admin/ProximasCitas";
 
+import AgendarCitaAdmin from "./pages/admin/AgendarCitaAdmin";
+
 import TratamientosActivos from "./pages/pacientes/TratamientosActivos";
 //Errores
 import Error404 from "./components/Errors/Error404";
@@ -283,6 +285,17 @@ const App = () => {
 
                   <LayoutAdmin>
                     <TratamientosPendientes />
+                  </LayoutAdmin>
+                </RutaProtegida>
+              }
+            />
+            <Route
+              path="/admin/citas-registrar"
+              element={
+                <RutaProtegida tiposPermitidos={['admin']}>
+
+                  <LayoutAdmin>
+                    <AgendarCitaAdmin />
                   </LayoutAdmin>
                 </RutaProtegida>
               }

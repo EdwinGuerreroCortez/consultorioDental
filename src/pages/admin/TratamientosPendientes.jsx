@@ -111,7 +111,7 @@ const TratamientosPendientes = () => {
                                 {tratamientosPaginados.map((tratamiento, index) => (
                                     <TableRow key={tratamiento.id} sx={{ "&:hover": { backgroundColor: "#eef3ff" } }}>
                                         <TableCell sx={{ textAlign: "center" }}>{(pagina - 1) * elementosPorPagina + index + 1}</TableCell>
-                                        {[tratamiento.nombre, tratamiento.apellido_paterno, tratamiento.apellido_materno, tratamiento.telefono, tratamiento.email || "N/A", tratamiento.edad || "N/A", tratamiento.sexo, tratamiento.tratamiento_nombre, tratamiento.fecha_inicio || "N/A"].map((value, i) => (
+                                        {[tratamiento.nombre, tratamiento.apellido_paterno, tratamiento.apellido_materno, tratamiento.telefono, tratamiento.email || "N/A", tratamiento.fecha_nacimiento || "N/A", tratamiento.sexo, tratamiento.tratamiento_nombre, tratamiento.fecha_inicio || "N/A"].map((value, i) => (
                                             <TableCell key={i} sx={{ textAlign: "center" }}>{value}</TableCell>
                                         ))}
                                     </TableRow>

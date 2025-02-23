@@ -31,7 +31,7 @@ const Registro = () => {
     nombre: "",
     apellidoPaterno: "",
     apellidoMaterno: "",
-    edad: "",
+    fechaNacimiento: "",
     genero: "",
     telefono: "",
     correo: "",
@@ -62,30 +62,35 @@ const Registro = () => {
   }, []);
 
   const handleNext = async () => {
+    if (!validateStep()) {
+      setAlert({
+        open: true,
+        message: "Por favor, corrige los errores antes de continuar.",
+        severity: "error",
+      });
+      return;
+    }
+  
     if (step === steps.length - 1) {
       try {
-         // Log para verificar los datos enviados al backend
-         console.log('Datos enviados a la verificación:', {
+        console.log('Datos enviados a la verificación:', {
           email: formData.correo,
           codigo: formData.codigoVerificacion,
-      });
+        });
+  
         const response = await axios.post("http://localhost:4000/api/usuarios/verificar", {
           email: formData.correo,
           codigo: formData.codigoVerificacion,
         });
-
+  
         setAlert({ open: true, message: response.data.mensaje, severity: "success" });
-        // Redirigir a otra ruta después de unos segundos o de forma inmediata
-        setTimeout(() => {
-          navigate("/login");  // Reemplaza '/dashboard' por la ruta deseada
-      }, 2000);
+        setTimeout(() => navigate("/login"), 2000);
       } catch (error) {
         setAlert({
           open: true,
           message: error.response?.data?.mensaje || "Error al verificar la cuenta.",
           severity: "error",
         });
-        // Log para mostrar cualquier error recibido desde el backend
         console.error('Error en la verificación:', error.response?.data);
       }
     } else if (step === 1) {
@@ -94,16 +99,15 @@ const Registro = () => {
           nombre: formData.nombre,
           apellido_paterno: formData.apellidoPaterno,
           apellido_materno: formData.apellidoMaterno,
-          edad: formData.edad,
+          fecha_nacimiento: formData.fechaNacimiento,
           sexo: formData.genero,
           telefono: formData.telefono,
           email: formData.correo,
           password: formData.contrasena,
-          repetir_password: formData.repetirContrasena,  // Y aquí 'repetir_password'
-
+          repetir_password: formData.repetirContrasena,
         });
-
-        setAlert({ open: true, message: "Registro exitoso. Revisa tu correo para el código de verificación.", severity: "success" });
+  
+        setAlert({ open: true, message: "Registro exitoso. Revisa tu correo.", severity: "success" });
         setStep((prevStep) => prevStep + 1);
       } catch (error) {
         setAlert({
@@ -116,6 +120,7 @@ const Registro = () => {
       setStep((prevStep) => prevStep + 1);
     }
   };
+  
 
   const handleBack = () => {
     setStep((prevStep) => prevStep - 1);
@@ -146,9 +151,21 @@ const Registro = () => {
       case "apellidoMaterno":
         errorMessage = validateName(value);
         break;
-      case "edad":
-        errorMessage = validateAge(value);
+      case "fechaNacimiento":
+        const birthDate = new Date(value);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();  // ✅ Cambio a `let`
+
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+          age--;  // ✅ Ahora sí puedes modificar `age`
+        }
+
+        if (age < 18) {
+          errorMessage = "Debes ser mayor de 18 años.";
+        }
         break;
+
       case "telefono":
         errorMessage = validatePhoneNumber(value);
         break;
@@ -179,7 +196,7 @@ const Registro = () => {
           formData.nombre &&
           formData.apellidoPaterno &&
           formData.apellidoMaterno &&
-          formData.edad &&
+          formData.fechaNacimiento &&
           formData.genero &&
           formData.telefono
         );
@@ -303,16 +320,18 @@ const Registro = () => {
                   helperText={errors.apellidoMaterno}
                 />
                 <TextField
-                  label="Edad"
-                  name="edad"
-                  type="number"
+                  label="Fecha de Nacimiento"
+                  name="fechaNacimiento"
+                  type="date"
                   fullWidth
                   margin="dense"
-                  value={formData.edad}
+                  InputLabelProps={{ shrink: true }}
+                  value={formData.fechaNacimiento}
                   onChange={handleChange}
-                  error={!!errors.edad}
-                  helperText={errors.edad}
+                  error={!!errors.fechaNacimiento}
+                  helperText={errors.fechaNacimiento}
                 />
+
                 <TextField
                   label="Género"
                   name="genero"

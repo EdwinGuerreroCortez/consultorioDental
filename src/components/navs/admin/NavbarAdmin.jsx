@@ -106,8 +106,8 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
       icon: <CalendarMonthIcon />,
       submenu: [
         { text: "Ver Citas Programadas", href: "/admin/citas-ver" },
-        { text: "Registrar Nueva Cita", href: "/admin/citas/registrar" },
-        { text: "Evaluar Citas Pendientes", href: "/admin/citas/evaluar" },
+        { text: "Registrar Nueva Cita", href: "/admin/citas-registrar" },
+        { text: "Evaluar Citas Pendientes", href: "/admin/citas-evaluar" },
       ],
     },
     {
