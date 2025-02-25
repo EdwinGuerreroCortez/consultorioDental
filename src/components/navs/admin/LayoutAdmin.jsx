@@ -21,7 +21,7 @@ const LayoutAdmin = ({ children }) => {
           marginTop: "64px",
           marginLeft: drawerOpen ? `${drawerWidth}px` : `${drawerCollapsedWidth}px`,
           transition: "all 0.3s ease-in-out",
-          backgroundColor: "#f5f5f5",
+          backgroundColor: "#fffff",
           height: "calc(100vh - 64px)",
           overflow: "hidden",
         }}

@@ -71,6 +71,9 @@ const MisCitas = () => {
     };
 
     const citasPaginadas = citas.slice((pagina - 1) * elementosPorPagina, pagina * elementosPorPagina);
+    const obtenerHoraExacta = (fechaUTC) => {
+        return dayjs.utc(fechaUTC).tz("UTC").format("D [de] MMMM [de] YYYY [a las] hh:mm A");
+    };
 
     return (
         <Box sx={{ padding: "2rem", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -118,9 +121,7 @@ const MisCitas = () => {
                                     <TableRow key={cita.id} sx={{ "&:hover": { backgroundColor: "#f1f8ff" } }}>
                                         <TableCell sx={{ textAlign: "center" }}>{(pagina - 1) * elementosPorPagina + index + 1}</TableCell>
                                         <TableCell sx={{ textAlign: "center" }}>
-                                            {cita.fecha_hora
-                                                ? dayjs(cita.fecha_hora).tz("America/Mexico_City").format(" D [de] MMMM [de] YYYY [a las] hh:mm A")
-                                                : "Fecha no registrada"}
+                                            {cita.fecha_hora ? obtenerHoraExacta(cita.fecha_hora) : "Fecha no registrada"}
                                         </TableCell>
                                         <TableCell sx={{ textAlign: "center" }}>
                                             <Chip label={cita.estado_cita} color={cita.estado_cita === "Confirmada" ? "success" : "warning"} />

@@ -239,75 +239,76 @@ useEffect(() => {
 
   const handleAgendarCita = async () => {
     if (!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada) {
-      setAlerta({
-        mostrar: true,
-        mensaje: 'Por favor, completa todos los campos.',
-        tipo: 'error',
-      });
-      return;
+        setAlerta({
+            mostrar: true,
+            mensaje: 'Por favor, completa todos los campos.',
+            tipo: 'error',
+        });
+        return;
     }
 
     try {
-      const tratamientoSeleccionado = servicios.find(s => s.nombre === servicioSeleccionado);
-      const estadoTratamiento = tratamientoSeleccionado.requiere_evaluacion ? 'pendiente' : 'en progreso';
+        const tratamientoSeleccionado = servicios.find(s => s.nombre === servicioSeleccionado);
+        const estadoTratamiento = tratamientoSeleccionado.requiere_evaluacion ? 'pendiente' : 'en progreso';
 
-      // ✅ Convertir la fecha seleccionada a string 'YYYY-MM-DD'
-      const fechaISO = new Date(fechaSeleccionada).toISOString().split('T')[0];
+        // ✅ Convertir la fecha seleccionada a formato 'YYYY-MM-DD' sin que cambie
+        const fechaSeleccionadaStr = fechaSeleccionada.toISOString().split('T')[0];
 
-      // ✅ Convertir la hora seleccionada correctamente
-      const [hora, minutos] = horaSeleccionada.replace(/( AM| PM)/, '').split(':').map(Number);
-      const esPM = horaSeleccionada.includes('PM');
+        // ✅ Convertir la hora seleccionada correctamente
+        const [hora, minutos] = horaSeleccionada.replace(/( AM| PM)/, '').split(':').map(Number);
+        const esPM = horaSeleccionada.includes('PM');
 
-      let horaFinal = esPM && hora !== 12 ? hora + 12 : hora;
-      if (!esPM && hora === 12) horaFinal = 0; // Convertir 12 AM a 00:00
+        let horaFinal = esPM && hora !== 12 ? hora + 12 : hora;
+        if (!esPM && hora === 12) horaFinal = 0; // Convertir 12 AM a 00:00
 
-      // ✅ Crear la fecha final en zona horaria local (México)
-      const fechaHoraLocal = new Date(fechaISO);
-      fechaHoraLocal.setHours(horaFinal, minutos, 0, 0);
+        // ✅ Crear la fecha con la hora seleccionada en **zona horaria local (México)**
+        const fechaHoraLocal = new Date(`${fechaSeleccionadaStr}T${horaFinal.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:00`);
 
-      // ✅ Convertir la fecha local a UTC antes de enviarla
-      const fechaHoraUTC = new Date(fechaHoraLocal.getTime() - fechaHoraLocal.getTimezoneOffset() * 60000);
+        // ✅ Convertir la fecha local a UTC antes de enviarla
+        const fechaHoraUTC = new Date(fechaHoraLocal.getTime() - fechaHoraLocal.getTimezoneOffset() * 60000);
 
-      console.log("📅 Fecha y hora final en hora local (México):", fechaHoraLocal.toString());
-      console.log("🌎 Fecha y hora final en UTC:", fechaHoraUTC.toISOString());
-      console.log("📦 Datos que se enviarán al backend:", {
-        usuarioId: usuarioEncontrado.id,
-        tratamientoId: tratamientoSeleccionado.id,
-        citasTotales: tratamientoSeleccionado.citas_requeridas || 0,
-        fechaInicio: fechaHoraUTC.toISOString(), // ✅ Enviar fecha en formato UTC
-        estado: estadoTratamiento,
-        precio: tratamientoSeleccionado.precio,
-        requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
-      });
+        console.log("📅 Fecha seleccionada (sin cambios):", fechaSeleccionadaStr);
+        console.log("🕒 Hora seleccionada:", horaSeleccionada);
+        console.log("🌎 Fecha y hora final en UTC:", fechaHoraUTC.toISOString());
+        console.log("📦 Datos que se enviarán al backend:", {
+            usuarioId: usuarioEncontrado.id,
+            tratamientoId: tratamientoSeleccionado.id,
+            citasTotales: tratamientoSeleccionado.citas_requeridas || 0,
+            fechaInicio: fechaHoraUTC.toISOString(), // ✅ Enviar en formato UTC corregido
+            estado: estadoTratamiento,
+            precio: tratamientoSeleccionado.precio,
+            requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
+        });
 
-      // ✅ Enviar solicitud para crear el tratamiento
-      await axiosInstance.post('/tratamientos-pacientes/crear', {
-        usuarioId: usuarioEncontrado.id,
-        tratamientoId: tratamientoSeleccionado.id,
-        citasTotales: tratamientoSeleccionado.citas_requeridas || 0,
-        fechaInicio: fechaHoraUTC.toISOString(), // ✅ Enviar en formato UTC corregido
-        estado: estadoTratamiento,
-        precio: tratamientoSeleccionado.precio,
-        requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
-      });
+        // ✅ Enviar solicitud para crear el tratamiento
+        await axiosInstance.post('/tratamientos-pacientes/crear', {
+            usuarioId: usuarioEncontrado.id,
+            tratamientoId: tratamientoSeleccionado.id,
+            citasTotales: tratamientoSeleccionado.citas_requeridas || 0,
+            fechaInicio: fechaHoraUTC.toISOString(), // ✅ Enviar en formato UTC corregido
+            estado: estadoTratamiento,
+            precio: tratamientoSeleccionado.precio,
+            requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
+        });
 
-      setAlerta({
-        mostrar: true,
-        mensaje: tratamientoSeleccionado.requiere_evaluacion
-          ? 'Tratamiento creado correctamente, pendiente de evaluación.'
-          : 'Tratamiento, citas y pagos creados correctamente.',
-        tipo: 'success',
-      });
+        setAlerta({
+            mostrar: true,
+            mensaje: tratamientoSeleccionado.requiere_evaluacion
+                ? 'Tratamiento creado correctamente, pendiente de evaluación.'
+                : 'Tratamiento, citas y pagos creados correctamente.',
+            tipo: 'success',
+        });
 
     } catch (error) {
-      console.error('❌ Error al agendar la cita:', error);
-      setAlerta({
-        mostrar: true,
-        mensaje: 'Error al agendar la cita. Inténtalo nuevamente.',
-        tipo: 'error',
-      });
+        console.error('❌ Error al agendar la cita:', error);
+        setAlerta({
+            mostrar: true,
+            mensaje: 'Error al agendar la cita. Inténtalo nuevamente.',
+            tipo: 'error',
+        });
     }
-  };
+};
+
 
 
 

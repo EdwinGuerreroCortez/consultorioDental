@@ -35,6 +35,7 @@ import TratamientosPendientes from "./pages/admin/TratamientosPendientes";
 import CitasAgendadas from "./pages/pacientes/CitasAgendadas";
 import ProximasCitas from "./pages/admin/ProximasCitas";
 
+import EvaluarCitasPendientes from "./pages/admin/EvaluarCitasPendientes";
 import AgendarCitaAdmin from "./pages/admin/AgendarCitaAdmin";
 
 import TratamientosActivos from "./pages/pacientes/TratamientosActivos";
@@ -296,6 +297,17 @@ const App = () => {
 
                   <LayoutAdmin>
                     <AgendarCitaAdmin />
+                  </LayoutAdmin>
+                </RutaProtegida>
+              }
+            />
+           <Route
+              path="/admin/citas-evaluar"
+              element={
+                <RutaProtegida tiposPermitidos={['admin']}>
+
+                  <LayoutAdmin>
+                    <EvaluarCitasPendientes />
                   </LayoutAdmin>
                 </RutaProtegida>
               }
