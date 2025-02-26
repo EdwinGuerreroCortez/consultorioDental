@@ -12,8 +12,17 @@ import {
     Snackbar,
     Alert,
     CircularProgress,
-    Pagination
+    Pagination,
+    IconButton,
+    Tooltip,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    TextField
 } from "@mui/material";
+import { Assignment } from "@mui/icons-material";
 import axios from "axios";
 
 const TratamientosPendientes = () => {
@@ -21,76 +30,80 @@ const TratamientosPendientes = () => {
     const [pagina, setPagina] = useState(1);
     const [alerta, setAlerta] = useState({ open: false, message: "", severity: "success" });
     const [loading, setLoading] = useState(true);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [tratamientoSeleccionado, setTratamientoSeleccionado] = useState(null);
+    const [numCitas, setNumCitas] = useState("");
+    const [precio, setPrecio] = useState("");
     const elementosPorPagina = 10;
 
-    // Función para obtener los tratamientos sin modificar loading después de la primera carga
+    useEffect(() => {
+        obtenerTratamientos(true);
+    }, []);
+
+    useEffect(() => {
+        const intervalo = setInterval(() => {
+            obtenerTratamientos(false);
+        }, 3000);
+        return () => clearInterval(intervalo);
+    }, []);
+
     const obtenerTratamientos = (isFirstLoad = false) => {
         axios.get("http://localhost:4000/api/tratamientos-pacientes/pendientes")
             .then(response => {
-                const tratamientosPendientes = response.data.map(tratamiento => ({
-                    ...tratamiento,
-                    sexo: tratamiento.sexo === "femenino" ? "F" : tratamiento.sexo === "masculino" ? "M" : "N/A"
-                }));
-                setTratamientos(tratamientosPendientes);
-                if (isFirstLoad) setLoading(false); // Solo ocultar el loading en la primera carga
+                setTratamientos(response.data);
+                if (isFirstLoad) setLoading(false);
             })
             .catch(error => {
                 console.error("Error al obtener tratamientos pendientes:", error);
                 setAlerta({ open: true, message: "Error al cargar los tratamientos pendientes", severity: "error" });
-                if (isFirstLoad) setLoading(false); // Asegurar que loading se oculta en la primera carga
+                if (isFirstLoad) setLoading(false);
             });
     };
-
-    // useEffect para la primera carga
-    useEffect(() => {
-        obtenerTratamientos(true); // Cargar datos iniciales con loading visible
-    }, []);
-
-    // useEffect para actualización automática cada 3 segundos (sin modificar loading)
-    useEffect(() => {
-        const intervalo = setInterval(() => {
-            obtenerTratamientos(false); // No modifica loading
-        }, 3000);
-
-        return () => clearInterval(intervalo); // Limpiar intervalo al desmontar
-    }, []);
 
     const handleChangePagina = (event, value) => {
         setPagina(value);
     };
 
+    const handleAbrirModal = (tratamiento) => {
+        setTratamientoSeleccionado(tratamiento);
+        setModalOpen(true);
+    };
+
+    const handleCerrarModal = () => {
+        setModalOpen(false);
+        setNumCitas("");
+        setPrecio("");
+    };
+
+    const handleGuardar = async () => {
+        if (!numCitas || !precio || isNaN(numCitas) || isNaN(precio) || numCitas <= 0 || precio <= 0) {
+            setAlerta({ open: true, message: "Por favor ingresa valores válidos.", severity: "warning" });
+            return;
+        }
+
+        try {
+            const response = await axios.post("http://localhost:4000/api/tratamientos-pacientes/crear-nuevas-citas-pagos", {
+                tratamientoPacienteId: tratamientoSeleccionado.id,
+                citasTotales: parseInt(numCitas, 10),
+                precioPorCita: parseFloat(precio)
+            });
+
+            setAlerta({ open: true, message: response.data.mensaje, severity: "success" });
+            obtenerTratamientos(); // Recargar lista de tratamientos
+            handleCerrarModal();
+        } catch (error) {
+            console.error("Error al asignar número de citas:", error);
+            setAlerta({ open: true, message: "Error al asignar número de citas", severity: "error" });
+        }
+    };
+
     const tratamientosPaginados = tratamientos.slice((pagina - 1) * elementosPorPagina, pagina * elementosPorPagina);
-    const filasFaltantes = elementosPorPagina - tratamientosPaginados.length;
 
     return (
         <Box sx={{ padding: "2rem", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-            {/* Encabezado */}
-            <Box
-                sx={{
-                    width: "100%",
-                    maxWidth: "900px",
-                    background: "linear-gradient(135deg, #0077b6, #48cae4)",
-                    clipPath: "polygon(0 0, 100% 0, 80% 100%, 0% 100%)",
-                    color: "#ffffff",
-                    padding: "40px 40px",
-                    borderRadius: "12px",
-                    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
-                    textAlign: "left",
-                    marginBottom: "2rem"
-                }}
-            >
-                <Typography
-                    variant="h4"
-                    sx={{
-                        fontWeight: "bold",
-                        fontFamily: "'Poppins', sans-serif",
-                        textShadow: "1px 1px 6px rgba(0, 0, 0, 0.2)",
-                    }}
-                >
-                    TRATAMIENTOS PENDIENTES DE EVALUACIÓN
-                </Typography>
-            </Box>
-
+            <Typography variant="h4" sx={{ fontWeight: "bold", marginBottom: "1.5rem" }}>
+                Tratamientos Pendientes de Evaluación
+            </Typography>
             <Box sx={{ flexGrow: 1 }}>
                 {loading ? (
                     <Typography align="center" sx={{ marginTop: "2rem", color: "#666" }}>
@@ -101,27 +114,39 @@ const TratamientosPendientes = () => {
                         <Table>
                             <TableHead sx={{ backgroundColor: "#d8eaff" }}>
                                 <TableRow>
-                                    <TableCell sx={{ fontWeight: "bold", textAlign: "center" }}>#</TableCell>
-                                    {["Nombre", "Apellido Paterno", "Apellido Materno", "Teléfono", "Email", "Edad", "Sexo", "Tratamiento", "Fecha de Inicio"].map((header) => (
-                                        <TableCell key={header} sx={{ fontWeight: "bold", textAlign: "center" }}>{header}</TableCell>
-                                    ))}
+                                    <TableCell>#</TableCell>
+                                    <TableCell>Nombre</TableCell>
+                                    <TableCell>Apellido Paterno</TableCell>
+                                    <TableCell>Apellido Materno</TableCell>
+                                    <TableCell>Teléfono</TableCell>
+                                    <TableCell>Email</TableCell>
+                                    <TableCell>Edad</TableCell>
+                                    <TableCell>Sexo</TableCell>
+                                    <TableCell>Tratamiento</TableCell>
+                                    <TableCell>Fecha de Inicio</TableCell>
+                                    <TableCell>Acción</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {tratamientosPaginados.map((tratamiento, index) => (
-                                    <TableRow key={tratamiento.id} sx={{ "&:hover": { backgroundColor: "#eef3ff" } }}>
-                                        <TableCell sx={{ textAlign: "center" }}>{(pagina - 1) * elementosPorPagina + index + 1}</TableCell>
-                                        {[tratamiento.nombre, tratamiento.apellido_paterno, tratamiento.apellido_materno, tratamiento.telefono, tratamiento.email || "N/A", tratamiento.fecha_nacimiento || "N/A", tratamiento.sexo, tratamiento.tratamiento_nombre, tratamiento.fecha_inicio || "N/A"].map((value, i) => (
-                                            <TableCell key={i} sx={{ textAlign: "center" }}>{value}</TableCell>
-                                        ))}
-                                    </TableRow>
-                                ))}
-                                {Array.from({ length: filasFaltantes }).map((_, index) => (
-                                    <TableRow key={`empty-${index}`}>
-                                        <TableCell sx={{ textAlign: "center" }}>{(pagina - 1) * elementosPorPagina + tratamientosPaginados.length + index + 1}</TableCell>
-                                        {Array(9).fill("-").map((_, i) => (
-                                            <TableCell key={i} sx={{ textAlign: "center" }}>-</TableCell>
-                                        ))}
+                                    <TableRow key={tratamiento.id}>
+                                        <TableCell>{(pagina - 1) * elementosPorPagina + index + 1}</TableCell>
+                                        <TableCell>{tratamiento.nombre}</TableCell>
+                                        <TableCell>{tratamiento.apellido_paterno}</TableCell>
+                                        <TableCell>{tratamiento.apellido_materno}</TableCell>
+                                        <TableCell>{tratamiento.telefono}</TableCell>
+                                        <TableCell>{tratamiento.email || "N/A"}</TableCell>
+                                        <TableCell>{tratamiento.fecha_nacimiento}</TableCell>
+                                        <TableCell>{tratamiento.sexo}</TableCell>
+                                        <TableCell>{tratamiento.tratamiento_nombre}</TableCell>
+                                        <TableCell>{tratamiento.fecha_inicio}</TableCell>
+                                        <TableCell>
+                                            <Tooltip title="Evaluar">
+                                                <IconButton onClick={() => handleAbrirModal(tratamiento)}>
+                                                    <Assignment color="primary" />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -129,19 +154,43 @@ const TratamientosPendientes = () => {
                     </TableContainer>
                 )}
             </Box>
+            <Pagination
+                count={Math.ceil(tratamientos.length / elementosPorPagina)}
+                page={pagina}
+                onChange={handleChangePagina}
+                color="primary"
+                size="large"
+                sx={{ marginTop: "1rem", alignSelf: "center" }}
+            />
 
-            <Box sx={{ display: "flex", justifyContent: "center", marginTop: "0.5rem", marginBottom: "7rem", padding: "0.5rem" }}>
-                <Pagination
-                    count={Math.ceil(tratamientos.length / elementosPorPagina)}
-                    page={pagina}
-                    onChange={handleChangePagina}
-                    color="primary"
-                    size="large"
-                />
-            </Box>
+            {/* Modal para asignar citas y precio */}
+            <Dialog open={modalOpen} onClose={handleCerrarModal}>
+                <DialogTitle>Asignar Número de Citas</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        label="Número de Citas"
+                        type="number"
+                        fullWidth
+                        value={numCitas}
+                        onChange={(e) => setNumCitas(e.target.value)}
+                        sx={{ marginBottom: 2 }}
+                    />
+                    <TextField
+                        label="Precio por Cita"
+                        type="number"
+                        fullWidth
+                        value={precio}
+                        onChange={(e) => setPrecio(e.target.value)}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCerrarModal} color="secondary">Cancelar</Button>
+                    <Button onClick={handleGuardar} color="primary" variant="contained">Guardar</Button>
+                </DialogActions>
+            </Dialog>
 
-            <Snackbar open={alerta.open} autoHideDuration={6000} onClose={() => setAlerta({ ...alerta, open: false })}>
-                <Alert onClose={() => setAlerta({ ...alerta, open: false })} severity={alerta.severity}>
+            <Snackbar open={alerta.open} autoHideDuration={4000} onClose={() => setAlerta({ ...alerta, open: false })}>
+                <Alert onClose={() => setAlerta({ ...alerta, open: false })} severity={alerta.severity} sx={{ width: "100%" }}>
                     {alerta.message}
                 </Alert>
             </Snackbar>
