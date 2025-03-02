@@ -9,7 +9,7 @@ const Loader = ({ children }) => {
 
   useEffect(() => {
     setLoading(true);
-    const timeout = setTimeout(() => setLoading(false), 2000); 
+    const timeout = setTimeout(() => setLoading(false), 500); 
     return () => clearTimeout(timeout);
   }, [location]);
 
