@@ -306,7 +306,7 @@ const App = () => {
               element={
                 <RutaProtegida tiposPermitidos={['admin']}>
 
-                  <LayoutAdmin>
+                  <LayoutAdmin title={"Evaluar Citas Pendientes"}>
                     <EvaluarCitasPendientes />
                   </LayoutAdmin>
                 </RutaProtegida>

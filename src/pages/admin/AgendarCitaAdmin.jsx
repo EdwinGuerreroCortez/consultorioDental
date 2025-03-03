@@ -344,7 +344,7 @@ const AgendarCitaAdmin = () => {
         alignItems: "center",
         justifyContent: "flex-start",
         boxSizing: "border-box",
-        backgroundColor: "#eef5f9",
+        backgroundColor: "transparent",
       }}
     >
       {/* 🔍 FORMULARIO PARA BUSCAR USUARIO */}

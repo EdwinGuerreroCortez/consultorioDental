@@ -29,8 +29,6 @@ import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 
-
-
 export default function EvaluarCitasPendientes() {
   const [tratamientos, setTratamientos] = useState([]);
   const [selectedTratamiento, setSelectedTratamiento] = useState(null);
@@ -78,41 +76,41 @@ export default function EvaluarCitasPendientes() {
       });
       return;
     }
-  
+
     // Convertir la fecha seleccionada a formato 'YYYY-MM-DD'
     const fechaSeleccionadaStr = fechaSeleccionada.toISOString().split('T')[0];
-  
+
     // Convertir la hora seleccionada correctamente
     const [hora, minutos] = horaSeleccionada.replace(/( AM| PM)/, '').split(':').map(Number);
     const esPM = horaSeleccionada.includes('PM');
-  
+
     let horaFinal = esPM && hora !== 12 ? hora + 12 : hora;
     if (!esPM && hora === 12) horaFinal = 0; // Convertir 12 AM a 00:00
-  
+
     // Crear la fecha completa con la hora seleccionada en zona horaria local (México)
     const fechaHoraLocal = new Date(`${fechaSeleccionadaStr}T${horaFinal.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:00`);
-  
+
     // Convertir la fecha local a UTC antes de enviarla al backend
     const fechaHoraUTC = new Date(fechaHoraLocal.getTime() - fechaHoraLocal.getTimezoneOffset() * 60000);
-  
+
     console.log("📌 Enviando actualización de cita con ID:", proximaCitaId);
     console.log("🕒 Nueva fecha y hora en UTC:", fechaHoraUTC.toISOString());
-  
+
     try {
       const response = await axios.put(`http://localhost:4000/api/citas/actualizar/${proximaCitaId}`, {
         fechaHora: fechaHoraUTC.toISOString(),
       });
-  
-      console.log("✅ Cita actualizada con éxito:", response.data);
-  
-      // 🔹 Actualizar el estado de citas localmente
-   setCitas(prevCitas => (prevCitas || []).map(cita =>
-  cita.id === proximaCitaId
-    ? { ...cita, fecha_hora: fechaHoraUTC.toISOString(), estado: "pendiente" }
-    : cita
-));
 
-  
+      console.log("✅ Cita actualizada con éxito:", response.data);
+
+      // 🔹 Actualizar el estado de citas localmente
+      setCitas(prevCitas => (prevCitas || []).map(cita =>
+        cita.id === proximaCitaId
+          ? { ...cita, fecha_hora: fechaHoraUTC.toISOString(), estado: "pendiente" }
+          : cita
+      ));
+
+
       // 🔹 También actualizamos citasPorTratamiento
       setCitasPorTratamiento(prevCitas => ({
         ...prevCitas,
@@ -122,35 +120,35 @@ export default function EvaluarCitasPendientes() {
             : cita
         )
       }));
-      
-  
+
+
       // 🔹 Recalcular citas asistidas en tratamientos
       setTratamientos(prevTratamientos =>
         prevTratamientos.map(tratamiento =>
           tratamiento.id === selectedTratamiento.id
             ? {
-                ...tratamiento,
-                citas_asistidas: (citasPorTratamiento[selectedTratamiento.id] || []).filter(cita =>
-                  cita.estado === "completada" && cita.pagada === 1 && cita.fecha_hora !== null
-                ).length + 1 // Incrementamos la cuenta si la cita está confirmada
-              }
+              ...tratamiento,
+              citas_asistidas: (citasPorTratamiento[selectedTratamiento.id] || []).filter(cita =>
+                cita.estado === "completada" && cita.pagada === 1 && cita.fecha_hora !== null
+              ).length + 1 // Incrementamos la cuenta si la cita está confirmada
+            }
             : tratamiento
         )
       );
-      
-  
+
+
       // 🔔 Mostrar alerta de éxito
       setAlerta({
         mostrar: true,
         mensaje: "La cita ha sido agendada exitosamente.",
         tipo: "success",
       });
-  
+
       setOpenAgendar(false); // Cerrar el modal después de actualizar
-  
+
     } catch (error) {
       console.error("❌ Error al actualizar la cita:", error);
-  
+
       // 🔔 Mostrar alerta de error
       setAlerta({
         mostrar: true,
@@ -159,8 +157,6 @@ export default function EvaluarCitasPendientes() {
       });
     }
   };
-  
-
 
   useEffect(() => {
     if (fechaSeleccionada) {
@@ -261,80 +257,91 @@ export default function EvaluarCitasPendientes() {
       return null;
     }
   };
+  const obtenerUltimaFechaCita = () => {
+    if (!selectedTratamiento || !citasPorTratamiento[selectedTratamiento.id]) return null;
+
+    const citasConFecha = citasPorTratamiento[selectedTratamiento.id].filter(cita => cita.fecha_hora);
+
+    if (citasConFecha.length === 0) return null; // Si no hay citas registradas, permitir desde hoy
+
+    // Ordenar por fecha y obtener la última cita registrada
+    const ultimaCita = citasConFecha.sort((a, b) => new Date(b.fecha_hora) - new Date(a.fecha_hora))[0];
+
+    return new Date(ultimaCita.fecha_hora);
+  };
 
   return (
     <Box sx={{ p: 3 }}>
-  <Grid container spacing={3}>
-    {tratamientos.map((tratamiento, index) => (
-      <Grid item xs={12} sm={6} md={3} lg={3} key={tratamiento.id}>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }} // 🔹 Inicia invisible y desplazado hacia abajo
-          animate={{ opacity: 1, y: 0 }} // 🔹 Se vuelve visible y regresa a su posición normal
-          transition={{
-            duration: 0.5,
-            ease: "easeOut",
-            delay: index * 0.1, // 🔹 Pequeño delay para cada tarjeta en secuencia
-          }}
-          whileHover={{ scale: 1.03 }} // 🔹 Efecto hover
-          whileTap={{ scale: 0.98 }}
-          style={{ cursor: "pointer" }}
-        >
-          <Card
-            sx={{
-              borderRadius: 4,
-              boxShadow: 4,
-              p: 2,
-              backgroundColor: "background.paper",
-              transition: "0.3s",
-              "&:hover": { boxShadow: 8 },
-              minHeight: 180,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-            }}
-            onClick={() => handleOpenDialog(tratamiento)}
-          >
-            <CardContent>
-              <Box display="flex" alignItems="center" gap={2} mb={1}>
-                <Avatar sx={{ bgcolor: "primary.main" }}>
-                  <AssignmentTurnedIn />
-                </Avatar>
-                <Typography variant="h6" sx={{ fontWeight: "bold", color: "primary.main" }}>
-                  {tratamiento.tratamiento}
-                </Typography>
-              </Box>
+      <Grid container spacing={3}>
+        {tratamientos.map((tratamiento, index) => (
+          <Grid item xs={12} sm={6} md={3} lg={3} key={tratamiento.id}>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }} // 🔹 Inicia invisible y desplazado hacia abajo
+              animate={{ opacity: 1, y: 0 }} // 🔹 Se vuelve visible y regresa a su posición normal
+              transition={{
+                duration: 0.5,
+                ease: "easeOut",
+                delay: index * 0.1, // 🔹 Pequeño delay para cada tarjeta en secuencia
+              }}
+              whileHover={{ scale: 1.03 }} // 🔹 Efecto hover
+              whileTap={{ scale: 0.98 }}
+              style={{ cursor: "pointer" }}
+            >
+              <Card
+                sx={{
+                  borderRadius: 4,
+                  boxShadow: 4,
+                  p: 2,
+                  backgroundColor: "background.paper",
+                  transition: "0.3s",
+                  "&:hover": { boxShadow: 8 },
+                  minHeight: 180,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                }}
+                onClick={() => handleOpenDialog(tratamiento)}
+              >
+                <CardContent>
+                  <Box display="flex" alignItems="center" gap={2} mb={1}>
+                    <Avatar sx={{ bgcolor: "primary.main" }}>
+                      <AssignmentTurnedIn />
+                    </Avatar>
+                    <Typography variant="h6" sx={{ fontWeight: "bold", color: "primary.main" }}>
+                      {tratamiento.tratamiento}
+                    </Typography>
+                  </Box>
 
-              <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Person sx={{ fontSize: 20, color: "text.secondary" }} />
-                  <Typography sx={{ fontSize: 14, color: "text.secondary" }}>
-                    {`${(tratamiento.nombre || "").charAt(0).toUpperCase() + (tratamiento.nombre || "").slice(1).toLowerCase()} 
+                  <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Person sx={{ fontSize: 20, color: "text.secondary" }} />
+                      <Typography sx={{ fontSize: 14, color: "text.secondary" }}>
+                        {`${(tratamiento.nombre || "").charAt(0).toUpperCase() + (tratamiento.nombre || "").slice(1).toLowerCase()} 
                       ${(tratamiento.apellido_paterno || "").charAt(0).toUpperCase() + (tratamiento.apellido_paterno || "").slice(1).toLowerCase()} 
                       ${(tratamiento.apellido_materno || "").charAt(0).toUpperCase() + (tratamiento.apellido_materno || "").slice(1).toLowerCase()}`.trim()}
-                  </Typography>
-                </Box>
+                      </Typography>
+                    </Box>
 
-                <Box display="flex" alignItems="center" gap={1}>
-                  <CalendarToday sx={{ fontSize: 18, color: "text.secondary" }} />
-                  <Typography sx={{ fontSize: 14, color: "text.secondary" }}>
-                    {tratamiento.edad} años
-                  </Typography>
-                </Box>
-              </Stack>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <CalendarToday sx={{ fontSize: 18, color: "text.secondary" }} />
+                      <Typography sx={{ fontSize: 14, color: "text.secondary" }}>
+                        {tratamiento.edad} años
+                      </Typography>
+                    </Box>
+                  </Stack>
 
-              <Box display="flex" alignItems="center" gap={1} mt={1}>
-                <AssignmentTurnedIn sx={{ fontSize: 20, color: "success.main" }} />
-                <Typography sx={{ fontSize: 14, color: "success.main" }}>
-                  Citas: <strong>{tratamiento.citas_asistidas}/{tratamiento.citas_totales}</strong>
-                </Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        </motion.div>
+                  <Box display="flex" alignItems="center" gap={1} mt={1}>
+                    <AssignmentTurnedIn sx={{ fontSize: 20, color: "success.main" }} />
+                    <Typography sx={{ fontSize: 14, color: "success.main" }}>
+                      Citas: <strong>{tratamiento.citas_asistidas}/{tratamiento.citas_totales}</strong>
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </Grid>
+        ))}
       </Grid>
-    ))}
-  </Grid>
-
       {selectedTratamiento && (
         <Dialog
           open={open}
@@ -535,15 +542,17 @@ export default function EvaluarCitasPendientes() {
             }}
           >
             {/* Selector de Fecha */}
-            <LocalizationProvider dateAdapter={AdapterDateFns} locale={es}>
+            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
               <DatePicker
                 label="Selecciona la Fecha"
                 value={fechaSeleccionada}
                 onChange={(newValue) => setFechaSeleccionada(newValue)}
+                minDate={obtenerUltimaFechaCita() || new Date()} // 🔹 Restringir fecha mínima
                 renderInput={(params) => <TextField {...params} fullWidth sx={{ mt: 1 }} />}
                 disablePast
-                shouldDisableDate={(date) => ![1, 2, 3, 6].includes(date.getDay())}
+                shouldDisableDate={(date) => ![1, 2, 3, 6].includes(date.getDay())} // Solo lunes, martes, miércoles y sábado
               />
+
             </LocalizationProvider>
 
             <Typography
@@ -677,7 +686,6 @@ export default function EvaluarCitasPendientes() {
           </Alert>
         </Box>
       )}
-
     </Box>
   );
 }
