@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import InputAdornment from '@mui/material/InputAdornment';
+import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 
 import MedicalServicesOutlinedIcon from "@mui/icons-material/MedicalServicesOutlined";
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -24,6 +25,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { es } from 'date-fns/locale';
 import { motion } from "framer-motion";
+
 
 const AgendarCitaAdmin = () => {
   const [usuarioId, setUsuarioId] = useState(null);
@@ -60,7 +62,7 @@ const AgendarCitaAdmin = () => {
     if (alerta.mostrar) {
       const timer = setTimeout(() => {
         setAlerta({ mostrar: false, mensaje: '', tipo: '' });
-      }, 5000);
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [alerta.mostrar]);
@@ -342,45 +344,9 @@ const AgendarCitaAdmin = () => {
         alignItems: "center",
         justifyContent: "flex-start",
         boxSizing: "border-box",
+        backgroundColor: "#eef5f9",
       }}
     >
-      {/* 🔹 Título del componente */}
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: "900px",
-          background: "linear-gradient(135deg, #0077b6, #48cae4)",
-          clipPath: "polygon(0 0, 100% 0, 80% 100%, 0% 100%)",
-          color: "#ffffff",
-          padding: { xs: "15px 20px", md: "20px 40px" }, // 🔹 Ajuste en padding
-          borderRadius: "12px",
-          boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
-          textAlign: "left",
-          marginTop: { xs: "1px", md: "10px" },
-        }}
-      >
-        <Typography
-          variant="h4"
-          sx={{
-            fontWeight: "bold",
-            fontSize: { xs: "22px", md: "28px" }, // 🔹 Tamaño menor en móviles
-            fontFamily: "'Poppins', sans-serif",
-            textShadow: "1px 1px 6px rgba(0, 0, 0, 0.2)",
-          }}
-        >
-          Agendar Cita Dental
-        </Typography>
-        <Typography
-          variant="subtitle1"
-          sx={{
-            fontSize: { xs: "14px", md: "16px" }, // 🔹 Reducir texto en móviles
-            fontStyle: "italic",
-            marginTop: "4px",
-          }}
-        >
-          ¡Cuidamos tu sonrisa con tratamientos personalizados!
-        </Typography>
-      </Box>
       {/* 🔍 FORMULARIO PARA BUSCAR USUARIO */}
       {pasoActual === 1 && (
         <motion.div
@@ -486,45 +452,88 @@ const AgendarCitaAdmin = () => {
             </motion.div>
           </Box>
         </motion.div>
-
       )}
       {/* 🔴 Si el usuario tiene un tratamiento en curso, mostrar el mensaje debajo del título */}
       {tratamientoActivo && (
-        <Box
-          sx={{
-            width: "100%",
-            maxWidth: "600px",
-            textAlign: "center",
-            backgroundColor: "#fff",
-            padding: { xs: "15px", md: "20px" },
-            borderRadius: "12px",
-            boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
-            marginTop: "15px",
+        <motion.div
+          initial={{ opacity: 0, y: -50, scale: 0.8 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -30, scale: 0.5 }}
+          transition={{
+            duration: 0.8,
+            ease: "easeOut",
+            type: "spring",
+            stiffness: 150
           }}
         >
-          <Typography
-            variant="h5"
-            sx={{
-              fontWeight: "bold",
-              fontSize: { xs: "18px", md: "22px" },
-              color: "#d32f2f",
-            }}
+          <motion.div
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ duration: 0.3 }}
           >
-            No puedes agendar una cita
-          </Typography>
-          <Typography
-            variant="body1"
-            sx={{
-              fontSize: { xs: "14px", md: "16px" },
-              marginTop: "10px",
-              color: "#333",
-            }}
-          >
-            Este paciente ya tiene un tratamiento en curso. Debe finalizarlo antes de agendar otra cita.
-          </Typography>
-        </Box>
-      )}
+            <Box
+              sx={{
+                width: "100%",
+                maxWidth: "600px",
+                textAlign: "center",
+                backgroundColor: "#FFEBEE", // 🔴 Fondo rojo claro
+                padding: { xs: "20px", md: "25px" },
+                borderRadius: "15px",
+                boxShadow: "0 12px 35px rgba(211, 47, 47, 0.3)", // 🔥 Más brillo en la sombra
+                border: "2px solid #D32F2F",
+                marginTop: "20px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                transition: "all 0.3s ease-in-out",
+                "&:hover": {
+                  boxShadow: "0 15px 40px rgba(211, 47, 47, 0.5)", // ✨ Más realce en hover
+                  transform: "scale(1.02)"
+                },
+              }}
+            >
+              {/* Icono con animación de oscilación y brillo */}
+              <motion.div
+                animate={{ rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] }}
+                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+              >
+                <ErrorOutlineOutlinedIcon
+                  sx={{
+                    fontSize: { xs: "50px", md: "60px" },
+                    color: "#D32F2F",
+                    marginBottom: "10px",
+                    filter: "drop-shadow(0px 0px 10px rgba(211, 47, 47, 0.5))" // ✨ Efecto de brillo en el icono
+                  }}
+                />
+              </motion.div>
 
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: "bold",
+                  fontSize: { xs: "18px", md: "22px" },
+                  color: "#D32F2F",
+                  textShadow: "0px 0px 5px rgba(211, 47, 47, 0.3)", // ✨ Texto con brillo sutil
+                }}
+              >
+                No puedes agendar una cita
+              </Typography>
+
+              <Typography
+                variant="body1"
+                sx={{
+                  fontSize: { xs: "14px", md: "16px" },
+                  marginTop: "10px",
+                  color: "#B71C1C",
+                  fontWeight: "500",
+                }}
+              >
+                Este paciente ya tiene un tratamiento en curso. Debe finalizarlo antes de agendar otra cita.
+              </Typography>
+            </Box>
+          </motion.div>
+        </motion.div>
+      )}
       {/* ✅ Si no tiene tratamiento activo, mostrar el formulario pegado al mensaje */}
       {pasoActual === 2 && usuarioEncontrado && !tratamientoActivo && (
         <motion.div
@@ -576,10 +585,11 @@ const AgendarCitaAdmin = () => {
                 }}
               >
                 <Typography variant="h6" sx={{ fontWeight: "bold", color: "#0077b6", marginBottom: "5px" }}>
-                  Información del Usuario
+                  Información del Paciente
+
                 </Typography>
                 <Typography variant="body1">
-                  <strong>Nombre:</strong> {usuarioEncontrado.nombre} {usuarioEncontrado.apellido_paterno} {usuarioEncontrado.apellido_materno}
+                  <strong >Nombre:</strong> {usuarioEncontrado.nombre.toUpperCase()} {usuarioEncontrado.apellido_paterno.toUpperCase()} {usuarioEncontrado.apellido_materno.toUpperCase()}
                 </Typography>
                 <Typography variant="body1">
                   <strong>Fecha de Nacimiento:</strong> {new Date(usuarioEncontrado.fecha_nacimiento).toLocaleDateString()}
@@ -729,28 +739,33 @@ const AgendarCitaAdmin = () => {
             </Box>
           </Box>
         </motion.div>
-
       )}
-
-
       {alerta.mostrar && (
         <Box
           sx={{
             position: "fixed",
-            bottom: 20, // 🔹 Ubicación en la parte inferior
-            left: 20,   // 🔹 Ubicación en la esquina izquierda
-            zIndex: 2000, // 🔹 Asegura que esté visible sobre otros elementos
+            bottom: 20,
+            left: 20,
+            zIndex: 2000,
             width: "auto",
             maxWidth: "400px",
           }}
         >
           <Alert
-            severity="success" // 🔹 Usa el color verde claro por defecto
+            severity={alerta.tipo} // 🔹 Cambia el icono y estilo según el tipo
             variant="filled"
             sx={{
               width: "100%",
-              backgroundColor: "#DFF6DD", // ✅ Color verde claro
-              color: "#1E4620", // ✅ Color de texto más oscuro para mejor contraste
+              backgroundColor:
+                alerta.tipo === "success" ? "#DFF6DD" :
+                  alerta.tipo === "error" ? "#F8D7DA" :
+                    alerta.tipo === "warning" ? "#FFF3CD" :
+                      "#D1ECF1", // 🔹 Default: Info
+              color:
+                alerta.tipo === "success" ? "#1E4620" :
+                  alerta.tipo === "error" ? "#721C24" :
+                    alerta.tipo === "warning" ? "#856404" :
+                      "#0C5460", // 🔹 Default: Info
             }}
             onClose={() => setAlerta({ mostrar: false, mensaje: '', tipo: '' })}
           >
@@ -758,12 +773,7 @@ const AgendarCitaAdmin = () => {
           </Alert>
         </Box>
       )}
-
-
-
-
     </Box>
   );
 };
-
 export default AgendarCitaAdmin;

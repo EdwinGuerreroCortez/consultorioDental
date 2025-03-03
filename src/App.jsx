@@ -262,7 +262,7 @@ const App = () => {
               element={
                 <RutaProtegida tiposPermitidos={['admin']}>
 
-                  <LayoutAdmin>
+                  <LayoutAdmin title={"Procesos en Curso"}>
                     <TratamientosEnCurso />
                   </LayoutAdmin>
                 </RutaProtegida>
@@ -295,7 +295,7 @@ const App = () => {
               element={
                 <RutaProtegida tiposPermitidos={['admin']}>
 
-                  <LayoutAdmin>
+                  <LayoutAdmin title="Gestión de Citas Médicas">
                     <AgendarCitaAdmin />
                   </LayoutAdmin>
                 </RutaProtegida>
