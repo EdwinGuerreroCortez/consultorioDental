@@ -12,6 +12,11 @@ import {
     Divider,
     IconButton,
     Grid,
+    Select,
+    MenuItem,
+    FormControl,
+    TextField
+
 
 } from "@mui/material";
 import { Calendar, momentLocalizer } from "react-big-calendar";
@@ -27,6 +32,11 @@ import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { es } from 'date-fns/locale';
+import { obtenerCitasOcupadas, obtenerHorasDisponibles } from "../../utils/citas";
 
 
 moment.locale("es");
@@ -86,6 +96,67 @@ const ProximasCitas = () => {
     const [selectedCita, setSelectedCita] = useState(null);
     const [comentario, setComentario] = useState("");
     const [isConfirming, setIsConfirming] = useState(false);
+    const [openReagendar, setOpenReagendar] = useState(false);
+    const [nuevaFecha, setNuevaFecha] = useState(null);
+    const [nuevaHora, setNuevaHora] = useState("");
+    const [horasDisponibles, setHorasDisponibles] = useState([
+        '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM',
+        '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM'
+    ]);
+    const [citasOcupadas, setCitasOcupadas] = useState([]);
+
+    const handleReagendar = () => {
+        setOpenReagendar(true);
+    };
+    const handleConfirmReagendar = async () => {
+        if (!nuevaFecha || !nuevaHora) {
+            alert("Por favor, selecciona una fecha y hora.");
+            return;
+        }
+    
+        // Verificar si `nuevaFecha` es un objeto válido antes de formatearla
+        if (!(nuevaFecha instanceof Date) || isNaN(nuevaFecha)) {
+            alert("La fecha seleccionada no es válida.");
+            return;
+        }
+    
+        // Formatear la fecha en `YYYY-MM-DD`
+        const fechaFormateada = nuevaFecha.toISOString().split('T')[0];
+    
+        // Convertir la hora seleccionada a formato de 24 horas
+        const [hora, minutos, periodo] = nuevaHora.match(/(\d+):(\d+)\s?(AM|PM)/i).slice(1);
+        let hora24 = parseInt(hora, 10);
+    
+        if (periodo.toUpperCase() === "PM" && hora24 !== 12) {
+            hora24 += 12;
+        } else if (periodo.toUpperCase() === "AM" && hora24 === 12) {
+            hora24 = 0;
+        }
+    
+        const horaFormateada = `${hora24.toString().padStart(2, '0')}:${minutos}:00`;
+    
+        // Unir fecha y hora en formato `YYYY-MM-DDTHH:mm:ss` para coincidir con Thunder Client
+        const nuevaFechaHora = `${fechaFormateada}T${horaFormateada}`;
+    
+        console.log(`📅 Intentando actualizar la cita ID: ${selectedCita.cita_id} con nueva fecha/hora: ${nuevaFechaHora}`);
+    
+        try {
+            const response = await axios.put(`http://localhost:4000/api/citas/actualizar-fecha-hora/${selectedCita.cita_id}`, {
+                fechaHora: nuevaFechaHora // Enviar la clave exacta como en Thunder Client
+            });
+    
+            console.log("✔️ Respuesta del servidor:", response.data);
+            alert("Cita reagendada exitosamente.");
+    
+            fetchCitas(); // Recargar citas después de reagendar
+            setOpenReagendar(false);
+            setSelectedCita(null);
+        } catch (error) {
+            console.error("❌ Error al reagendar la cita:", error.response ? error.response.data : error);
+            alert(error.response?.data?.mensaje || "Hubo un error al reagendar la cita. Verifica los datos.");
+        }
+    };
+     
 
     const fetchCitas = async () => {
         try {
@@ -106,6 +177,9 @@ const ProximasCitas = () => {
             }));
 
             setCitas(citasFormateadas);
+            // ✅ Obtener citas ocupadas para bloquear horarios
+        const citasOcupadasData = await obtenerCitasOcupadas();
+        setCitasOcupadas(citasOcupadasData);
         } catch (error) {
             console.error("Error al obtener las próximas citas", error);
         } finally {
@@ -120,7 +194,12 @@ const ProximasCitas = () => {
     const handleMarkAsCompleted = () => {
         setIsConfirming(true); // Mostrar el formulario de comentario
     };
-
+    useEffect(() => {
+        if (nuevaFecha) {
+            setHorasDisponibles(obtenerHorasDisponibles(nuevaFecha, citasOcupadas));
+        }
+    }, [nuevaFecha, citasOcupadas]);
+    
     const handleConfirmCompletion = async () => {
         if (!comentario.trim()) {
             alert("Por favor, ingresa un comentario.");
@@ -364,87 +443,124 @@ const ProximasCitas = () => {
 
                 {/* BOTONES DE ACCIÓN */}
                 <DialogActions
-    sx={{
-        display: "flex",
-        justifyContent: "center",
-        gap: 2,
-        padding: "15px",
-        backgroundColor: "#f8fcff",
-        borderBottomLeftRadius: 3,
-        borderBottomRightRadius: 3
+                    sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        gap: 2,
+                        padding: "15px",
+                        backgroundColor: "#f8fcff",
+                        borderBottomLeftRadius: 3,
+                        borderBottomRightRadius: 3
+                    }}
+                >
+                    {!isConfirming ? (
+                        <>
+                            {/* 🔹 Verificar si la cita NO está completada antes de mostrar el botón de reagendar */}
+                            {selectedCita && selectedCita.estado_cita !== "completada" && (
+                                <Button
+                                    variant="contained"
+                                    onClick={handleReagendar}
+                                    sx={{
+                                        backgroundColor: "#ffa500",
+                                        color: "white",
+                                        fontWeight: "bold",
+                                        textTransform: "none",
+                                        "&:hover": { backgroundColor: "#ff8c00" }
+                                    }}
+                                >
+                                    Reagendar
+                                </Button>
+                            )}
+
+                            {/* 🔹 Verificar si la cita NO está completada antes de mostrar el botón de marcar como completada */}
+                            {selectedCita && selectedCita.estado_cita !== "completada" && (
+                                <Button
+                                    variant="contained"
+                                    sx={{
+                                        backgroundColor: "#28a745",
+                                        color: "white",
+                                        fontWeight: "bold",
+                                        textTransform: "none",
+                                        "&:hover": { backgroundColor: "#218838" }
+                                    }}
+                                    onClick={handleMarkAsCompleted} // Muestra el formulario
+                                >
+                                    Marcar como Completada
+                                </Button>
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={handleConfirmCompletion}
+                                sx={{ fontWeight: "bold" }}
+                            >
+                                Confirmar
+                            </Button>
+                            <Button
+                                variant="contained"
+                                color="warning"
+                                onClick={() => setIsConfirming(false)}
+                                sx={{ fontWeight: "bold" }}
+                            >
+                                Cancelar
+                            </Button>
+                        </>
+                    )}
+
+                    <Button
+                        onClick={handleCloseDialog}
+                        variant="contained"
+                        sx={{
+                            backgroundColor: "#d32f2f",
+                            color: "white",
+                            fontWeight: "bold",
+                            textTransform: "none",
+                            "&:hover": { backgroundColor: "#c62828" }
+                        }}
+                    >
+                        Cerrar
+                    </Button>
+                </DialogActions>
+
+            </Dialog>
+            <Dialog open={openReagendar} onClose={() => setOpenReagendar(false)}>
+                <DialogTitle>Reagendar Cita</DialogTitle>
+                <DialogContent>
+                    <LocalizationProvider dateAdapter={AdapterDateFns} locale={es}>
+                    <DatePicker
+    label="Nueva Fecha"
+    value={nuevaFecha}
+    onChange={setNuevaFecha}
+    renderInput={(params) => <TextField {...params} fullWidth margin="normal" />}
+    disablePast
+    shouldDisableDate={(date) => {
+        const dia = date.getDay();
+        return ![1, 2, 3, 6].includes(dia); // Solo Lunes (1), Martes (2), Miércoles (3) y Sábado (6)
     }}
->
-    {!isConfirming ? (
-        <>
-            {/* 🔹 Verificar si la cita NO está completada antes de mostrar el botón de reagendar */}
-            {selectedCita && selectedCita.estado_cita !== "completada" && (
-                <Button
-                    variant="contained"
-                    sx={{
-                        backgroundColor: "#ffa500",
-                        color: "white",
-                        fontWeight: "bold",
-                        textTransform: "none",
-                        "&:hover": { backgroundColor: "#ff8c00" }
-                    }}
-                >
-                    Reagendar
-                </Button>
-            )}
+    maxDate={new Date(new Date().setMonth(new Date().getMonth() + 4))} // ✅ Permitir hasta 4 meses en el futuro
+/>
 
-            {/* 🔹 Verificar si la cita NO está completada antes de mostrar el botón de marcar como completada */}
-            {selectedCita && selectedCita.estado_cita !== "completada" && (
-                <Button
-                    variant="contained"
-                    sx={{
-                        backgroundColor: "#28a745",
-                        color: "white",
-                        fontWeight: "bold",
-                        textTransform: "none",
-                        "&:hover": { backgroundColor: "#218838" }
-                    }}
-                    onClick={handleMarkAsCompleted} // Muestra el formulario
-                >
-                    Marcar como Completada
-                </Button>
-            )}
-        </>
-    ) : (
-        <>
-            <Button
-                variant="contained"
-                color="primary"
-                onClick={handleConfirmCompletion}
-                sx={{ fontWeight: "bold" }}
-            >
-                Confirmar
-            </Button>
-            <Button
-                variant="contained"
-                color="warning"
-                onClick={() => setIsConfirming(false)}
-                sx={{ fontWeight: "bold" }}
-            >
-                Cancelar
-            </Button>
-        </>
-    )}
-
-    <Button
-        onClick={handleCloseDialog}
-        variant="contained"
-        sx={{
-            backgroundColor: "#d32f2f",
-            color: "white",
-            fontWeight: "bold",
-            textTransform: "none",
-            "&:hover": { backgroundColor: "#c62828" }
-        }}
-    >
-        Cerrar
-    </Button>
-</DialogActions>
-
+                    </LocalizationProvider>
+                    <FormControl fullWidth margin="normal">
+                        <Select
+                            value={nuevaHora}
+                            onChange={(e) => setNuevaHora(e.target.value)}
+                            displayEmpty
+                        >
+                            <MenuItem disabled value="">Selecciona una hora</MenuItem>
+                            {horasDisponibles.map((hora, index) => (
+                                <MenuItem key={index} value={hora}>{hora}</MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                </DialogContent>
+                <DialogActions>
+                    <Button variant="contained" onClick={handleConfirmReagendar}>Confirmar</Button>
+                    <Button onClick={() => setOpenReagendar(false)}>Cancelar</Button>
+                </DialogActions>
             </Dialog>
 
         </Box>
