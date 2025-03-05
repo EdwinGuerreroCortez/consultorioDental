@@ -23,6 +23,8 @@ import LayoutPaciente from "./components/navs/pacientes/LayoutPaciente";
 import Inicio from "./pages/pacientes/Inicio";
 import DetalleServicio from "./pages/pacientes/DetalleServicio";
 import AgendarCita from "./pages/pacientes/AgendarCita";
+import TratamientosActivos from "./pages/pacientes/TratamientosActivos";
+import CitasAgendadas from "./pages/pacientes/CitasAgendadas";
 
 //Admin
 import LayoutAdmin from "./components/navs/admin/LayoutAdmin";
@@ -32,13 +34,12 @@ import MisCatalogos from "./pages/admin/MisCatalogos";
 
 import TratamientosEnCurso from "./pages/admin/ProcesosCurso";
 import TratamientosPendientes from "./pages/admin/TratamientosPendientes";
-import CitasAgendadas from "./pages/pacientes/CitasAgendadas";
 import ProximasCitas from "./pages/admin/ProximasCitas";
 
 import EvaluarCitasPendientes from "./pages/admin/EvaluarCitasPendientes";
 import AgendarCitaAdmin from "./pages/admin/AgendarCitaAdmin";
+import HistorialProcesosTerminados from "./pages/admin/HistorialProcesosTerminados";
 
-import TratamientosActivos from "./pages/pacientes/TratamientosActivos";
 //Errores
 import Error404 from "./components/Errors/Error404";
 import Error400 from "./components/Errors/Error400";
@@ -308,6 +309,17 @@ const App = () => {
 
                   <LayoutAdmin title={"Evaluar Citas Pendientes"}>
                     <EvaluarCitasPendientes />
+                  </LayoutAdmin>
+                </RutaProtegida>
+              }
+            />
+            <Route
+              path="/admin/tratamientos-historial"
+              element={
+                <RutaProtegida tiposPermitidos={['admin']}>
+
+                  <LayoutAdmin title={"Historial Procesos Terminados"}>
+                    <HistorialProcesosTerminados />
                   </LayoutAdmin>
                 </RutaProtegida>
               }
