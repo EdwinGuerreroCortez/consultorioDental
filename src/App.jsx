@@ -40,6 +40,8 @@ import EvaluarCitasPendientes from "./pages/admin/EvaluarCitasPendientes";
 import AgendarCitaAdmin from "./pages/admin/AgendarCitaAdmin";
 import HistorialProcesosTerminados from "./pages/admin/HistorialProcesosTerminados";
 
+import ListaPacientes from "./pages/admin/ListaPacientes";
+
 //Errores
 import Error404 from "./components/Errors/Error404";
 import Error400 from "./components/Errors/Error400";
@@ -324,6 +326,17 @@ const App = () => {
                 </RutaProtegida>
               }
             />
+            <Route
+              path="/admin/pacientes/con-cuenta"
+              element={
+                <RutaProtegida tiposPermitidos={['admin']}>
+
+                  <LayoutAdmin title={"Lista de Pacientes"}>
+                    <ListaPacientes />
+                  </LayoutAdmin>
+                </RutaProtegida>
+              }
+              />
 
             {/*Rutas Errores*/}
             <Route path="/400" element={<Error400 />} /> {/* Ruta específica para error 400 */}
