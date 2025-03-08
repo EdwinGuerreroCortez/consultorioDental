@@ -7,8 +7,6 @@ import { useInView } from "react-intersection-observer";
 const Servicios = () => {
   const [servicios, setServicios] = useState([]);
   const navigate = useNavigate();
-  
-  // Ahora la animación se activará cada vez que el usuario entre en la vista del componente
   const { ref, inView } = useInView({ triggerOnce: false, threshold: 0.2 });
 
   useEffect(() => {
@@ -30,21 +28,17 @@ const Servicios = () => {
     <motion.div
       ref={ref}
       initial={{ opacity: 0, y: 50 }}
-      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }} // Animación bidireccional
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
       transition={{ duration: 1 }}
     >
-      <Box
-        sx={{
-          padding: "80px 20px",
-          textAlign: "center",
-          background: "linear-gradient(135deg, #0077b6, #00b4d8)",
-          color: "#fff",
-        }}
-      >
-        <Typography variant="h3" sx={{ fontWeight: "bold", marginBottom: "20px" }}>
+      <Box sx={{ padding: "80px 20px", textAlign: "center", backgroundColor: "#e0f7fa" }}>
+        <Typography
+          variant="h3"
+          sx={{ fontWeight: "bold", marginBottom: "20px", color: "#004d80" }}
+        >
           🦷 Nuestros Servicios
         </Typography>
-        <Typography variant="body1" sx={{ fontSize: "1.2rem", marginBottom: "40px" }}>
+        <Typography variant="body1" sx={{ fontSize: "1.2rem", marginBottom: "40px", color: "#555" }}>
           Conoce algunos de nuestros tratamientos para el cuidado de tu sonrisa.
         </Typography>
 
@@ -53,18 +47,17 @@ const Servicios = () => {
             <Grid item xs={12} sm={6} md={3} key={servicio.id}>
               <motion.div
                 initial={{ opacity: 0, y: 50 }}
-                animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }} // Se activa al subir y bajar
+                animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
                 transition={{ duration: 0.5, delay: index * 0.2 }}
               >
                 <Card
                   sx={{
                     borderRadius: "16px",
-                    boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
+                    boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
                     background: "#fff",
-                    transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                    transition: "transform 0.3s ease",
                     "&:hover": {
                       transform: "scale(1.05)",
-                      boxShadow: "0 12px 24px rgba(0, 0, 0, 0.3)",
                     },
                   }}
                 >
@@ -76,7 +69,10 @@ const Servicios = () => {
                     sx={{ borderTopLeftRadius: "16px", borderTopRightRadius: "16px" }}
                   />
                   <CardContent>
-                    <Typography variant="h6" sx={{ fontWeight: "bold", color: "#0077b6", marginBottom: "10px" }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: "bold", color: "#0077b6", marginBottom: "10px" }}
+                    >
                       {servicio.nombre}
                     </Typography>
                     <Typography variant="body2" sx={{ color: "#555", height: "50px", overflow: "hidden" }}>
@@ -93,23 +89,24 @@ const Servicios = () => {
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }} // Se activa al subir y bajar
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
           transition={{ duration: 0.8, delay: 1 }}
         >
           <Button
             variant="contained"
             sx={{
               marginTop: "40px",
-              backgroundColor: "#ff6b6b",
+              backgroundColor: "#00a8e8",
               color: "#fff",
               fontWeight: "bold",
               fontSize: "1rem",
               padding: "12px 24px",
-              borderRadius: "30px",
+              borderRadius: "8px",
               textTransform: "none",
-              "&:hover": { backgroundColor: "#d32f2f" },
+              "&:hover": { backgroundColor: "#0077b6" },
             }}
             onClick={() => navigate("/catalogo-servicios")}
+            startIcon={<Typography component="span">🦷</Typography>}
           >
             Ver todos los servicios
           </Button>

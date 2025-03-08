@@ -18,7 +18,7 @@ const Ubicacion = () => {
       <Box
         sx={{
           padding: "60px 20px",
-          background: "linear-gradient(135deg, #0077b6, #00b4d8)",
+          background: "linear-gradient(135deg, #e0f7fa, #00b4d8)",
           color: "#fff",
           display: "flex",
           flexDirection: "column",
