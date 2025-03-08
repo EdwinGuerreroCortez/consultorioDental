@@ -13,7 +13,7 @@ import Alerts from "../../components/shared/Button"; // Componente de alerta per
 import axios from "axios";
 import { validateEmail } from "../../utils/validations"; // Validación personalizada
 import "./bubbles.css";
-import { useNavigate } from "react-router-dom"; // Importar useNavigate
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -22,16 +22,16 @@ const Login = () => {
   const [alert, setAlert] = useState({ type: "", message: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
   const [bubbles, setBubbles] = useState([]);
-  const navigate = useNavigate(); // Inicializar useNavigate
+  const navigate = useNavigate();
 
-  // Genera las burbujas solo una vez
   useEffect(() => {
     const generatedBubbles = Array.from({ length: 40 }).map(() => ({
       left: `${Math.random() * 100}%`,
       animationDelay: `${Math.random() * 10}s`,
       animationDuration: `${5 + Math.random() * 10}s`,
-      backgroundColor: `rgba(${Math.random() * 50 + 100}, ${Math.random() * 200}, ${Math.random() * 150 + 100
-        }, 0.7)`,
+      backgroundColor: `rgba(${Math.random() * 50 + 100}, ${Math.random() * 200}, ${
+        Math.random() * 150 + 100
+      }, 0.7)`,
     }));
     setBubbles(generatedBubbles);
   }, []);
@@ -48,21 +48,28 @@ const Login = () => {
     }
 
     try {
-      // Solicitud al backend para autenticar al usuario
-      const response = await axios.post("http://localhost:4000/api/usuarios/login",
-        { email, password, },
-        { withCredentials: true, }
+      const response = await axios.post(
+        "http://localhost:4000/api/usuarios/login",
+        { email, password },
+        { withCredentials: true }
       );
       const { nombre, tipo } = response.data;
-      // Mostrar mensaje de éxito y redirigir al usuario
+
+      // Guardar el nombre del usuario en localStorage
+      localStorage.setItem("nombreUsuario", nombre);
+
       setAlert({ type: "success", message: `Bienvenido, ${nombre}` });
 
       // Redirigir según el tipo de usuario
-      if (tipo === "admin") {
-        setTimeout(() => navigate("/admin"), 2000);
-      } else if (tipo === "paciente") {
-        setTimeout(() => navigate("/paciente"), 2000);
-      }
+      setTimeout(() => {
+        if (tipo === "admin") {
+          navigate("/admin");
+        } else if (tipo === "paciente") {
+          navigate("/paciente");
+        } else {
+          navigate("/inicio"); // Ruta genérica para otros usuarios
+        }
+      }, 2000);
     } catch (error) {
       setAlert({
         type: "error",
@@ -107,21 +114,6 @@ const Login = () => {
         backgroundColor: "#e6f9f5",
       }}
     >
-      <div className="bubbles">
-        {bubbles.map((bubble, i) => (
-          <div
-            key={i}
-            className="bubble"
-            style={{
-              left: bubble.left,
-              animationDelay: bubble.animationDelay,
-              animationDuration: bubble.animationDuration,
-              backgroundColor: bubble.backgroundColor,
-            }}
-          ></div>
-        ))}
-      </div>
-
       <Box sx={{ position: "relative", zIndex: 2 }}>
         <Paper
           elevation={3}
@@ -179,18 +171,6 @@ const Login = () => {
               Iniciar Sesión
             </Button>
           </form>
-          <Typography variant="body2" sx={{ marginTop: "20px", color: "#555" }}>
-            ¿No tienes una cuenta?{" "}
-            <a href="/registro" style={{ color: "#0077b6", textDecoration: "none" }}>
-              Regístrate
-            </a>
-          </Typography>
-          <Typography variant="body2" sx={{ marginTop: "20px", color: "#555" }}>
-            ¿Olvidate tu contraseña?{" "}
-            <a href="/recuperar-password" style={{ color: "#0077b6", textDecoration: "none" }}>
-              Presione aquí
-            </a>
-          </Typography>
         </Paper>
       </Box>
 
