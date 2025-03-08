@@ -89,7 +89,7 @@ const TratamientosPendientes = () => {
             });
 
             setAlerta({ open: true, message: response.data.mensaje, severity: "success" });
-            obtenerTratamientos(); // Recargar lista de tratamientos
+            obtenerTratamientos();
             handleCerrarModal();
         } catch (error) {
             console.error("Error al asignar número de citas:", error);
@@ -98,52 +98,112 @@ const TratamientosPendientes = () => {
     };
 
     const tratamientosPaginados = tratamientos.slice((pagina - 1) * elementosPorPagina, pagina * elementosPorPagina);
+    const cellStyle = {
+        textAlign: "center",
+        fontFamily: "'Roboto', sans-serif",
+        color: "#333",
+        fontSize: "1rem",
+        py: "1.2rem"
+    };
 
     return (
         <Box sx={{ padding: "2rem", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-            <Typography variant="h4" sx={{ fontWeight: "bold", marginBottom: "1.5rem" }}>
-                Tratamientos Pendientes de Evaluación
-            </Typography>
-            <Box sx={{ flexGrow: 1 }}>
+            {/* Título con diseño de TratamientosEnCurso */}
+            <Box
+                sx={{
+                    width: "100%",
+                    maxWidth: "900px",
+                    background: "linear-gradient(135deg, #0077b6, #48cae4)",
+                    clipPath: "polygon(0 0, 100% 0, 80% 100%, 0% 100%)",
+                    color: "#ffffff",
+                    padding: "40px 40px",
+                    borderRadius: "12px",
+                    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
+                    textAlign: "left",
+                    marginBottom: "2rem",
+                    mx: "auto"
+                }}
+            >
+                <Typography
+                    variant="h4"
+                    sx={{
+                        fontWeight: "bold",
+                        fontFamily: "'Poppins', sans-serif",
+                        textShadow: "1px 1px 6px rgba(0, 0, 0, 0.2)",
+                    }}
+                >
+                    TRATAMIENTOS PENDIENTES DE EVALUACIÓN
+                </Typography>
+            </Box>
+
+            <Box sx={{ flexGrow: 1, maxWidth: "1200px", mx: "auto", width: "100%" }}>
                 {loading ? (
-                    <Typography align="center" sx={{ marginTop: "2rem", color: "#666" }}>
-                        <CircularProgress />
-                    </Typography>
+                    <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "50vh" }}>
+                        <CircularProgress
+                            size={60}
+                            sx={{ 
+                                color: "#0077b6",
+                                '& .MuiCircularProgress-circle': { strokeLinecap: 'round' }
+                            }}
+                        />
+                    </Box>
                 ) : (
-                    <TableContainer component={Paper} sx={{ borderRadius: "12px", boxShadow: 3 }}>
+                    <TableContainer component={Paper} sx={{ 
+                        borderRadius: "16px", 
+                        boxShadow: "0 6px 24px rgba(0,0,0,0.08)", 
+                        overflow: "hidden" 
+                    }}>
                         <Table>
-                            <TableHead sx={{ backgroundColor: "#d8eaff" }}>
+                            <TableHead sx={{ background: "linear-gradient(90deg, #0077b6 0%, #48cae4 100%)" }}>
                                 <TableRow>
-                                    <TableCell>#</TableCell>
-                                    <TableCell>Nombre</TableCell>
-                                    <TableCell>Apellido Paterno</TableCell>
-                                    <TableCell>Apellido Materno</TableCell>
-                                    <TableCell>Teléfono</TableCell>
-                                    <TableCell>Email</TableCell>
-                                    <TableCell>Edad</TableCell>
-                                    <TableCell>Sexo</TableCell>
-                                    <TableCell>Tratamiento</TableCell>
-                                    <TableCell>Fecha de Inicio</TableCell>
-                                    <TableCell>Acción</TableCell>
+                                    {["#", "Nombre", "Apellido Paterno", "Apellido Materno", "Teléfono", "Email", "Edad", "Sexo", "Tratamiento", "Fecha de Inicio", "Acción"].map((header) => (
+                                        <TableCell 
+                                            key={header} 
+                                            sx={{ 
+                                                ...cellStyle, 
+                                                color: "#fff", 
+                                                fontWeight: 600, 
+                                                borderBottom: "none",
+                                                fontSize: "1.1rem"
+                                            }}
+                                        >
+                                            {header}
+                                        </TableCell>
+                                    ))}
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {tratamientosPaginados.map((tratamiento, index) => (
-                                    <TableRow key={tratamiento.id}>
-                                        <TableCell>{(pagina - 1) * elementosPorPagina + index + 1}</TableCell>
-                                        <TableCell>{tratamiento.nombre}</TableCell>
-                                        <TableCell>{tratamiento.apellido_paterno}</TableCell>
-                                        <TableCell>{tratamiento.apellido_materno}</TableCell>
-                                        <TableCell>{tratamiento.telefono}</TableCell>
-                                        <TableCell>{tratamiento.email || "N/A"}</TableCell>
-                                        <TableCell>{tratamiento.fecha_nacimiento}</TableCell>
-                                        <TableCell>{tratamiento.sexo}</TableCell>
-                                        <TableCell>{tratamiento.tratamiento_nombre}</TableCell>
-                                        <TableCell>{tratamiento.fecha_inicio}</TableCell>
-                                        <TableCell>
+                                    <TableRow 
+                                        key={tratamiento.id}
+                                        sx={{ 
+                                            "&:hover": { 
+                                                backgroundColor: "#f8fbff",
+                                                transition: "background-color 0.2s",
+                                                boxShadow: "inset 0 2px 8px rgba(0,0,0,0.05)"
+                                            }
+                                        }}
+                                    >
+                                        <TableCell sx={cellStyle}>{(pagina - 1) * elementosPorPagina + index + 1}</TableCell>
+                                        <TableCell sx={cellStyle}>{tratamiento.nombre}</TableCell>
+                                        <TableCell sx={cellStyle}>{tratamiento.apellido_paterno}</TableCell>
+                                        <TableCell sx={cellStyle}>{tratamiento.apellido_materno}</TableCell>
+                                        <TableCell sx={cellStyle}>{tratamiento.telefono}</TableCell>
+                                        <TableCell sx={cellStyle}>{tratamiento.email || "N/A"}</TableCell>
+                                        <TableCell sx={cellStyle}>{tratamiento.fecha_nacimiento || "N/A"}</TableCell>
+                                        <TableCell sx={cellStyle}>{tratamiento.sexo || "N/A"}</TableCell>
+                                        <TableCell sx={cellStyle}>{tratamiento.tratamiento_nombre}</TableCell>
+                                        <TableCell sx={cellStyle}>{tratamiento.fecha_inicio || "N/A"}</TableCell>
+                                        <TableCell sx={cellStyle}>
                                             <Tooltip title="Evaluar">
-                                                <IconButton onClick={() => handleAbrirModal(tratamiento)}>
-                                                    <Assignment color="primary" />
+                                                <IconButton 
+                                                    onClick={() => handleAbrirModal(tratamiento)}
+                                                    sx={{ 
+                                                        color: "#0077b6",
+                                                        "&:hover": { color: "#005f8d" }
+                                                    }}
+                                                >
+                                                    <Assignment />
                                                 </IconButton>
                                             </Tooltip>
                                         </TableCell>
@@ -154,19 +214,55 @@ const TratamientosPendientes = () => {
                     </TableContainer>
                 )}
             </Box>
+
+            {/* Paginación */}
             <Pagination
                 count={Math.ceil(tratamientos.length / elementosPorPagina)}
                 page={pagina}
                 onChange={handleChangePagina}
                 color="primary"
                 size="large"
-                sx={{ marginTop: "1rem", alignSelf: "center" }}
+                sx={{
+                    marginTop: "2rem",
+                    alignSelf: "center",
+                    "& .MuiPaginationItem-root": {
+                        fontSize: "1.1rem",
+                        padding: "8px 16px",
+                        margin: "0 4px",
+                        borderRadius: "8px",
+                        backgroundColor: "#fff",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                        "&:hover": {
+                            backgroundColor: "#0077b6",
+                            color: "#fff"
+                        }
+                    },
+                    "& .Mui-selected": {
+                        backgroundColor: "#0077b6",
+                        color: "#fff",
+                        "&:hover": {
+                            backgroundColor: "#005f8d"
+                        }
+                    }
+                }}
             />
 
             {/* Modal para asignar citas y precio */}
-            <Dialog open={modalOpen} onClose={handleCerrarModal}>
-                <DialogTitle>Asignar Número de Citas</DialogTitle>
-                <DialogContent>
+            <Dialog 
+                open={modalOpen} 
+                onClose={handleCerrarModal}
+                sx={{ "& .MuiDialog-paper": { borderRadius: "12px", boxShadow: "0 8px 32px rgba(0,0,0,0.1)" } }}
+            >
+                <DialogTitle sx={{ 
+                    background: "linear-gradient(90deg, #0077b6 0%, #48cae4 100%)",
+                    color: "#fff",
+                    fontFamily: "'Poppins', sans-serif",
+                    fontWeight: 600,
+                    borderRadius: "12px 12px 0 0"
+                }}>
+                    Asignar Número de Citas
+                </DialogTitle>
+                <DialogContent sx={{ padding: "2rem" }}>
                     <TextField
                         label="Número de Citas"
                         type="number"
@@ -174,6 +270,7 @@ const TratamientosPendientes = () => {
                         value={numCitas}
                         onChange={(e) => setNumCitas(e.target.value)}
                         sx={{ marginBottom: 2 }}
+                        InputProps={{ inputProps: { min: 1 } }}
                     />
                     <TextField
                         label="Precio por Cita"
@@ -181,16 +278,44 @@ const TratamientosPendientes = () => {
                         fullWidth
                         value={precio}
                         onChange={(e) => setPrecio(e.target.value)}
+                        InputProps={{ inputProps: { min: 0, step: 0.01 } }}
                     />
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCerrarModal} color="secondary">Cancelar</Button>
-                    <Button onClick={handleGuardar} color="primary" variant="contained">Guardar</Button>
+                <DialogActions sx={{ padding: "0 2rem 1.5rem" }}>
+                    <Button 
+                        onClick={handleCerrarModal} 
+                        color="inherit" 
+                        sx={{ borderRadius: "8px", textTransform: "none" }}
+                    >
+                        Cancelar
+                    </Button>
+                    <Button 
+                        onClick={handleGuardar} 
+                        variant="contained"
+                        sx={{ 
+                            borderRadius: "8px", 
+                            textTransform: "none",
+                            background: "linear-gradient(45deg, #0077b6, #48cae4)",
+                            "&:hover": { background: "linear-gradient(45deg, #005f8d, #2196f3)" }
+                        }}
+                    >
+                        Guardar
+                    </Button>
                 </DialogActions>
             </Dialog>
 
-            <Snackbar open={alerta.open} autoHideDuration={4000} onClose={() => setAlerta({ ...alerta, open: false })}>
-                <Alert onClose={() => setAlerta({ ...alerta, open: false })} severity={alerta.severity} sx={{ width: "100%" }}>
+            {/* Snackbar */}
+            <Snackbar 
+                open={alerta.open} 
+                autoHideDuration={4000} 
+                onClose={() => setAlerta({ ...alerta, open: false })}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            >
+                <Alert 
+                    onClose={() => setAlerta({ ...alerta, open: false })} 
+                    severity={alerta.severity} 
+                    sx={{ width: "100%", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                >
                     {alerta.message}
                 </Alert>
             </Snackbar>

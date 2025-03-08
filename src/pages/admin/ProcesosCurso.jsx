@@ -11,12 +11,10 @@ import {
     Typography,
     Snackbar,
     Alert,
-    Button,
     Pagination,
     Stack
 } from "@mui/material";
 import CircularProgress from '@mui/material/CircularProgress';
-
 import axios from "axios";
 
 const TratamientosEnCurso = () => {
@@ -28,15 +26,14 @@ const TratamientosEnCurso = () => {
 
     useEffect(() => {
         axios.get("http://localhost:4000/api/tratamientos-pacientes/en-progreso")
-    .then(response => {
-        const tratamientosEnProgreso = response.data.map(tratamiento => ({
-            ...tratamiento,
-            sexo: tratamiento.sexo === "femenino" ? "F" : tratamiento.sexo === "masculino" ? "M" : "N/A"
-        }));
-        setTratamientos(tratamientosEnProgreso);
-        setLoading(false);
-    })
-
+            .then(response => {
+                const tratamientosEnProgreso = response.data.map(tratamiento => ({
+                    ...tratamiento,
+                    sexo: tratamiento.sexo === "femenino" ? "F" : tratamiento.sexo === "masculino" ? "M" : "N/A"
+                }));
+                setTratamientos(tratamientosEnProgreso);
+                setLoading(false);
+            })
             .catch(error => {
                 console.error("Error al obtener tratamientos en curso:", error);
                 setAlerta({ open: true, message: "Error al cargar los tratamientos", severity: "error" });
@@ -53,7 +50,7 @@ const TratamientosEnCurso = () => {
 
     return (
         <Box sx={{ padding: "2rem", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-
+            {/* Título con diseño de TratamientosEnCurso */}
             <Box
                 sx={{
                     width: "100%",
@@ -65,9 +62,8 @@ const TratamientosEnCurso = () => {
                     borderRadius: "12px",
                     boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
                     textAlign: "left",
-                    marginBottom: "2rem"  // <-- Agregar este margen para mayor separación
-
-
+                    marginBottom: "2rem",
+                    mx: "auto"
                 }}
             >
                 <Typography
@@ -78,51 +74,95 @@ const TratamientosEnCurso = () => {
                         textShadow: "1px 1px 6px rgba(0, 0, 0, 0.2)",
                     }}
                 >
-                    TRATAMIENTOS EN CURSO
-                </Typography>
+                TRATAMIENTOS PENDIENTES DE EVALUACIÓN
+            </Typography>
+        </Box>
 
-            </Box>
-
-            <Box sx={{ flexGrow: 1 }}>
-                {loading ? (
-                    <Typography align="center" sx={{ marginTop: "2rem", color: "#666" }}>
-                        <svg width={0} height={0}>
-                            <defs>
-                                <linearGradient id="my_gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                                    <stop offset="0%" stopColor="#e01cd5" />
-                                    <stop offset="100%" stopColor="#1CB5E0" />
-                                </linearGradient>
-                            </defs>
-                        </svg>
-                        <CircularProgress
-                            sx={{ 'svg circle': { stroke: 'url(#my_gradient)' } }}
-                        />
-                    </Typography>
-                ) : (
-                    <TableContainer component={Paper} sx={{ borderRadius: "12px", boxShadow: 3 }}>
+                <Box sx={{ flexGrow: 1, maxWidth: "1200px", mx: "auto", width: "100%" }}>
+                    {loading ? (
+                        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "50vh" }}>
+                            <CircularProgress
+                                size={60}
+                                sx={{ 
+                                    color: "#0077b6",
+                                    '& .MuiCircularProgress-circle': { strokeLinecap: 'round' }
+                                }}
+                            />
+                        </Box>
+                    ) : (
+                    <TableContainer component={Paper} sx={{ 
+                        borderRadius: "16px", 
+                        boxShadow: "0 6px 24px rgba(0,0,0,0.08)", // Sombra más pronunciada
+                        overflow: "hidden",
+                        background: "#fff"
+                    }}>
                         <Table>
-                            <TableHead sx={{ backgroundColor: "#d8eaff" }}>
+                            <TableHead sx={{ 
+                                background: "linear-gradient(90deg, #0077b6 0%, #48cae4 100%)" // Ajusté al color original
+                            }}>
                                 <TableRow>
-                                    <TableCell sx={{ fontWeight: "bold", textAlign: "center" }}>#</TableCell>
-                                    {["Nombre", "Apellido Paterno", "Apellido Materno",  "Edad", "Sexo","Teléfono", "Email", "Tratamiento", "Fecha de Inicio","Citas Totales", "Citas Asistidas", "Estado" ].map((header) => (
-                                        <TableCell key={header} sx={{ fontWeight: "bold", textAlign: "center" }}>{header}</TableCell>
+                                    <TableCell sx={{ 
+                                        color: "#fff", 
+                                        fontWeight: 600, 
+                                        textAlign: "center",
+                                        fontFamily: "'Roboto', sans-serif",
+                                        borderBottom: "none"
+                                    }}>#</TableCell>
+                                    {["Nombre", "Apellido Paterno", "Apellido Materno", "Edad", "Sexo", "Teléfono", "Email", "Tratamiento", "Fecha de Inicio", "Citas Totales", "Citas Asistidas", "Estado"].map((header) => (
+                                        <TableCell key={header} sx={{ 
+                                            color: "#fff", 
+                                            fontWeight: 600, 
+                                            textAlign: "center",
+                                            fontFamily: "'Roboto', sans-serif",
+                                            borderBottom: "none"
+                                        }}>
+                                            {header}
+                                        </TableCell>
                                     ))}
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {tratamientosPaginados.map((tratamiento, index) => (
-                                    <TableRow key={tratamiento.id} sx={{ "&:hover": { backgroundColor: "#eef3ff" } }}>
-                                        <TableCell sx={{ textAlign: "center" }}>{(pagina - 1) * elementosPorPagina + index + 1}</TableCell>
-                                        {[tratamiento.nombre, tratamiento.apellido_paterno, tratamiento.apellido_materno, tratamiento.edad || "N/A", tratamiento.sexo,  tratamiento.telefono, tratamiento.email || "N/A",tratamiento.tratamiento_nombre, tratamiento.fecha_inicio || "N/A",tratamiento.citas_totales, tratamiento.citas_asistidas, tratamiento.estado].map((value, i) => (
-                                            <TableCell key={i} sx={{ textAlign: "center" }}>{value}</TableCell>
+                                    <TableRow 
+                                        key={tratamiento.id} 
+                                        sx={{ 
+                                            "&:hover": { 
+                                                backgroundColor: "#f8fbff",
+                                                transition: "background-color 0.2s",
+                                                boxShadow: "inset 0 2px 8px rgba(0,0,0,0.05)" // Sombra interna al pasar el ratón
+                                            },
+                                            borderBottom: "1px solid #eef3f7"
+                                        }}
+                                    >
+                                        <TableCell sx={{ 
+                                            textAlign: "center",
+                                            color: "#444",
+                                            fontFamily: "'Roboto', sans-serif"
+                                        }}>
+                                            {(pagina - 1) * elementosPorPagina + index + 1}
+                                        </TableCell>
+                                        {[tratamiento.nombre, tratamiento.apellido_paterno, tratamiento.apellido_materno, tratamiento.edad || "N/A", tratamiento.sexo, tratamiento.telefono, tratamiento.email || "N/A", tratamiento.tratamiento_nombre, tratamiento.fecha_inicio || "N/A", tratamiento.citas_totales, tratamiento.citas_asistidas, tratamiento.estado].map((value, i) => (
+                                            <TableCell 
+                                                key={i} 
+                                                sx={{ 
+                                                    textAlign: "center",
+                                                    color: "#444",
+                                                    fontFamily: "'Roboto', sans-serif",
+                                                    py: "1.2rem"
+                                                }}
+                                            >
+                                                {value}
+                                            </TableCell>
                                         ))}
                                     </TableRow>
                                 ))}
                                 {Array.from({ length: filasFaltantes }).map((_, index) => (
                                     <TableRow key={`empty-${index}`}>
-                                        <TableCell sx={{ textAlign: "center" }}>{(pagina - 1) * elementosPorPagina + tratamientosPaginados.length + index + 1}</TableCell>
+                                        <TableCell sx={{ textAlign: "center", color: "#999" }}>
+                                            {(pagina - 1) * elementosPorPagina + tratamientosPaginados.length + index + 1}
+                                        </TableCell>
                                         {Array(12).fill("-").map((_, i) => (
-                                            <TableCell key={i} sx={{ textAlign: "center" }}>-</TableCell>
+                                            <TableCell key={i} sx={{ textAlign: "center", color: "#999", py: "1.2rem" }}>-</TableCell>
                                         ))}
                                     </TableRow>
                                 ))}
@@ -132,7 +172,13 @@ const TratamientosEnCurso = () => {
                 )}
             </Box>
 
-            <Box sx={{ display: "flex", justifyContent: "center", marginTop: "0.5rem", marginBottom: "7rem", padding: "0.5rem" }}>
+            {/* Paginación */}
+            <Box sx={{ 
+                display: "flex", 
+                justifyContent: "center", 
+                mt: "2rem", 
+                mb: "4rem" 
+            }}>
                 <Pagination
                     count={Math.ceil(tratamientos.length / elementosPorPagina)}
                     page={pagina}
@@ -141,17 +187,44 @@ const TratamientosEnCurso = () => {
                     size="large"
                     sx={{
                         "& .MuiPaginationItem-root": {
-                            fontSize: "1.2rem",
-                            padding: "8px",
-                            margin: "4px",
+                            fontSize: "1.1rem",
+                            padding: "8px 16px",
+                            margin: "0 4px",
+                            borderRadius: "8px",
+                            backgroundColor: "#fff",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                            "&:hover": {
+                                backgroundColor: "#0077b6",
+                                color: "#fff"
+                            }
+                        },
+                        "& .Mui-selected": {
+                            backgroundColor: "#0077b6",
+                            color: "#fff",
+                            "&:hover": {
+                                backgroundColor: "#005f8d"
+                            }
                         }
                     }}
                 />
             </Box>
 
-
-            <Snackbar open={alerta.open} autoHideDuration={6000} onClose={() => setAlerta({ ...alerta, open: false })} anchorOrigin={{ vertical: "bottom", horizontal: "left" }}>
-                <Alert onClose={() => setAlerta({ ...alerta, open: false })} severity={alerta.severity} sx={{ width: "100%" }}>
+            {/* Snackbar */}
+            <Snackbar 
+                open={alerta.open} 
+                autoHideDuration={6000} 
+                onClose={() => setAlerta({ ...alerta, open: false })} 
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            >
+                <Alert 
+                    onClose={() => setAlerta({ ...alerta, open: false })} 
+                    severity={alerta.severity} 
+                    sx={{ 
+                        width: "100%",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                    }}
+                >
                     {alerta.message}
                 </Alert>
             </Snackbar>
