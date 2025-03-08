@@ -214,4 +214,4 @@ const HistorialProcesosTerminados = () => {
     );
 };
 
-export default HistorialProcesosTerminados;
+export default HistorialProcesosTerminados; 
