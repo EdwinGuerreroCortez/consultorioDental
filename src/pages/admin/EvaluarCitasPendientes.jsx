@@ -276,7 +276,6 @@ export default function EvaluarCitasPendientes() {
     return new Date(ultimaCita.fecha_hora);
   };
 
-  // Determinar tipo de cita (puede ajustarse según tus datos reales)
   const determinarTipoCita = (tratamiento) => {
     if (tratamiento.requiere_evaluacion) return "Evaluación";
     return tratamiento.tratamiento || "Valorar cita";
@@ -304,25 +303,24 @@ export default function EvaluarCitasPendientes() {
                   borderRadius: 16,
                   boxShadow: "0 4px 10px rgba(0, 0, 0, 0.08)",
                   p: 2,
-                  background: "linear-gradient(135deg, #ffffff, #f7fbff)", 
-                  border: "1px solid #b3e5fc", 
+                  background: "linear-gradient(135deg, #ffffff, #f7fbff)",
+                  border: "1px solid #b3e5fc",
                   transition: "transform 0.3s ease",
                   minHeight: 220,
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
                   "&:hover": {
-                    boxShadow: "0 6px 15px rgba(179, 229, 252, 0.2)", 
+                    boxShadow: "0 6px 15px rgba(179, 229, 252, 0.2)",
                   },
                 }}
                 onClick={() => handleOpenDialog(tratamiento)}
               >
                 <CardContent>
-                  {/* Tipo de cita destacado */}
                   <Box sx={{ mb: 2, textAlign: "center" }}>
                     <Avatar
                       sx={{
-                        bgcolor: "#b3e5fc", // Azul cielo claro
+                        bgcolor: "#b3e5fc",
                         width: 40,
                         height: 40,
                         mx: "auto",
@@ -339,7 +337,6 @@ export default function EvaluarCitasPendientes() {
                     </Typography>
                   </Box>
 
-                  {/* Nombre y edad */}
                   <Box display="flex" alignItems="center" gap={2} mb={2}>
                     <Avatar sx={{ bgcolor: "#e3f2fd", width: 40, height: 40 }}>
                       <Person sx={{ fontSize: 24, color: "#42a5f5" }} />
@@ -388,7 +385,6 @@ export default function EvaluarCitasPendientes() {
                     </Box>
                   </Box>
 
-                  {/* Progreso de citas */}
                   <Box sx={{ mt: 2 }}>
                     <Typography
                       variant="body1"
@@ -408,7 +404,7 @@ export default function EvaluarCitasPendientes() {
                     >
                       <Box
                         sx={{
-                          bgcolor: "#b3e5fc", 
+                          bgcolor: "#b3e5fc",
                           height: "100%",
                           width: `${(tratamiento.citas_asistidas / tratamiento.citas_totales) * 100}%`,
                           transition: "width 0.3s ease",
@@ -444,7 +440,7 @@ export default function EvaluarCitasPendientes() {
             sx={{
               fontWeight: "bold",
               textAlign: "center",
-              backgroundColor: "#b3e5fc", 
+              backgroundColor: "#b3e5fc",
               color: "white",
               borderTopLeftRadius: 4,
               borderTopRightRadius: 4,
@@ -461,22 +457,68 @@ export default function EvaluarCitasPendientes() {
               height: "100%",
               backgroundColor: "#f9f9f9",
               p: 2,
+              pt: 4, // Aumentamos el padding superior para más espacio
             }}
           >
-            <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 3 }}>
+            <TableContainer
+              component={Paper}
+              sx={{
+                borderRadius: 2,
+                boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
+                border: "1px solid #e3f2fd",
+                mt: 2, // Añadimos margen superior para separar del DialogTitle
+              }}
+            >
               <Table>
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: "#e0e0e0" }}>
-                    <TableCell sx={{ fontWeight: "bold", textAlign: "center", width: "10%" }}>
+                  <TableRow
+                    sx={{
+                      background: "linear-gradient(135deg, #e3f2fd, #b3e5fc)",
+                      borderBottom: "2px solid #42a5f5",
+                    }}
+                  >
+                    <TableCell
+                      sx={{
+                        fontWeight: "bold",
+                        textAlign: "center",
+                        color: "#42a5f5",
+                        fontSize: "1rem",
+                        py: 2,
+                      }}
+                    >
                       #
                     </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", textAlign: "center", width: "30%" }}>
+                    <TableCell
+                      sx={{
+                        fontWeight: "bold",
+                        textAlign: "center",
+                        color: "#42a5f5",
+                        fontSize: "1rem",
+                        py: 2,
+                      }}
+                    >
                       Fecha
                     </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", textAlign: "center", width: "30%" }}>
+                    <TableCell
+                      sx={{
+                        fontWeight: "bold",
+                        textAlign: "center",
+                        color: "#42a5f5",
+                        fontSize: "1rem",
+                        py: 2,
+                      }}
+                    >
                       Estado Cita
                     </TableCell>
-                    <TableCell sx={{ fontWeight: "bold", textAlign: "center", width: "30%" }}>
+                    <TableCell
+                      sx={{
+                        fontWeight: "bold",
+                        textAlign: "center",
+                        color: "#42a5f5",
+                        fontSize: "1rem",
+                        py: 2,
+                      }}
+                    >
                       Estado Pago
                     </TableCell>
                   </TableRow>
@@ -487,45 +529,110 @@ export default function EvaluarCitasPendientes() {
                       <TableRow
                         key={index}
                         sx={{
-                          "&:nth-of-type(odd)": { backgroundColor: "#f5f5f5" },
-                          "&:hover": { backgroundColor: "#e3f2fd" },
+                          backgroundColor: index % 2 === 0 ? "#fafafa" : "#ffffff",
+                          "&:hover": { backgroundColor: "#e6f7ff" },
+                          transition: "background-color 0.3s ease",
+                          borderRadius: "8px",
                           height: "60px",
                         }}
                       >
-                        <TableCell sx={{ textAlign: "center", fontWeight: "bold", color: "gray" }}>
-                          {index + 1 + currentPage * 5}
+                        <TableCell
+                          sx={{
+                            textAlign: "center",
+                            fontWeight: "bold",
+                            color: "#666",
+                            fontSize: "0.9rem",
+                            py: 1.5,
+                          }}
+                        >
+                          {index + 1 + currentPage * citasPorPagina}
                         </TableCell>
-                        <TableCell sx={{ textAlign: "center" }}>
+                        <TableCell
+                          sx={{
+                            textAlign: "center",
+                            fontSize: "0.9rem",
+                            color: "#333",
+                            py: 1.5,
+                          }}
+                        >
                           {cita.fecha_hora ? convertirHoraLocal(cita.fecha_hora) : "Sin Asignar"}
                         </TableCell>
-                        <TableCell sx={{ textAlign: "center" }}>
+                        <TableCell sx={{ textAlign: "center", py: 1.5 }}>
                           <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
                             {cita.estado === "pendiente" ? (
-                              <ErrorOutline sx={{ color: "warning.main" }} />
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  bgcolor: "#fff3e0",
+                                  borderRadius: "50%",
+                                  width: 24,
+                                  height: 24,
+                                }}
+                              >
+                                <ErrorOutline sx={{ fontSize: 18, color: "#ff9800" }} />
+                              </Box>
                             ) : (
-                              <AssignmentTurnedIn sx={{ color: "success.main" }} />
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  bgcolor: "#e8f5e9",
+                                  borderRadius: "50%",
+                                  width: 24,
+                                  height: 24,
+                                }}
+                              >
+                                <AssignmentTurnedIn sx={{ fontSize: 18, color: "#4caf50" }} />
+                              </Box>
                             )}
                             <Typography
                               sx={{
-                                fontSize: 14,
+                                fontSize: "0.9rem",
                                 fontWeight: "bold",
-                                color: cita.estado === "pendiente" ? "warning.main" : "success.main",
+                                color: cita.estado === "pendiente" ? "#ff9800" : "#4caf50",
+                                bgcolor:
+                                  cita.estado === "pendiente" ? "#fff3e0" : "#e8f5e9",
+                                borderRadius: "12px",
+                                px: 1.5,
+                                py: 0.5,
                               }}
                             >
                               {cita.estado}
                             </Typography>
                           </Box>
                         </TableCell>
-                        <TableCell sx={{ textAlign: "center" }}>
+                        <TableCell sx={{ textAlign: "center", py: 1.5 }}>
                           <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
-                            <MonetizationOn
-                              sx={{ color: cita.pagada ? "success.main" : "error.main" }}
-                            />
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                bgcolor: cita.pagada ? "#e8f5e9" : "#ffebee",
+                                borderRadius: "50%",
+                                width: 24,
+                                height: 24,
+                              }}
+                            >
+                              <MonetizationOn
+                                sx={{
+                                  fontSize: 18,
+                                  color: cita.pagada ? "#4caf50" : "#f44336",
+                                }}
+                              />
+                            </Box>
                             <Typography
                               sx={{
-                                fontSize: 14,
+                                fontSize: "0.9rem",
                                 fontWeight: "bold",
-                                color: cita.pagada ? "success.main" : "error.main",
+                                color: cita.pagada ? "#4caf50" : "#f44336",
+                                bgcolor: cita.pagada ? "#e8f5e9" : "#ffebee",
+                                borderRadius: "12px",
+                                px: 1.5,
+                                py: 0.5,
                               }}
                             >
                               {cita.pagada ? "Pagada" : "No Pagada"}
@@ -536,7 +643,15 @@ export default function EvaluarCitasPendientes() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} sx={{ textAlign: "center", fontStyle: "italic", color: "text.secondary" }}>
+                      <TableCell
+                        colSpan={4}
+                        sx={{
+                          textAlign: "center",
+                          fontStyle: "italic",
+                          color: "text.secondary",
+                          py: 3,
+                        }}
+                      >
                         No hay citas registradas.
                       </TableCell>
                     </TableRow>
@@ -561,7 +676,7 @@ export default function EvaluarCitasPendientes() {
                   height: "45px",
                   borderRadius: "8px",
                   textTransform: "none",
-                  backgroundColor: "#b3e5fc", // Azul cielo claro
+                  backgroundColor: "#b3e5fc",
                   color: "#ffffff",
                   "&:hover": {
                     backgroundColor: "#42a5f5",
@@ -611,7 +726,7 @@ export default function EvaluarCitasPendientes() {
           sx={{
             fontWeight: "bold",
             textAlign: "center",
-            backgroundColor: "#b3e5fc", // Azul cielo claro
+            backgroundColor: "#b3e5fc",
             color: "white",
             borderTopLeftRadius: 4,
             borderTopRightRadius: 4,

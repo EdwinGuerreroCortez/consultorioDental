@@ -29,7 +29,7 @@ const AgendarCita = () => {
     const [servicioSeleccionado, setServicioSeleccionado] = useState('');
     const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
     const [horaSeleccionada, setHoraSeleccionada] = useState('');
-    const [disponibilidad, setDisponibilidad] = useState([
+    const [disponibilidad] = useState([
         '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM',
         '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM'
     ]);
@@ -305,77 +305,72 @@ const AgendarCita = () => {
 
             {/* Si no tiene tratamiento activo, mostrar el formulario */}
             {!tratamientoActivo && (
-                <Box
+                <Paper
+                    elevation={6}
                     sx={{
                         width: "100%",
                         maxWidth: "600px",
+                        padding: { xs: "20px", md: "30px" },
+                        borderRadius: "16px",
+                        background: "linear-gradient(135deg, #fff, #bbdefb)",
+                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
                         display: "flex",
                         flexDirection: "column",
-                        gap: { xs: "15px", md: "20px" },
+                        gap: { xs: "20px", md: "25px" },
                     }}
                 >
-                    {/* Servicio */}
-                    <Paper
-                        elevation={6}
-                        sx={{
-                            padding: "15px",
-                            borderRadius: "16px",
-                            background: "linear-gradient(135deg, #fff, #bbdefb)",
-                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                        }}
-                    >
-                        <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333", marginBottom: "10px" }}>
-                            Servicio
-                        </Typography>
-                        <FormControl fullWidth>
-                            <Select
-                                value={servicioSeleccionado}
-                                onChange={(e) => setServicioSeleccionado(e.target.value)}
-                                displayEmpty
-                                sx={{
-                                    borderRadius: "12px",
-                                    backgroundColor: "transparent",
-                                    "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-                                }}
-                                startAdornment={
-                                    <InputAdornment position="start">
-                                        <MedicalServicesOutlinedIcon sx={{ color: "#0288d1" }} />
-                                    </InputAdornment>
-                                }
-                            >
-                                <MenuItem disabled value="">
-                                    Selecciona un servicio
-                                </MenuItem>
-                                {servicios.map((servicio) => (
-                                    <MenuItem key={servicio.id} value={servicio.nombre}>
-                                        {servicio.nombre} -{' '}
-                                        {servicio.requiere_evaluacion ? (
-                                            <em>Requiere evaluación</em>
-                                        ) : (
-                                            `$${servicio.precio} MXN`
-                                        )}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    </Paper>
 
-                    {/* Fecha de la cita */}
-                    <Paper
-                        elevation={6}
-                        sx={{
-                            padding: "15px",
-                            borderRadius: "16px",
-                            background: "linear-gradient(135deg, #fff, #bbdefb)",
-                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                        }}
-                    >
-                        <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333", marginBottom: "10px" }}>
+                    {/* Campo: Servicio */}
+                    <FormControl fullWidth>
+                        <Typography
+                            variant="subtitle1"
+                            sx={{ fontWeight: "medium", color: "#333", mb: 1 }}
+                        >
+                            Selecciona un servicio
+                        </Typography>
+                        <Select
+                            value={servicioSeleccionado}
+                            onChange={(e) => setServicioSeleccionado(e.target.value)}
+                            displayEmpty
+                            sx={{
+                                borderRadius: "12px",
+                                backgroundColor: "transparent",
+                                "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+                                backgroundColor: "#f5faff",
+                            }}
+                            startAdornment={
+                                <InputAdornment position="start">
+                                    <MedicalServicesOutlinedIcon sx={{ color: "#0288d1" }} />
+                                </InputAdornment>
+                            }
+                        >
+                            <MenuItem disabled value="">
+                                Selecciona un servicio
+                            </MenuItem>
+                            {servicios.map((servicio) => (
+                                <MenuItem key={servicio.id} value={servicio.nombre}>
+                                    {servicio.nombre} -{' '}
+                                    {servicio.requiere_evaluacion ? (
+                                        <em>Requiere evaluación</em>
+                                    ) : (
+                                        `$${servicio.precio} MXN`
+                                    )}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+
+                    {/* Campo: Fecha de la cita */}
+                    <Box>
+                        <Typography
+                            variant="subtitle1"
+                            sx={{ fontWeight: "medium", color: "#333", mb: 1 }}
+                        >
                             Fecha de la cita
                         </Typography>
                         <Typography
                             variant="body2"
-                            sx={{ color: "#d32f2f", fontWeight: "bold", marginBottom: "8px" }}
+                            sx={{ color: "#d32f2f", fontWeight: "bold", mb: 1 }}
                         >
                             Solo se pueden agendar citas en: Lunes, Martes, Miércoles y Sábado.
                         </Typography>
@@ -390,7 +385,7 @@ const AgendarCita = () => {
                                         sx={{
                                             "& .MuiOutlinedInput-root": {
                                                 borderRadius: "12px",
-                                                backgroundColor: "transparent",
+                                                backgroundColor: "#f5faff",
                                                 "& fieldset": { border: "none" },
                                             },
                                         }}
@@ -412,59 +407,52 @@ const AgendarCita = () => {
                                 }}
                             />
                         </LocalizationProvider>
-                    </Paper>
+                    </Box>
 
-                    {/* Hora */}
-                    <Paper
-                        elevation={6}
-                        sx={{
-                            padding: "15px",
-                            borderRadius: "16px",
-                            background: "linear-gradient(135deg, #fff, #bbdefb)",
-                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                        }}
-                    >
-                        <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333", marginBottom: "10px" }}>
-                            Hora
+                    {/* Campo: Hora */}
+                    <FormControl fullWidth>
+                        <Typography
+                            variant="subtitle1"
+                            sx={{ fontWeight: "medium", color: "#333", mb: 1 }}
+                        >
+                            Hora de la cita
                         </Typography>
-                        <FormControl fullWidth>
-                            <Select
-                                value={horaSeleccionada}
-                                onChange={(e) => {
-                                    setHoraSeleccionada(e.target.value);
-                                    console.log("🕒 Hora seleccionada:", e.target.value);
-                                    console.log("📦 Datos actuales antes de enviar:", {
-                                        usuarioId,
-                                        servicioSeleccionado,
-                                        fechaSeleccionada: fechaSeleccionada ? fechaSeleccionada.toISOString().split('T')[0] : "No seleccionada",
-                                        horaSeleccionada: e.target.value
-                                    });
-                                }}
-                                displayEmpty
-                                sx={{
-                                    borderRadius: "12px",
-                                    backgroundColor: "transparent",
-                                    "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-                                }}
-                                startAdornment={
-                                    <InputAdornment position="start">
-                                        <AccessTimeIcon sx={{ color: "#0288d1" }} />
-                                    </InputAdornment>
-                                }
-                                disabled={!fechaSeleccionada || horasDisponibles.length === 0}
-                            >
-                                {horasDisponibles.length > 0 ? (
-                                    horasDisponibles.map((hora, index) => (
-                                        <MenuItem key={index} value={hora}>
-                                            {hora}
-                                        </MenuItem>
-                                    ))
-                                ) : (
-                                    <MenuItem disabled>No hay horarios disponibles</MenuItem>
-                                )}
-                            </Select>
-                        </FormControl>
-                    </Paper>
+                        <Select
+                            value={horaSeleccionada}
+                            onChange={(e) => {
+                                setHoraSeleccionada(e.target.value);
+                                console.log("🕒 Hora seleccionada:", e.target.value);
+                                console.log("📦 Datos actuales antes de enviar:", {
+                                    usuarioId,
+                                    servicioSeleccionado,
+                                    fechaSeleccionada: fechaSeleccionada ? fechaSeleccionada.toISOString().split('T')[0] : "No seleccionada",
+                                    horaSeleccionada: e.target.value
+                                });
+                            }}
+                            displayEmpty
+                            sx={{
+                                borderRadius: "12px",
+                                backgroundColor: "#f5faff",
+                                "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+                            }}
+                            startAdornment={
+                                <InputAdornment position="start">
+                                    <AccessTimeIcon sx={{ color: "#0288d1" }} />
+                                </InputAdornment>
+                            }
+                            disabled={!fechaSeleccionada || horasDisponibles.length === 0}
+                        >
+                            {horasDisponibles.length > 0 ? (
+                                horasDisponibles.map((hora, index) => (
+                                    <MenuItem key={index} value={hora}>
+                                        {hora}
+                                    </MenuItem>
+                                ))
+                            ) : (
+                                <MenuItem disabled>No hay horarios disponibles</MenuItem>
+                            )}
+                        </Select>
+                    </FormControl>
 
                     {/* Botón: Confirmar Cita */}
                     <Button
@@ -483,11 +471,12 @@ const AgendarCita = () => {
                                 background: "linear-gradient(135deg, #0277bd, #1e88e5)",
                             },
                             boxShadow: "0 6px 15px rgba(0, 119, 182, 0.3)",
+                            mt: 2,
                         }}
                     >
                         Confirmar Cita
                     </Button>
-                </Box>
+                </Paper>
             )}
 
             {/* Snackbar para alertas */}
