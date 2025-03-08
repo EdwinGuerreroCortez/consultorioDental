@@ -96,18 +96,6 @@ const CatalogoServicios = () => {
     return descripcion;
   };
 
-  // Función para formatear la duración
-  const formatearDuracion = (minutos) => {
-    if (minutos >= 60) {
-      const horas = Math.floor(minutos / 60);
-      const minutosRestantes = minutos % 60;
-      return minutosRestantes > 0
-        ? `${horas} ${horas === 1 ? 'hora' : 'horas'} ${minutosRestantes} minutos`
-        : `${horas} ${horas === 1 ? 'hora' : 'horas'}`;
-    }
-    return `${minutos} minutos`;
-  };
-
   return (
     <Box
       sx={{
@@ -196,69 +184,72 @@ const CatalogoServicios = () => {
       </Box>
 
       {/* Lista de servicios */}
-      <Grid container spacing={5}>
+      <Grid container spacing={3} justifyContent="center">
         {filteredServicios.map((servicio) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={servicio.id}>
+          <Grid item xs={12} sm={6} md={4} key={servicio.id}>
             <Card
               sx={{
-                borderRadius: "20px",
-                boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
-                transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                borderRadius: "16px",
+                boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+                backgroundColor: "#ffffff",
+                transition: "transform 0.3s ease",
+                "&:hover": {
+                  transform: "scale(1.05)",
+                },
                 display: "flex",
                 flexDirection: "column",
                 height: "100%",
-                backgroundColor: "#ffffff",
-                "&:hover": {
-                  transform: "scale(1.05)",
-                  boxShadow: "0 12px 24px rgba(0, 0, 0, 0.2)",
-                },
               }}
             >
               <CardMedia
                 component="img"
                 alt={servicio.nombre}
-                height="180"
+                height="200"
                 image={servicio.imagen || "https://via.placeholder.com/150"}
-                sx={{ borderTopLeftRadius: "20px", borderTopRightRadius: "20px" }}
+                sx={{
+                  borderTopLeftRadius: "16px",
+                  borderTopRightRadius: "16px",
+                  objectFit: "cover",
+                }}
               />
-              <CardContent sx={{ flexGrow: 1, padding: "20px" }}>
-                <Typography variant="h6" sx={{ fontWeight: "bold", color: "#004d40", marginBottom: "10px" }}>
+              <CardContent sx={{ flexGrow: 1, padding: "20px", textAlign: "center" }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: "bold",
+                    color: "#333",
+                    marginBottom: "10px",
+                    textTransform: "uppercase",
+                  }}
+                >
                   {servicio.nombre}
                 </Typography>
-                <Typography variant="body2" sx={{ color: "#37474f", marginBottom: "10px" }}>
-                  {truncarDescripcion(servicio.descripcion)}
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "#666",
+                    marginBottom: "20px",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  {truncarDescripcion(servicio.descripcion, 80)}
                 </Typography>
-                <Typography variant="body2" sx={{ color: "#00796b", marginBottom: "10px" }}>
-                  Duración: {formatearDuracion(servicio.duracion_minutos)}
-                </Typography>
-                {servicio.requiere_evaluacion ? (
-                  <Tooltip title="Este tratamiento requiere evaluación." arrow>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#e65100", display: "flex", alignItems: "center" }}
-                    >
-                      <InfoOutlinedIcon sx={{ fontSize: "18px", marginRight: "5px" }} />
-                      Requiere evaluación previa
-                    </Typography>
-                  </Tooltip>
-                ) : (
-                  <Typography variant="body2" sx={{ color: "#d32f2f" }}>
-                    Precio: {servicio.precio} MXN
-                  </Typography>
-                )}
-
                 <Button
                   variant="contained"
                   sx={{
-                    backgroundColor: "#00796b",
+                    backgroundColor: "#00a8e8",
                     color: "#ffffff",
                     fontWeight: "bold",
-                    marginTop: "20px",
-                    "&:hover": { backgroundColor: "#004d40" },
+                    textTransform: "none",
+                    borderRadius: "20px",
+                    padding: "8px 24px",
+                    "&:hover": {
+                      backgroundColor: "#0077b6",
+                    },
                   }}
                   onClick={() => handleOpen(servicio)}
                 >
-                  Ver Más
+                  Más información
                 </Button>
               </CardContent>
             </Card>
