@@ -9,7 +9,13 @@ import {
     TextField,
     Box,
     Divider,
-    Grid
+    Grid,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Alert,
+    Snackbar,
 } from "@mui/material";
 import DientesImage from "../../assets/images/Dientes.jpg"; // Imagen de dientes
 
@@ -20,64 +26,73 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
     const [tipoTratamiento, setTipoTratamiento] = useState("");
     const [medicamentos, setMedicamentos] = useState("");
     const [comentario, setComentario] = useState("");
+    const [tieneHistorial, setTieneHistorial] = useState(false); // ✅ Estado para verificar si hay historial
+    const [modoEdicion, setModoEdicion] = useState(false);
+    const [historiales, setHistoriales] = useState([]);
+    const [historialSeleccionado, setHistorialSeleccionado] = useState(null);
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState("");
+    const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
+
+
+    // 🔹 Define obtenerHistorial ANTES del useEffect para que pueda ser llamada desde guardarHistorial
+    const obtenerHistorial = async () => {
+        try {
+            const response = await fetch(`http://localhost:4000/api/historial/usuario/${paciente.id}`);
+
+            if (!response.ok) {
+                console.warn(`⚠️ No se encontró historial médico.`);
+                setHistoriales([]);
+                setHistorialSeleccionado(null);
+                setTieneHistorial(false);
+                setModoEdicion(false);
+                limpiarCampos();
+                return;
+            }
+
+            const data = await response.json();
+
+            if (!Array.isArray(data) || data.length === 0) {
+                console.warn(`⚠️ No hay historiales médicos.`);
+                setHistoriales([]);
+                setHistorialSeleccionado(null);
+                setTieneHistorial(false);
+                setModoEdicion(false);
+                limpiarCampos();
+                return;
+            }
+
+            // 🔹 Ordenar por fecha y obtener todos los historiales
+            const historialOrdenado = data.sort((a, b) => new Date(b.fecha_registro) - new Date(a.fecha_registro));
+
+            setHistoriales(historialOrdenado);
+            setHistorialSeleccionado(historialOrdenado[0]); // ✅ Selecciona el más reciente por defecto
+            setTieneHistorial(true);
+            setModoEdicion(false);
+        } catch (error) {
+            console.error("Error al obtener historial médico:", error);
+        }
+    };
+
+
+    // 🔹 Solo un `useEffect` que llama a `obtenerHistorial`
     useEffect(() => {
         if (!open || !paciente || !paciente.id) {
             return;
         }
-    
-        console.log(`🟢 Obteniendo historial médico para usuarioId: ${paciente.id}`);
-    
-        const obtenerHistorial = async () => {
-            try {
-                const response = await fetch(`http://localhost:4000/api/historial/usuario/${paciente.id}`);
-    
-                if (response.status === 404) {
-                    // ✅ Silenciar el error 404 en la consola
-                    console.warn(`⚠️ No hay historial médico registrado para el usuario ID: ${paciente.id}.`);
-                    return; // Detener ejecución sin mostrar error en consola
-                }
-    
-                if (!response.ok) {
-                    throw new Error(`⚠️ Error en la respuesta del servidor: ${response.status}`);
-                }
-    
-                const data = await response.json();
-    
-                if (!data || data.length === 0) {
-                    // Si el historial está vacío, asigna valores predeterminados
-                    setSignosVitales("");
-                    setBajoTratamiento("");
-                    setTipoTratamiento("");
-                    setMedicamentos("");
-                    setComentario("");
-                    return;
-                }
-    
-                const historialReciente = data[data.length - 1];
-                setSignosVitales(historialReciente.signos_vitales || "");
-                setBajoTratamiento(historialReciente.bajo_tratamiento ? "Sí" : "No");
-                setTipoTratamiento(historialReciente.tipo_tratamiento || "");
-                setMedicamentos(historialReciente.medicamentos_recetados || "");
-                setComentario(historialReciente.observaciones_medicas || "");
-    
-                console.log("✅ Historial cargado correctamente:", historialReciente);
-            } catch (error) {
-                if (error.message.includes("404")) {
-                    return; // ✅ No mostrar error en consola si es un 404
-                }
-                console.error("❌ Error al obtener historial médico:", error);
-            }
-        };
-    
         obtenerHistorial();
     }, [open, paciente]);
-    
-    const guardarHistorial = () => {
+
+
+
+    const guardarHistorial = async () => {
         if (!paciente || !paciente.id) {
-            console.error("❌ Error: No hay paciente seleccionado.");
+            console.error("Error: No hay paciente seleccionado.");
             return;
         }
+
+        const fechaActual = new Date().toLocaleString("es-MX", { timeZone: "America/Mexico_City" });
 
         const historialData = {
             usuario_id: paciente.id,
@@ -86,23 +101,58 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
             tipo_tratamiento: tipoTratamiento,
             medicamentos_recetados: medicamentos,
             observaciones_medicas: comentario,
+            fecha_registro: fechaActual,
         };
 
-        console.log("🟢 Enviando historial médico con datos:", historialData);
+        try {
+            const response = await fetch(`http://localhost:4000/api/historial/usuario/${paciente.id}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(historialData),
+            });
 
-        fetch(`http://localhost:4000/api/historial/usuario/${paciente.id}`, { // ✅ Corrección aquí
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(historialData),
-        })
+            if (!response.ok) {
+                throw new Error("⚠️ Error al guardar el historial");
+            }
 
-            .then(response => response.json())
-            .then(data => {
-                console.log("✅ Historial guardado correctamente:", data);
-                handleClose(); // Cerrar el modal tras guardar
-            })
-            .catch(error => console.error("❌ Error al guardar historial médico:", error));
+            console.log("✅ Historial guardado correctamente");
+            setSnackbarMessage("Historial guardado exitosamente");
+            setSnackbarSeverity("success");
+            setOpenSnackbar(true);
+            setTimeout(() => setOpenSnackbar(false), 3000);
+
+            // 🔹 Volver a obtener los datos más recientes desde el backend
+            await obtenerHistorial();
+
+            // 🔹 Desactivar la edición después de guardar
+            setModoEdicion(false);
+
+        } catch (error) {
+            console.error("Error al guardar historial médico:", error);
+            setSnackbarMessage("Error al guardar historial médico");
+            setSnackbarSeverity("error");
+            setOpenSnackbar(true);
+
+        }
     };
+
+
+
+
+    // Función para limpiar los campos y permitir añadir otro historial
+    const limpiarCampos = () => {
+        setSignosVitales("");
+        setBajoTratamiento("");
+        setTipoTratamiento("");
+        setMedicamentos("");
+        setComentario("");
+        setModoEdicion(true); // 🔹 Activa la edición
+    };
+    const manejarCambioHistorial = (event) => {
+        const historialSeleccionado = historiales.find(h => h.id === event.target.value);
+        setHistorialSeleccionado(historialSeleccionado);
+    };
+
 
 
     return (
@@ -111,7 +161,23 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
             <DialogTitle sx={{ backgroundColor: "#0077b6", color: "white", textAlign: "center", fontWeight: "bold" }}>
                 {paciente ? `Historial Médico de ${paciente.nombre} ${paciente.apellido_paterno}` : "Cargando Historial Médico..."}
             </DialogTitle>
-            <DialogContent dividers sx={{ padding: "1.5rem" }}>
+            <DialogContent
+                dividers
+                sx={{
+                    padding: "1.5rem",
+                    overflowY: "auto", // Habilita el scroll
+                    "&::-webkit-scrollbar": {
+                        width: "8px", // Ancho de la barra
+                    },
+                    "&::-webkit-scrollbar-thumb": {
+                        backgroundColor: "#0077b6", // Color de la barra de desplazamiento
+                        borderRadius: "4px",
+                    },
+                    "&::-webkit-scrollbar-track": {
+                        backgroundColor: "#f1f1f1", // Color del fondo de la barra
+                    },
+                }}
+            >
                 {/* 🔹 Mostrar mensaje si paciente es null */}
                 {!paciente ? (
                     <Typography variant="body1" align="center">
@@ -119,13 +185,23 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                     </Typography>
                 ) : (
                     <>
-                        {/* 🔹 IMAGEN */}
-                        <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
-                            <img src={DientesImage} alt="Dientes" style={{ width: "150px", borderRadius: "10px" }} />
-                        </Box>
+
 
                         {/* 🔹 SECCIÓN: Datos personales */}
                         <Box sx={{ marginBottom: "1.5rem" }}>
+                            {historiales.length > 0 && (
+                                <FormControl fullWidth sx={{ mb: 2 }}>
+                                    <InputLabel>Seleccionar historial</InputLabel>
+                                    <Select value={historialSeleccionado?.id || ""} onChange={manejarCambioHistorial}>
+                                        {historiales.map(historial => (
+                                            <MenuItem key={historial.id} value={historial.id}>
+                                                {new Date(historial.fecha_registro).toLocaleString("es-MX")}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            )}
+
                             <Typography variant="h6" sx={{ fontWeight: "bold", color: "#0077b6" }}>
                                 Datos Personales
                             </Typography>
@@ -178,7 +254,10 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                                 </Grid>
                             </Grid>
                         </Box>
-
+                        {/* 🔹 IMAGEN */}
+                        <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+                            <img src={DientesImage} alt="Dientes" style={{ width: "700px", borderRadius: "10px" }} />
+                        </Box>
                         {/* 🔹 SECCIÓN: Información médica */}
                         <Box sx={{ marginBottom: "1.5rem" }}>
                             <Typography variant="h6" sx={{ fontWeight: "bold", color: "#0077b6" }}>
@@ -189,8 +268,10 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                                 label="Signos Vitales"
                                 fullWidth
                                 variant="outlined"
-                                value={signosVitales || ""} // ✅ Evita errores de undefined
+                                value={modoEdicion ? signosVitales : historialSeleccionado?.signos_vitales || ""}
                                 onChange={(e) => setSignosVitales(e.target.value)}
+                                InputProps={{ readOnly: !modoEdicion }}
+
                             />
 
                         </Box>
@@ -203,21 +284,28 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                             <Divider sx={{ marginBottom: "1rem" }} />
                             <Grid container spacing={2}>
                                 <Grid item xs={12} md={6}>
-                                    <TextField
-                                        label="Bajo Tratamiento"
-                                        fullWidth
-                                        variant="outlined"
-                                        value={bajoTratamiento || ""}  // ✅ Evita undefined
-                                        onChange={(e) => setBajoTratamiento(e.target.value)}
-                                    />
+                                    <FormControl fullWidth variant="outlined">
+                                        <InputLabel>Bajo Tratamiento</InputLabel>
+                                        <Select
+                                            value={modoEdicion ? bajoTratamiento : historialSeleccionado?.bajo_tratamiento ? "Sí" : "No"}
+                                            onChange={(e) => setBajoTratamiento(e.target.value)}
+                                            label="Bajo Tratamiento"
+                                            disabled={!modoEdicion} // Desactiva cuando no está en edición
+                                        >
+                                            <MenuItem value="Sí">Sí</MenuItem>
+                                            <MenuItem value="No">No</MenuItem>
+                                        </Select>
+                                    </FormControl>
                                 </Grid>
+
                                 <Grid item xs={12} md={6}>
                                     <TextField
                                         label="Tipo de Tratamiento"
                                         fullWidth
                                         variant="outlined"
-                                        value={tipoTratamiento || ""}  // ✅ Evita undefined
+                                        value={modoEdicion ? tipoTratamiento : historialSeleccionado?.tipo_tratamiento || ""}
                                         onChange={(e) => setTipoTratamiento(e.target.value)}
+                                        InputProps={{ readOnly: !modoEdicion }}
                                     />
 
 
@@ -227,8 +315,10 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                                         label="Medicamentos Recetados"
                                         fullWidth
                                         variant="outlined"
-                                        value={medicamentos || ""}  // ✅ Evita undefined
+                                        value={modoEdicion ? medicamentos : historialSeleccionado?.medicamentos_recetados || ""}
                                         onChange={(e) => setMedicamentos(e.target.value)}
+                                        InputProps={{ readOnly: !modoEdicion }}
+
                                     />
                                 </Grid>
                             </Grid>
@@ -246,8 +336,10 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                                 rows={4}
                                 variant="outlined"
                                 fullWidth
-                                value={comentario || ""}  // ✅ Evita undefined
+                                value={modoEdicion ? comentario : historialSeleccionado?.observaciones_medicas || ""}
                                 onChange={(e) => setComentario(e.target.value)}
+                                InputProps={{ readOnly: !modoEdicion }}
+
                             />
 
                         </Box>
@@ -262,11 +354,57 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                 <Button onClick={handleClose} variant="contained" sx={{ backgroundColor: "#0077b6", "&:hover": { backgroundColor: "#005f91" } }}>
                     Cerrar
                 </Button>
-                <Button variant="contained" color="success" onClick={guardarHistorial}>
-                    Guardar Cambios
+                <Button variant="contained" color="warning" onClick={limpiarCampos}>
+                    Agregar Otro Historial
                 </Button>
 
+                <Button variant="contained" color="success" onClick={guardarHistorial} disabled={!modoEdicion}>
+                    {tieneHistorial ? "Actualizar Historial" : "Registrar Nuevo"}
+                </Button>
+
+
+
             </DialogActions>
+            {/* 🔹 ALERTA EN LA ESQUINA INFERIOR IZQUIERDA */}
+            {openSnackbar && (
+                <Box
+                    sx={{
+                        position: "fixed",
+                        bottom: 20,
+                        left: 20,
+                        zIndex: 1000,
+                        maxWidth: "350px",
+                    }}
+                >
+                    <Alert
+                        severity={snackbarSeverity}
+                        variant="filled"
+                        sx={{
+                            backgroundColor:
+                                snackbarSeverity === "success"
+                                    ? "#DFF6DD"
+                                    : snackbarSeverity === "error"
+                                        ? "#F8D7DA"
+                                        : snackbarSeverity === "warning"
+                                            ? "#FFF3CD"
+                                            : "#D1ECF1",
+                            color:
+                                snackbarSeverity === "success"
+                                    ? "#1E4620"
+                                    : snackbarSeverity === "error"
+                                        ? "#721C24"
+                                        : snackbarSeverity === "warning"
+                                            ? "#856404"
+                                            : "#0C5460",
+                        }}
+                        onClose={() => setOpenSnackbar(false)}
+                    >
+                        {snackbarMessage}
+                    </Alert>
+                </Box>
+            )}
+
+
         </Dialog>
     );
 };
