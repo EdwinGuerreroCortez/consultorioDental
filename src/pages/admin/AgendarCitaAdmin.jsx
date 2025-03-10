@@ -140,28 +140,30 @@ const AgendarCitaAdmin = () => {
 
 
   const verificarTratamientoActivo = async () => {
-    if (!usuarioEncontrado?.id) return; // Asegurar que usuarioEncontrado existe
-    try {
-      const response = await axiosInstance.get(`/tratamientos-pacientes/verificar/${usuarioEncontrado.id}`);
-      setTratamientoActivo(response.data.tieneTratamientoActivo);
-      console.log("⚠️ Tratamiento activo:", response.data.tieneTratamientoActivo);
+    if (!usuarioEncontrado?.id || !usuarioEncontrado?.tipo) return;
 
-      if (response.data.tieneTratamientoActivo) {
-        setAlerta({
-          mostrar: true,
-          mensaje: 'El paciente ya tiene un tratamiento activo. No puede agendar otra cita.',
-          tipo: 'warning',
-        });
-      }
+    try {
+        const response = await axiosInstance.get(`/tratamientos-pacientes/verificar/${usuarioEncontrado.tipo}/${usuarioEncontrado.id}`);
+        setTratamientoActivo(response.data.tieneTratamientoActivo);
+        console.log("⚠️ Tratamiento activo:", response.data.tieneTratamientoActivo);
+
+        if (response.data.tieneTratamientoActivo) {
+            setAlerta({
+                mostrar: true,
+                mensaje: 'El paciente ya tiene un tratamiento activo. No puede agendar otra cita.',
+                tipo: 'warning',
+            });
+        }
     } catch (error) {
-      console.error('❌ Error al verificar tratamiento:', error);
-      setAlerta({
-        mostrar: true,
-        mensaje: 'Error al verificar el tratamiento activo.',
-        tipo: 'error',
-      });
+        console.error('❌ Error al verificar tratamiento:', error);
+        setAlerta({
+            mostrar: true,
+            mensaje: 'Error al verificar el tratamiento activo.',
+            tipo: 'error',
+        });
     }
-  };
+};
+
 
   // ✅ Llamar a la función cada vez que se encuentra un usuario
   useEffect(() => {
@@ -212,127 +214,136 @@ const AgendarCitaAdmin = () => {
   const buscarUsuario = async () => {
     // Convertir la fecha de nacimiento a formato 'YYYY-MM-DD' si existe
     const datosEnvio = {
-      ...busquedaUsuario,
-      fecha_nacimiento: busquedaUsuario.fecha_nacimiento
-        ? busquedaUsuario.fecha_nacimiento.toISOString().split('T')[0]
-        : ""
+        ...busquedaUsuario,
+        fecha_nacimiento: busquedaUsuario.fecha_nacimiento
+            ? busquedaUsuario.fecha_nacimiento.toISOString().split('T')[0]
+            : ""
     };
 
     console.log("🔍 Enviando solicitud para buscar usuario con los datos:", datosEnvio);
 
     try {
-      const response = await axios.post('http://localhost:4000/api/usuarios/buscar', datosEnvio);
-      console.log("✅ Respuesta recibida del servidor:", response.data);
+        const response = await axios.post('http://localhost:4000/api/usuarios/buscar', datosEnvio);
+        console.log("✅ Respuesta recibida del servidor:", response.data);
 
-      if (response.data.length > 0) {
-        const usuario = response.data[0];
+        if (response.data.length > 0) {
+            const usuario = response.data[0];
 
-        setUsuarioEncontrado({
-          ...usuario,
-          fecha_nacimiento: usuario.fecha_nacimiento ? new Date(usuario.fecha_nacimiento) : null
-        });
+            setUsuarioEncontrado({
+                ...usuario,
+                tipo: usuario.tipo, // 🔥 Ahora el frontend sabrá si es 'usuario' o 'paciente_sin_plataforma'
+                fecha_nacimiento: usuario.fecha_nacimiento ? new Date(usuario.fecha_nacimiento) : null
+            });
 
-        setAlerta({
-          mostrar: true,
-          mensaje: "Usuario encontrado correctamente.",
-          tipo: "success",
-        });
-        // Solo pasar al paso 2 si hay un usuario encontrado
-        setPasoActual(2);
-      } else {
-        console.log("⚠️ No se encontró ningún usuario con los datos proporcionados.");
-        setUsuarioEncontrado(null);
-        setPasoActual(1); // 🔹 Asegurar que el paso se mantenga en 1 si no encuentra usuario
+            setAlerta({
+                mostrar: true,
+                mensaje: "Usuario encontrado correctamente.",
+                tipo: "success",
+            });
 
-        setAlerta({
-          mostrar: true,
-          mensaje: "No se encontró el usuario. Verifica los datos.",
-          tipo: "error",
-        });
-      }
+            // Solo pasar al paso 2 si hay un usuario encontrado
+            setPasoActual(2);
+        } else {
+            console.log("⚠️ No se encontró ningún usuario con los datos proporcionados.");
+            setUsuarioEncontrado(null);
+            setPasoActual(1);
+
+            setAlerta({
+                mostrar: true,
+                mensaje: "No se encontró el usuario. Verifica los datos.",
+                tipo: "error",
+            });
+        }
     } catch (error) {
-      console.error("❌ Error al buscar usuario:", error);
-      setUsuarioEncontrado(null);
-      setPasoActual(1);
-      setAlerta({
-        mostrar: true,
-        mensaje: "Error al buscar el usuario.",
-        tipo: "error",
-      });
+        console.error("❌ Error al buscar usuario:", error);
+        setUsuarioEncontrado(null);
+        setPasoActual(1);
+        setAlerta({
+            mostrar: true,
+            mensaje: "Error al buscar el usuario.",
+            tipo: "error",
+        });
     }
-  };
+};
 
-  const handleAgendarCita = async () => {
-    if (!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada) {
+
+const handleAgendarCita = async () => {
+  if (!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada) {
       setAlerta({
-        mostrar: true,
-        mensaje: 'Por favor, completa todos los campos.',
-        tipo: 'error',
+          mostrar: true,
+          mensaje: 'Por favor, completa todos los campos.',
+          tipo: 'error',
       });
       return;
-    }
+  }
 
-    try {
+  try {
       const tratamientoSeleccionado = servicios.find(s => s.nombre === servicioSeleccionado);
       const estadoTratamiento = tratamientoSeleccionado.requiere_evaluacion ? 'pendiente' : 'en progreso';
 
-      // ✅ Convertir la fecha seleccionada a formato 'YYYY-MM-DD' sin que cambie
       const fechaSeleccionadaStr = fechaSeleccionada.toISOString().split('T')[0];
 
-      // ✅ Convertir la hora seleccionada correctamente
       const [hora, minutos] = horaSeleccionada.replace(/( AM| PM)/, '').split(':').map(Number);
       const esPM = horaSeleccionada.includes('PM');
 
       let horaFinal = esPM && hora !== 12 ? hora + 12 : hora;
-      if (!esPM && hora === 12) horaFinal = 0; // Convertir 12 AM a 00:00
+      if (!esPM && hora === 12) horaFinal = 0; 
 
-      // ✅ Crear la fecha con la hora seleccionada en **zona horaria local (México)**
       const fechaHoraLocal = new Date(`${fechaSeleccionadaStr}T${horaFinal.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:00`);
-
-      // ✅ Convertir la fecha local a UTC antes de enviarla
       const fechaHoraUTC = new Date(fechaHoraLocal.getTime() - fechaHoraLocal.getTimezoneOffset() * 60000);
 
-      console.log("📅 Fecha seleccionada (sin cambios):", fechaSeleccionadaStr);
-      console.log("🕒 Hora seleccionada:", horaSeleccionada);
-      console.log("🌎 Fecha y hora final en UTC:", fechaHoraUTC.toISOString());
-      console.log("📦 Datos que se enviarán al backend:", {
-        usuarioId: usuarioEncontrado.id,
-        tratamientoId: tratamientoSeleccionado.id,
-        citasTotales: tratamientoSeleccionado.citas_requeridas || 0,
-        fechaInicio: fechaHoraUTC.toISOString(), // ✅ Enviar en formato UTC corregido
-        estado: estadoTratamiento,
-        precio: tratamientoSeleccionado.precio,
-        requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
-      });
+      // ✅ **Asegurar que usuarioId o pacienteId no sean null**
+      let usuarioId = null;
+      let pacienteId = null;
 
-      // ✅ Enviar solicitud para crear el tratamiento
-      await axiosInstance.post('/tratamientos-pacientes/crear', {
-        usuarioId: usuarioEncontrado.id,
-        tratamientoId: tratamientoSeleccionado.id,
-        citasTotales: tratamientoSeleccionado.citas_requeridas || 0,
-        fechaInicio: fechaHoraUTC.toISOString(), // ✅ Enviar en formato UTC corregido
-        estado: estadoTratamiento,
-        precio: tratamientoSeleccionado.precio,
-        requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
-      });
+      if (usuarioEncontrado) {
+          if (usuarioEncontrado.tipo === 'usuario') {
+              usuarioId = usuarioEncontrado.id;
+          } else if (usuarioEncontrado.tipo === 'paciente_sin_plataforma') {
+              pacienteId = usuarioEncontrado.id;
+          }
+      }
+
+      if (!usuarioId && !pacienteId) {
+          console.error("🚨 No se pudo identificar si es un usuario registrado o un paciente sin plataforma.");
+          throw new Error("❌ No se pudo identificar si es un usuario registrado o un paciente sin plataforma.");
+      }
+
+      const datosEnvio = {
+          usuarioId,
+          pacienteId,
+          tratamientoId: tratamientoSeleccionado.id,
+          citasTotales: tratamientoSeleccionado.citas_requeridas || 0,
+          fechaInicio: fechaHoraUTC.toISOString(),
+          estado: estadoTratamiento,
+          precio: tratamientoSeleccionado.precio,
+          requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
+      };
+
+      console.log("📦 Enviando datos al backend:", datosEnvio);
+
+      await axiosInstance.post('/tratamientos-pacientes/crear', datosEnvio);
 
       setAlerta({
-        mostrar: true,
-        mensaje: tratamientoSeleccionado.requiere_evaluacion
-          ? 'Tratamiento creado correctamente, pendiente de evaluación.'
-          : 'Tratamiento, citas y pagos creados correctamente.',
-        tipo: 'success',
+          mostrar: true,
+          mensaje: tratamientoSeleccionado.requiere_evaluacion
+              ? 'Tratamiento creado correctamente, pendiente de evaluación.'
+              : 'Tratamiento, citas y pagos creados correctamente.',
+          tipo: 'success',
       });
 
-    } catch (error) {
+  } catch (error) {
       console.error('❌ Error al agendar la cita:', error);
       setAlerta({
-        mostrar: true,
-        mensaje: 'Error al agendar la cita. Inténtalo nuevamente.',
-        tipo: 'error',
+          mostrar: true,
+          mensaje: 'Error al agendar la cita. Inténtalo nuevamente.',
+          tipo: 'error',
       });
-    }
-  };
+  }
+};
+
+
+
   const horasDisponibles = useMemo(() => obtenerHorasDisponibles(), [fechaSeleccionada, citasOcupadas]);
   return (
     <Box
