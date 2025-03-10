@@ -41,6 +41,8 @@ import AgendarCitaAdmin from "./pages/admin/AgendarCitaAdmin";
 import HistorialProcesosTerminados from "./pages/admin/HistorialProcesosTerminados";
 
 import ListaPacientes from "./pages/admin/ListaPacientes";
+import ListaPacientesSinCuenta from "./pages/admin/ListaPacientesSinCuenta";
+import CrearPacienteSinCuenta from "./pages/admin/CrearPacienteSinCuenta";
 
 //Errores
 import Error404 from "./components/Errors/Error404";
@@ -333,6 +335,28 @@ const App = () => {
 
                   <LayoutAdmin title={"Lista de Pacientes"}>
                     <ListaPacientes />
+                  </LayoutAdmin>
+                </RutaProtegida>
+              }
+              />
+              <Route
+              path="/admin/pacientes/sin-cuenta"
+              element={
+                <RutaProtegida tiposPermitidos={['admin']}>
+
+                  <LayoutAdmin title={"Lista de Pacientes"}>
+                    <ListaPacientesSinCuenta />
+                  </LayoutAdmin>
+                </RutaProtegida>
+              }
+              />
+              <Route
+              path="/admin/pacientes/registrar"
+              element={
+                <RutaProtegida tiposPermitidos={['admin']}>
+
+                  <LayoutAdmin title={"Lista de Pacientes"}>
+                    <CrearPacienteSinCuenta />
                   </LayoutAdmin>
                 </RutaProtegida>
               }
