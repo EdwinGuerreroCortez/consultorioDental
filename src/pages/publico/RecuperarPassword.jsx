@@ -16,7 +16,15 @@ const RecuperarPassword = () => {
   const [alert, setAlert] = useState({ type: "", message: "" });
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
+  const obtenerTokenCSRF = () => {
+    const csrfToken = document.cookie
+      .split("; ")
+      .find(row => row.startsWith("XSRF-TOKEN="))
+      ?.split("=")[1];
+  
+    return csrfToken || ""; // Evita valores undefined
+  };
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -32,8 +40,15 @@ const RecuperarPassword = () => {
     }
 
     try {
+      const csrfToken = obtenerTokenCSRF(); // 🔹 Obtener token CSRF
       // Enviar solicitud al backend para recuperación de contraseña
-      await axios.post("http://localhost:4000/api/usuarios/recuperar-password", { email });
+      await axios.post("http://localhost:4000/api/usuarios/recuperar-password", { email },{
+        headers: {
+          "X-XSRF-TOKEN": csrfToken, // 🔹 Agregar token CSRF
+          "Content-Type": "application/json",
+        },
+        withCredentials: true, // 🔹 Permitir cookies con CSRF
+      });
       setAlert({ type: "success", message: "Correo enviado con instrucciones para recuperar la contraseña." });
       setTimeout(() => navigate("/login"), 3000);
     } catch (error) {

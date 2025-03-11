@@ -32,6 +32,12 @@ const CrearPacienteSinCuenta = () => {
   const [mensaje, setMensaje] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const obtenerTokenCSRF = () => {
+    return document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("XSRF-TOKEN="))
+      ?.split("=")[1];
+  };
   const formik = useFormik({
     initialValues: {
       nombre: "",
@@ -46,9 +52,18 @@ const CrearPacienteSinCuenta = () => {
     onSubmit: async (values, { resetForm }) => {
       setLoading(true);
       try {
+        const csrfToken = obtenerTokenCSRF(); // 🔹 Obtener el token CSRF
+
         const response = await axios.post(
           "http://localhost:4000/api/pacientes-sin-plataforma/registrar",
-          values
+          values,
+          {
+          headers: {
+            "X-XSRF-TOKEN": csrfToken, // 🔹 Agregar token CSRF en headers
+            "Content-Type": "application/json",
+          },
+          withCredentials: true, // 🔹 Asegurar que las cookies sean enviadas
+        }
         );
         setMensaje({ tipo: "success", texto: response.data.mensaje });
         resetForm();

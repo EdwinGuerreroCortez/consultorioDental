@@ -100,7 +100,12 @@ const CrearServicioOdontologia = () => {
             [campo]: mensajeError,
         });
     };
-
+    const obtenerTokenCSRF = () => {
+        return document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("XSRF-TOKEN="))
+          ?.split("=")[1];
+      };
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -137,10 +142,12 @@ const CrearServicioOdontologia = () => {
                 formulario.tipo_citas === "citas_requeridas" ? formulario.citas_requeridas : ""
             );
             formData.append("imagen", formulario.imagen);
-
+            const csrfToken = obtenerTokenCSRF();
             const response = await fetch("http://localhost:4000/api/tratamientos/crear", {
                 method: "POST",
                 body: formData,
+                headers: {"X-XSRF-TOKEN": csrfToken },
+                credentials: "include",
             });
 
             if (response.ok) {

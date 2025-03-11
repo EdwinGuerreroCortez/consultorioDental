@@ -35,50 +35,79 @@ const Login = () => {
     }));
     setBubbles(generatedBubbles);
   }, []);
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-
-    if (errors.email || errors.password || !email || !password) {
-      setAlert({
-        type: "error",
-        message: "Por favor, corrige los errores antes de continuar.",
-      });
-      return;
-    }
-
-    try {
-      const response = await axios.post(
-        "http://localhost:4000/api/usuarios/login",
-        { email, password },
-        { withCredentials: true }
-      );
-      const { nombre, tipo } = response.data;
-
-      // Guardar el nombre del usuario en localStorage
-      localStorage.setItem("nombreUsuario", nombre);
-
-      setAlert({ type: "success", message: `Bienvenido, ${nombre}` });
-
-      // Redirigir según el tipo de usuario
-      setTimeout(() => {
-        if (tipo === "admin") {
-          navigate("/admin");
-        } else if (tipo === "paciente") {
-          navigate("/paciente");
-        } else {
-          navigate("/inicio"); // Ruta genérica para otros usuarios
+   useEffect(() => {
+      const obtenerTokenCSRF = async () => {
+        try {
+          await fetch('http://localhost:4000/api/get-csrf-token', {
+            credentials: 'include',
+          });
+        } catch (error) {
+          console.error('Error obteniendo el token CSRF:', error);
         }
-      }, 2000);
-    } catch (error) {
-      setAlert({
-        type: "error",
-        message: error.response?.data?.mensaje || "Error al iniciar sesión.",
-      });
-    }
+      };
+    
+      obtenerTokenCSRF();
+    }, []);
+    
 
-    setTimeout(() => setAlert({ type: "", message: "" }), 5000);
-  };
+    const handleLogin = async (e) => {
+      e.preventDefault();
+    
+      if (errors.email || errors.password || !email || !password) {
+        setAlert({
+          type: "error",
+          message: "Por favor, corrige los errores antes de continuar.",
+        });
+        return;
+      }
+    
+      try {
+        // 1️⃣ Obtener el token CSRF desde las cookies
+        const csrfToken = document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("XSRF-TOKEN="))
+          ?.split("=")[1];
+    
+        // 2️⃣ Enviar la solicitud con el token CSRF en los headers
+        const response = await axios.post(
+          "http://localhost:4000/api/usuarios/login",
+          { email, password },
+          {
+            withCredentials: true,
+            headers: {
+              "Content-Type": "application/json",
+              "X-XSRF-TOKEN": csrfToken, // Incluir el token CSRF en la solicitud
+            },
+          }
+        );
+    
+        const { nombre, tipo } = response.data;
+    
+        // Guardar el nombre del usuario en localStorage
+        localStorage.setItem("nombreUsuario", nombre);
+    
+        setAlert({ type: "success", message: `Bienvenido, ${nombre}` });
+    
+        // Redirigir según el tipo de usuario
+        setTimeout(() => {
+          if (tipo === "admin") {
+            navigate("/admin");
+          } else if (tipo === "paciente") {
+            navigate("/paciente");
+          } else {
+            navigate("/inicio");
+          }
+        }, 2000);
+      } catch (error) {
+        setAlert({
+          type: "error",
+          message: error.response?.data?.mensaje || "Error al iniciar sesión.",
+        });
+      }
+    
+      setTimeout(() => setAlert({ type: "", message: "" }), 5000);
+    };
+    
 
   const handleChange = (field, value) => {
     if (field === "email") {
@@ -170,6 +199,30 @@ const Login = () => {
             >
               Iniciar Sesión
             </Button>
+            <Typography variant="body2" sx={{ marginTop: "10px" }}>
+  ¿No tienes cuenta?{" "}
+  <Button
+    variant="text"
+    color="primary"
+    onClick={() => navigate("/registro")}
+    sx={{ textTransform: "none" }}
+  >
+    Regístrate aquí
+  </Button>
+</Typography>
+
+<Typography variant="body2" sx={{ marginTop: "5px" }}>
+  ¿Olvidaste tu contraseña?{" "}
+  <Button
+    variant="text"
+    color="primary"
+    onClick={() => navigate("/recuperar-password")}
+    sx={{ textTransform: "none" }}
+  >
+    Recuperar contraseña
+  </Button>
+</Typography>
+
           </form>
         </Paper>
       </Box>

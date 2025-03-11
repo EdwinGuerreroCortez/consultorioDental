@@ -91,7 +91,13 @@ export default function EvaluarCitasPendientes() {
   const handleCloseAgendar = () => {
     setOpenAgendar(false);
   };
-
+  const obtenerTokenCSRF = () => {
+    const csrfToken = document.cookie
+        .split("; ")
+        .find(row => row.startsWith("XSRF-TOKEN="))
+        ?.split("=")[1];
+    return csrfToken || ""; // 🔥 Evitar valores undefined o null
+};
   const actualizarCita = async () => {
     const proximaCitaId = obtenerProximaCitaId();
     if (!proximaCitaId || !fechaSeleccionada || !horaSeleccionada) {
@@ -120,9 +126,16 @@ export default function EvaluarCitasPendientes() {
     console.log("🕒 Nueva fecha y hora en UTC:", fechaHoraUTC.toISOString());
 
     try {
+      const csrfToken = obtenerTokenCSRF();
       const response = await axios.put(`http://localhost:4000/api/citas/actualizar/${proximaCitaId}`, {
         fechaHora: fechaHoraUTC.toISOString(),
-      });
+      },
+      {
+        headers: {
+            "X-XSRF-TOKEN": csrfToken // Enviar el token CSRF en los headers
+        },
+        withCredentials: true,
+    });
 
       console.log("✅ Cita actualizada con éxito:", response.data);
 

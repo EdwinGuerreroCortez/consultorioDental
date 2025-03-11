@@ -74,7 +74,13 @@ const TratamientosPendientes = () => {
         setNumCitas("");
         setPrecio("");
     };
-
+    const obtenerTokenCSRF = () => {
+        const csrfToken = document.cookie
+            .split("; ")
+            .find(row => row.startsWith("XSRF-TOKEN="))
+            ?.split("=")[1];
+        return csrfToken || ""; // 🔥 Evitar valores undefined o null
+    };
     const handleGuardar = async () => {
         if (!numCitas || !precio || isNaN(numCitas) || isNaN(precio) || numCitas <= 0 || precio <= 0) {
             setAlerta({ open: true, message: "Por favor ingresa valores válidos.", severity: "warning" });
@@ -82,10 +88,17 @@ const TratamientosPendientes = () => {
         }
 
         try {
+            const csrfToken = obtenerTokenCSRF();
             const response = await axios.post("http://localhost:4000/api/tratamientos-pacientes/crear-nuevas-citas-pagos", {
                 tratamientoPacienteId: tratamientoSeleccionado.id,
                 citasTotales: parseInt(numCitas, 10),
                 precioPorCita: parseFloat(precio)
+            },
+            {
+                headers: {
+                    "X-XSRF-TOKEN": csrfToken // Enviar el token CSRF en los headers
+                },
+                withCredentials: true,
             });
 
             setAlerta({ open: true, message: response.data.mensaje, severity: "success" });

@@ -53,11 +53,13 @@ const MisCatalogos = () => {
     };
 
     const actualizarEstado = async (id, estadoActual) => {
+        const csrfToken = obtenerTokenCSRF(); // 🔹 Obtener el token CSRF
         try {
             const nuevoEstado = estadoActual === 1 ? 0 : 1;
             await fetch(`http://localhost:4000/api/tratamientos/${id}/estado`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": csrfToken },
+                credentials: "include",
                 body: JSON.stringify({ estado: nuevoEstado }),
             });
 
@@ -118,7 +120,12 @@ const MisCatalogos = () => {
 
         setErrores((prev) => ({ ...prev, [campo]: error }));
     };
-
+    const obtenerTokenCSRF = () => {
+        return document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("XSRF-TOKEN="))
+          ?.split("=")[1];
+      };
     const guardarCambios = async () => {
         const camposValidos = Object.values(errores).every((error) => error === "");
 
@@ -126,11 +133,12 @@ const MisCatalogos = () => {
             setAlerta({ open: true, message: "Corrige los errores antes de guardar.", severity: "error" });
             return;
         }
-
+        const csrfToken = obtenerTokenCSRF(); // 🔹 Obtener el token CSRF
         try {
             await fetch(`http://localhost:4000/api/tratamientos/${tratamientoSeleccionado.id}`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": csrfToken },
+                credentials: "include",
                 body: JSON.stringify(tratamientoSeleccionado),
             });
 

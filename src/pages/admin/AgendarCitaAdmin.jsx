@@ -223,7 +223,17 @@ const AgendarCitaAdmin = () => {
     console.log("🔍 Enviando solicitud para buscar usuario con los datos:", datosEnvio);
 
     try {
-        const response = await axios.post('http://localhost:4000/api/usuarios/buscar', datosEnvio);
+      // 1️⃣ Obtener el token CSRF desde las cookies
+      const csrfToken = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("XSRF-TOKEN="))
+      ?.split("=")[1];
+        const response = await axios.post('http://localhost:4000/api/usuarios/buscar', datosEnvio,{
+          headers: {
+              'X-XSRF-TOKEN': csrfToken,
+          },
+        withCredentials: true,
+        });
         console.log("✅ Respuesta recibida del servidor:", response.data);
 
         if (response.data.length > 0) {
@@ -266,6 +276,19 @@ const AgendarCitaAdmin = () => {
     }
 };
 
+useEffect(() => {
+  const obtenerTokenCSRF = async () => {
+    try {
+      await fetch("http://localhost:4000/api/get-csrf-token", {
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Error obteniendo el token CSRF:", error);
+    }
+  };
+
+  obtenerTokenCSRF();
+}, []);
 
 const handleAgendarCita = async () => {
   if (!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada) {
@@ -278,6 +301,11 @@ const handleAgendarCita = async () => {
   }
 
   try {
+      // 1️⃣ Obtener el token CSRF desde las cookies
+      const csrfToken = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("XSRF-TOKEN="))
+      ?.split("=")[1];
       const tratamientoSeleccionado = servicios.find(s => s.nombre === servicioSeleccionado);
       const estadoTratamiento = tratamientoSeleccionado.requiere_evaluacion ? 'pendiente' : 'en progreso';
 
@@ -322,7 +350,11 @@ const handleAgendarCita = async () => {
 
       console.log("📦 Enviando datos al backend:", datosEnvio);
 
-      await axiosInstance.post('/tratamientos-pacientes/crear', datosEnvio);
+      await axiosInstance.post('/tratamientos-pacientes/crear', datosEnvio,{
+          headers: {
+              'X-XSRF-TOKEN': csrfToken,
+          },
+      });
 
       setAlerta({
           mostrar: true,

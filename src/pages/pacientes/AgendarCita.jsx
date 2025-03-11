@@ -161,7 +161,15 @@ const AgendarCita = () => {
             });
         }
     };
-
+    const obtenerTokenCSRF = () => {
+        const csrfToken = document.cookie
+          .split("; ")
+          .find(row => row.startsWith("XSRF-TOKEN="))
+          ?.split("=")[1];
+      
+        return csrfToken || ""; // Evita valores undefined
+      };
+      
     const handleAgendarCita = async () => {
         if (!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada) {
             setAlerta({
@@ -173,6 +181,8 @@ const AgendarCita = () => {
         }
 
         try {
+            const csrfToken = obtenerTokenCSRF(); // 🔹 Obtener token CSRF
+
             const tratamientoSeleccionado = servicios.find(s => s.nombre === servicioSeleccionado);
             const estadoTratamiento = tratamientoSeleccionado.requiere_evaluacion ? 'pendiente' : 'en progreso';
 
@@ -194,7 +204,13 @@ const AgendarCita = () => {
                 estado: estadoTratamiento,
                 precio: tratamientoSeleccionado.precio,
                 requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
-            });
+            },{
+                headers: {
+                  "X-XSRF-TOKEN": csrfToken, // 🔹 Agregar token CSRF
+                  "Content-Type": "application/json",
+                },
+                withCredentials: true, // 🔹 Permitir cookies con CSRF
+              });
 
             setAlerta({
                 mostrar: true,

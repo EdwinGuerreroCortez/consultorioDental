@@ -60,7 +60,15 @@ const Registro = () => {
     }));
     setBubbles(generatedBubbles);
   }, []);
-
+  const obtenerTokenCSRF = () => {
+    const csrfToken = document.cookie
+      .split("; ")
+      .find(row => row.startsWith("XSRF-TOKEN="))
+      ?.split("=")[1];
+  
+    return csrfToken || ""; // Evita valores undefined
+  };
+  
   const handleNext = async () => {
     if (!validateStep()) {
       setAlert({
@@ -73,6 +81,7 @@ const Registro = () => {
   
     if (step === steps.length - 1) {
       try {
+        const csrfToken = obtenerTokenCSRF(); // 🔹 Obtener token CSRF antes de enviar la solicitud
         console.log('Datos enviados a la verificación:', {
           email: formData.correo,
           codigo: formData.codigoVerificacion,
@@ -81,6 +90,12 @@ const Registro = () => {
         const response = await axios.post("http://localhost:4000/api/usuarios/verificar", {
           email: formData.correo,
           codigo: formData.codigoVerificacion,
+        },{
+          headers: {
+            "X-XSRF-TOKEN": csrfToken, // 🔹 Agregar token CSRF
+            "Content-Type": "application/json",
+          },
+          withCredentials: true, // 🔹 Permitir cookies con CSRF
         });
   
         setAlert({ open: true, message: response.data.mensaje, severity: "success" });
@@ -95,6 +110,8 @@ const Registro = () => {
       }
     } else if (step === 1) {
       try {
+        const csrfToken = obtenerTokenCSRF(); // 🔹 Obtener token CSRF antes de enviar la solicitud
+
         await axios.post("http://localhost:4000/api/usuarios/registrar", {
           nombre: formData.nombre,
           apellido_paterno: formData.apellidoPaterno,
@@ -105,6 +122,12 @@ const Registro = () => {
           email: formData.correo,
           password: formData.contrasena,
           repetir_password: formData.repetirContrasena,
+        }, {
+          headers: {
+            "X-XSRF-TOKEN": csrfToken, // 🔹 Agregar token CSRF
+            "Content-Type": "application/json",
+          },
+          withCredentials: true, // 🔹 Permitir cookies con CSRF
         });
   
         setAlert({ open: true, message: "Registro exitoso. Revisa tu correo.", severity: "success" });

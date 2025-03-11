@@ -54,7 +54,20 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
       }
     });
   }, [location.pathname]);
-
+  useEffect(() => {
+    const obtenerTokenCSRF = async () => {
+      try {
+        await fetch("http://localhost:4000/api/get-csrf-token", {
+          credentials: "include",
+        });
+      } catch (error) {
+        console.error("Error obteniendo el token CSRF:", error);
+      }
+    };
+  
+    obtenerTokenCSRF();
+  }, []);
+  
   // Cerrar los submenús automáticamente si el Drawer se colapsa
   useEffect(() => {
     if (!drawerOpen) {
@@ -76,9 +89,19 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
   
   const cerrarSesion = async () => {
     try {
+       // Obtener el token CSRF desde las cookies
+    const csrfToken = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("XSRF-TOKEN="))
+    ?.split("=")[1];
+
       const response = await fetch('http://localhost:4000/api/usuarios/logout', {
         method: 'POST',
         credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+          "X-XSRF-TOKEN": csrfToken,  // Incluir el token CSRF en los headers
+        },
       });
 
       if (response.ok) {

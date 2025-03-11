@@ -85,7 +85,16 @@ const HistorialMedicoSincuenta = ({ open, handleClose, paciente }) => {
     }, [open, paciente]);
 
 
-
+    const obtenerTokenCSRF = () => {
+        const csrfToken = document.cookie
+            .split("; ")
+            .find(row => row.startsWith("XSRF-TOKEN="))
+            ?.split("=")[1];
+    
+        console.log("🔹 Token CSRF obtenido:", csrfToken); // Verificar si se obtiene el token correctamente
+    
+        return csrfToken || ""; // Evitar valores undefined o null
+    };
     const guardarHistorial = async () => {
         if (!paciente || !paciente.id) {
             console.error("Error: No hay paciente seleccionado.");
@@ -105,9 +114,11 @@ const HistorialMedicoSincuenta = ({ open, handleClose, paciente }) => {
         };
 
         try {
+            const csrfToken = obtenerTokenCSRF();
             const response = await fetch(`http://localhost:4000/api/historial/usuario/sin-Plataforma/${paciente.id}`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json","X-XSRF-TOKEN": csrfToken },
+                credentials: "include",
                 body: JSON.stringify(historialData),
             });
 

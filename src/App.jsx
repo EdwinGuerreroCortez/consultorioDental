@@ -23,8 +23,10 @@ import LayoutPaciente from "./components/navs/pacientes/LayoutPaciente";
 import Inicio from "./pages/pacientes/Inicio";
 import DetalleServicio from "./pages/pacientes/DetalleServicio";
 import AgendarCita from "./pages/pacientes/AgendarCita";
+
 import TratamientosActivos from "./pages/pacientes/TratamientosActivos";
 import CitasAgendadas from "./pages/pacientes/CitasAgendadas";
+import Perfil from "./pages/pacientes/Perfil";
 
 //Admin
 import LayoutAdmin from "./components/navs/admin/LayoutAdmin";
@@ -214,7 +216,16 @@ const App = () => {
                 </RutaProtegida>
               }
             />
-
+            <Route
+              path="/perfil"
+              element={
+                <RutaProtegida tiposPermitidos={['paciente']}>
+                  <LayoutPaciente>
+                    <Perfil />
+                  </LayoutPaciente>
+                </RutaProtegida>
+              }
+            />
 
 
             {/* Rutas admin */}
@@ -306,7 +317,7 @@ const App = () => {
                 </RutaProtegida>
               }
             />
-           <Route
+            <Route
               path="/admin/citas-evaluar"
               element={
                 <RutaProtegida tiposPermitidos={['admin']}>
@@ -338,8 +349,8 @@ const App = () => {
                   </LayoutAdmin>
                 </RutaProtegida>
               }
-              />
-              <Route
+            />
+            <Route
               path="/admin/pacientes/sin-cuenta"
               element={
                 <RutaProtegida tiposPermitidos={['admin']}>
@@ -349,8 +360,8 @@ const App = () => {
                   </LayoutAdmin>
                 </RutaProtegida>
               }
-              />
-              <Route
+            />
+            <Route
               path="/admin/pacientes/registrar"
               element={
                 <RutaProtegida tiposPermitidos={['admin']}>
@@ -360,7 +371,7 @@ const App = () => {
                   </LayoutAdmin>
                 </RutaProtegida>
               }
-              />
+            />
 
             {/*Rutas Errores*/}
             <Route path="/400" element={<Error400 />} /> {/* Ruta específica para error 400 */}

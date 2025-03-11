@@ -61,7 +61,15 @@ const CambioPassword = () => {
             }));
         }
     };
-
+    const obtenerTokenCSRF = () => {
+        const csrfToken = document.cookie
+          .split("; ")
+          .find(row => row.startsWith("XSRF-TOKEN="))
+          ?.split("=")[1];
+      
+        return csrfToken || ""; // Evita valores undefined
+      };
+      
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -72,12 +80,18 @@ const CambioPassword = () => {
             }));
             return;
         }
-
+        const csrfToken = obtenerTokenCSRF(); // 🔹 Obtener token CSRF
         try {
             await axios.post('http://localhost:4000/api/usuarios/cambiar-password', {
                 token,
-                nuevaPassword: password
-            });
+                nuevaPassword: password,
+            },{
+                headers: {
+                  "X-XSRF-TOKEN": csrfToken, // 🔹 Agregar token CSRF
+                  "Content-Type": "application/json",
+                },
+                withCredentials: true, // 🔹 Permitir cookies con CSRF
+              });
 
             setAlert({ open: true, message: 'Contraseña cambiada con éxito.', severity: 'success' });
             setTimeout(() => navigate('/login'), 3000);

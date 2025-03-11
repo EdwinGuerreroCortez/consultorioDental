@@ -62,6 +62,8 @@ const NavbarPaciente = () => {
     };
   }, []);
 
+  
+
   // Función para manejar la búsqueda
   const handleSearch = async (event) => {
     const term = event.target.value;
@@ -88,24 +90,35 @@ const NavbarPaciente = () => {
   // Función para manejar el cierre de sesión
   const cerrarSesion = async () => {
     try {
+      const csrfToken = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('XSRF-TOKEN='))
+        ?.split('=')[1];
+  
       const response = await fetch('http://localhost:4000/api/usuarios/logout', {
         method: 'POST',
         credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-XSRF-TOKEN': csrfToken, // Incluir el token CSRF en la solicitud
+        },
       });
-
+  
       if (response.ok) {
-        setAlertaExito(true);  // Mostrar alerta de éxito
+        setAlertaExito(true);
         setTimeout(() => {
           setAlertaExito(false);
-          window.location.href = '/';  // Redirigir a la página de inicio después de 2 segundos
+          window.location.href = '/';
         }, 2000);
       } else {
-        console.error('Error al cerrar sesión:', await response.json());
+        const errorData = await response.json();
+        console.error('Error al cerrar sesión:', errorData);
       }
     } catch (error) {
       console.error('Error en la solicitud de cierre de sesión:', error);
     }
   };
+  
 
   const toggleDrawer = (open) => (event) => {
     if (event.type === "keydown" && (event.key === "Tab" || event.key === "Shift")) {

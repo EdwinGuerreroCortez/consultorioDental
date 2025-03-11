@@ -113,41 +113,48 @@ const ProximasCitas = () => {
             alert("Por favor, selecciona una fecha y hora.");
             return;
         }
-    
+
         // Verificar si `nuevaFecha` es un objeto válido antes de formatearla
         if (!(nuevaFecha instanceof Date) || isNaN(nuevaFecha)) {
             alert("La fecha seleccionada no es válida.");
             return;
         }
-    
+
         // Formatear la fecha en `YYYY-MM-DD`
         const fechaFormateada = nuevaFecha.toISOString().split('T')[0];
-    
+
         // Convertir la hora seleccionada a formato de 24 horas
         const [hora, minutos, periodo] = nuevaHora.match(/(\d+):(\d+)\s?(AM|PM)/i).slice(1);
         let hora24 = parseInt(hora, 10);
-    
+
         if (periodo.toUpperCase() === "PM" && hora24 !== 12) {
             hora24 += 12;
         } else if (periodo.toUpperCase() === "AM" && hora24 === 12) {
             hora24 = 0;
         }
-    
+
         const horaFormateada = `${hora24.toString().padStart(2, '0')}:${minutos}:00`;
-    
+
         // Unir fecha y hora en formato `YYYY-MM-DDTHH:mm:ss` para coincidir con Thunder Client
         const nuevaFechaHora = `${fechaFormateada}T${horaFormateada}`;
-    
+
         console.log(`📅 Intentando actualizar la cita ID: ${selectedCita.cita_id} con nueva fecha/hora: ${nuevaFechaHora}`);
-    
+
         try {
+            const csrfToken = obtenerTokenCSRF(); // Obtener el token CSRF de las cookies
             const response = await axios.put(`http://localhost:4000/api/citas/actualizar-fecha-hora/${selectedCita.cita_id}`, {
                 fechaHora: nuevaFechaHora // Enviar la clave exacta como en Thunder Client
-            });
-    
+            },
+                {
+                    headers: {
+                        "X-XSRF-TOKEN": csrfToken // Enviar el token CSRF en los headers
+                    },
+                    withCredentials: true,
+                });
+
             console.log("✔️ Respuesta del servidor:", response.data);
             alert("Cita reagendada exitosamente.");
-    
+
             fetchCitas(); // Recargar citas después de reagendar
             setOpenReagendar(false);
             setSelectedCita(null);
@@ -156,7 +163,14 @@ const ProximasCitas = () => {
             alert(error.response?.data?.mensaje || "Hubo un error al reagendar la cita. Verifica los datos.");
         }
     };
-     
+    const obtenerTokenCSRF = () => {
+        const csrfToken = document.cookie
+            .split("; ")
+            .find(row => row.startsWith("XSRF-TOKEN="))
+            ?.split("=")[1];
+        return csrfToken || ""; // 🔥 Evitar valores undefined o null
+    };
+    
 
     const fetchCitas = async () => {
         try {
@@ -178,8 +192,8 @@ const ProximasCitas = () => {
 
             setCitas(citasFormateadas);
             // ✅ Obtener citas ocupadas para bloquear horarios
-        const citasOcupadasData = await obtenerCitasOcupadas();
-        setCitasOcupadas(citasOcupadasData);
+            const citasOcupadasData = await obtenerCitasOcupadas();
+            setCitasOcupadas(citasOcupadasData);
         } catch (error) {
             console.error("Error al obtener las próximas citas", error);
         } finally {
@@ -199,7 +213,7 @@ const ProximasCitas = () => {
             setHorasDisponibles(obtenerHorasDisponibles(nuevaFecha, citasOcupadas));
         }
     }, [nuevaFecha, citasOcupadas]);
-    
+
     const handleConfirmCompletion = async () => {
         if (!comentario.trim()) {
             alert("Por favor, ingresa un comentario.");
@@ -209,9 +223,13 @@ const ProximasCitas = () => {
         console.log("📩 Enviando comentario:", comentario); // 🔹 LOG antes de enviar
 
         try {
+            const csrfToken = obtenerTokenCSRF(); // Obtener el token CSRF de las cookies
             const response = await axios.put(`http://localhost:4000/api/citas/completar/${selectedCita.cita_id}`, {
-                comentario
-            });
+                comentario},
+                { 
+                    headers: { "X-XSRF-TOKEN": csrfToken },
+                    withCredentials: true,
+                 },);
 
             console.log("✔️ Respuesta del servidor:", response.data); // 🔹 LOG para verificar
 
@@ -530,18 +548,18 @@ const ProximasCitas = () => {
                 <DialogTitle>Reagendar Cita</DialogTitle>
                 <DialogContent>
                     <LocalizationProvider dateAdapter={AdapterDateFns} locale={es}>
-                    <DatePicker
-    label="Nueva Fecha"
-    value={nuevaFecha}
-    onChange={setNuevaFecha}
-    renderInput={(params) => <TextField {...params} fullWidth margin="normal" />}
-    disablePast
-    shouldDisableDate={(date) => {
-        const dia = date.getDay();
-        return ![1, 2, 3, 6].includes(dia); // Solo Lunes (1), Martes (2), Miércoles (3) y Sábado (6)
-    }}
-    maxDate={new Date(new Date().setMonth(new Date().getMonth() + 4))} // ✅ Permitir hasta 4 meses en el futuro
-/>
+                        <DatePicker
+                            label="Nueva Fecha"
+                            value={nuevaFecha}
+                            onChange={setNuevaFecha}
+                            renderInput={(params) => <TextField {...params} fullWidth margin="normal" />}
+                            disablePast
+                            shouldDisableDate={(date) => {
+                                const dia = date.getDay();
+                                return ![1, 2, 3, 6].includes(dia); // Solo Lunes (1), Martes (2), Miércoles (3) y Sábado (6)
+                            }}
+                            maxDate={new Date(new Date().setMonth(new Date().getMonth() + 4))} // ✅ Permitir hasta 4 meses en el futuro
+                        />
 
                     </LocalizationProvider>
                     <FormControl fullWidth margin="normal">
