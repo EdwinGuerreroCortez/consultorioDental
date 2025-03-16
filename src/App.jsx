@@ -106,9 +106,7 @@ const App = () => {
             <Route
               path="/login"
               element={
-                <LayoutPublico>
                   <Login />
-                </LayoutPublico>
               }
             />
             <Route

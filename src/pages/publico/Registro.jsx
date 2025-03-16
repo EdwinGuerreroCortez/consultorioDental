@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
 import {
   Box,
   Button,
@@ -13,7 +12,10 @@ import {
   MenuItem,
   Alert,
   Snackbar,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import axios from "axios";
 import "./bubbles.css";
 import {
@@ -47,28 +49,30 @@ const Registro = () => {
     level: "",
     suggestions: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRepeatPassword, setShowRepeatPassword] = useState(false);
   const navigate = useNavigate();
-
 
   const steps = ["Datos Personales", "Cuenta", "Verificación"];
 
   useEffect(() => {
-    const generatedBubbles = Array.from({ length: 40 }).map(() => ({
+    const generatedBubbles = Array.from({ length: 20 }).map(() => ({
       left: `${Math.random() * 100}%`,
-      animationDelay: `${Math.random() * 10}s`,
-      animationDuration: `${5 + Math.random() * 10}s`,
+      size: `${Math.random() * 40 + 20}px`,
+      animationDelay: `${Math.random() * 8}s`,
+      animationDuration: `${6 + Math.random() * 8}s`,
     }));
     setBubbles(generatedBubbles);
   }, []);
+
   const obtenerTokenCSRF = () => {
     const csrfToken = document.cookie
       .split("; ")
-      .find(row => row.startsWith("XSRF-TOKEN="))
+      .find((row) => row.startsWith("XSRF-TOKEN="))
       ?.split("=")[1];
-  
-    return csrfToken || ""; // Evita valores undefined
+    return csrfToken || "";
   };
-  
+
   const handleNext = async () => {
     if (!validateStep()) {
       setAlert({
@@ -78,26 +82,30 @@ const Registro = () => {
       });
       return;
     }
-  
+
     if (step === steps.length - 1) {
       try {
-        const csrfToken = obtenerTokenCSRF(); // 🔹 Obtener token CSRF antes de enviar la solicitud
-        console.log('Datos enviados a la verificación:', {
+        const csrfToken = obtenerTokenCSRF();
+        console.log("Datos enviados a la verificación:", {
           email: formData.correo,
           codigo: formData.codigoVerificacion,
         });
-  
-        const response = await axios.post("http://localhost:4000/api/usuarios/verificar", {
-          email: formData.correo,
-          codigo: formData.codigoVerificacion,
-        },{
-          headers: {
-            "X-XSRF-TOKEN": csrfToken, // 🔹 Agregar token CSRF
-            "Content-Type": "application/json",
+
+        const response = await axios.post(
+          "http://localhost:4000/api/usuarios/verificar",
+          {
+            email: formData.correo,
+            codigo: formData.codigoVerificacion,
           },
-          withCredentials: true, // 🔹 Permitir cookies con CSRF
-        });
-  
+          {
+            headers: {
+              "X-XSRF-TOKEN": csrfToken,
+              "Content-Type": "application/json",
+            },
+            withCredentials: true,
+          }
+        );
+
         setAlert({ open: true, message: response.data.mensaje, severity: "success" });
         setTimeout(() => navigate("/login"), 2000);
       } catch (error) {
@@ -106,31 +114,39 @@ const Registro = () => {
           message: error.response?.data?.mensaje || "Error al verificar la cuenta.",
           severity: "error",
         });
-        console.error('Error en la verificación:', error.response?.data);
+        console.error("Error en la verificación:", error.response?.data);
       }
     } else if (step === 1) {
       try {
-        const csrfToken = obtenerTokenCSRF(); // 🔹 Obtener token CSRF antes de enviar la solicitud
+        const csrfToken = obtenerTokenCSRF();
 
-        await axios.post("http://localhost:4000/api/usuarios/registrar", {
-          nombre: formData.nombre,
-          apellido_paterno: formData.apellidoPaterno,
-          apellido_materno: formData.apellidoMaterno,
-          fecha_nacimiento: formData.fechaNacimiento,
-          sexo: formData.genero,
-          telefono: formData.telefono,
-          email: formData.correo,
-          password: formData.contrasena,
-          repetir_password: formData.repetirContrasena,
-        }, {
-          headers: {
-            "X-XSRF-TOKEN": csrfToken, // 🔹 Agregar token CSRF
-            "Content-Type": "application/json",
+        await axios.post(
+          "http://localhost:4000/api/usuarios/registrar",
+          {
+            nombre: formData.nombre,
+            apellido_paterno: formData.apellidoPaterno,
+            apellido_materno: formData.apellidoMaterno,
+            fecha_nacimiento: formData.fechaNacimiento,
+            sexo: formData.genero,
+            telefono: formData.telefono,
+            email: formData.correo,
+            password: formData.contrasena,
+            repetir_password: formData.repetirContrasena,
           },
-          withCredentials: true, // 🔹 Permitir cookies con CSRF
+          {
+            headers: {
+              "X-XSRF-TOKEN": csrfToken,
+              "Content-Type": "application/json",
+            },
+            withCredentials: true,
+          }
+        );
+
+        setAlert({
+          open: true,
+          message: "Registro exitoso. Revisa tu correo.",
+          severity: "success",
         });
-  
-        setAlert({ open: true, message: "Registro exitoso. Revisa tu correo.", severity: "success" });
         setStep((prevStep) => prevStep + 1);
       } catch (error) {
         setAlert({
@@ -143,7 +159,6 @@ const Registro = () => {
       setStep((prevStep) => prevStep + 1);
     }
   };
-  
 
   const handleBack = () => {
     setStep((prevStep) => prevStep - 1);
@@ -151,14 +166,11 @@ const Registro = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
-
     validateField(name, value);
-
     if (name === "contrasena") {
       const strength = evaluatePasswordStrength(value);
       setPasswordStrength(strength);
@@ -167,7 +179,6 @@ const Registro = () => {
 
   const validateField = (fieldName, value) => {
     let errorMessage = "";
-
     switch (fieldName) {
       case "nombre":
       case "apellidoPaterno":
@@ -177,18 +188,15 @@ const Registro = () => {
       case "fechaNacimiento":
         const birthDate = new Date(value);
         const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();  // ✅ Cambio a `let`
-
+        let age = today.getFullYear() - birthDate.getFullYear();
         const monthDiff = today.getMonth() - birthDate.getMonth();
         if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-          age--;  // ✅ Ahora sí puedes modificar `age`
+          age--;
         }
-
         if (age < 18) {
           errorMessage = "Debes ser mayor de 18 años.";
         }
         break;
-
       case "telefono":
         errorMessage = validatePhoneNumber(value);
         break;
@@ -204,7 +212,6 @@ const Registro = () => {
       default:
         break;
     }
-
     setErrors((prevErrors) => ({
       ...prevErrors,
       [fieldName]: errorMessage,
@@ -242,6 +249,14 @@ const Registro = () => {
     setAlert({ ...alert, open: false });
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleRepeatPasswordVisibility = () => {
+    setShowRepeatPassword(!showRepeatPassword);
+  };
+
   return (
     <Box
       sx={{
@@ -251,7 +266,7 @@ const Registro = () => {
         alignItems: "center",
         minHeight: "100vh",
         overflow: "hidden",
-        backgroundColor: "#e0f7fa",
+        background: "linear-gradient(135deg, #e0f7fa, #b2ebf2)",
       }}
     >
       <div className="bubbles">
@@ -261,126 +276,222 @@ const Registro = () => {
             className="bubble"
             style={{
               left: bubble.left,
+              width: bubble.size,
+              height: bubble.size,
               animationDelay: bubble.animationDelay,
               animationDuration: bubble.animationDuration,
             }}
-          ></div>
+          />
         ))}
       </div>
 
-      <Box
-        sx={{
-          position: "relative",
-          zIndex: 2,
-        }}
-      >
+      <Box sx={{ position: "relative", zIndex: 2 }}>
         <Paper
-          elevation={3}
+          elevation={6}
           sx={{
-            padding: "20px",
-            width: "500px",
-            borderRadius: "10px",
-            backgroundColor: "#ffffff",
+            padding: "50px",
+            width: "900px",
+            borderRadius: "20px",
+            backgroundColor: "rgba(255, 255, 255, 0.85)",
+            backdropFilter: "blur(10px)",
+            boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.2)",
+            border: "1px solid rgba(255, 255, 255, 0.18)",
           }}
         >
           <Typography
-            variant="h6"
+            variant="h4"
             sx={{
-              color: "#0077b6",
+              color: "#003087",
               textAlign: "center",
-              fontWeight: "bold",
-              marginBottom: "10px",
+              fontWeight: "700",
+              marginBottom: "30px",
+              fontFamily: "'Poppins', sans-serif",
+              textShadow: "1px 1px 2px rgba(0, 0, 0, 0.1)",
             }}
           >
             Registro - {steps[step]}
           </Typography>
 
-          <Stepper activeStep={step} alternativeLabel sx={{ marginBottom: "10px" }}>
+          <Stepper activeStep={step} alternativeLabel sx={{ marginBottom: "40px" }}>
             {steps.map((label, index) => (
               <Step key={index}>
-                <StepLabel>{label}</StepLabel>
+                <StepLabel
+                  sx={{
+                    "& .MuiStepLabel-label": {
+                      color: step >= index ? "#003087" : "#757575",
+                      fontWeight: step === index ? "bold" : "normal",
+                      fontSize: "1.2rem",
+                      fontFamily: "'Poppins', sans-serif",
+                    },
+                  }}
+                >
+                  {label}
+                </StepLabel>
               </Step>
             ))}
           </Stepper>
 
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "15px",
-            }}
-          >
+          <Box sx={{ display: "flex", flexDirection: "column", gap: "30px" }}>
             {step === 0 && (
               <>
-                <TextField
-                  label="Nombre"
-                  name="nombre"
-                  fullWidth
-                  margin="dense"
-                  value={formData.nombre}
-                  onChange={handleChange}
-                  error={!!errors.nombre}
-                  helperText={errors.nombre}
-                />
-                <TextField
-                  label="Apellido Paterno"
-                  name="apellidoPaterno"
-                  fullWidth
-                  margin="dense"
-                  value={formData.apellidoPaterno}
-                  onChange={handleChange}
-                  error={!!errors.apellidoPaterno}
-                  helperText={errors.apellidoPaterno}
-                />
-                <TextField
-                  label="Apellido Materno"
-                  name="apellidoMaterno"
-                  fullWidth
-                  margin="dense"
-                  value={formData.apellidoMaterno}
-                  onChange={handleChange}
-                  error={!!errors.apellidoMaterno}
-                  helperText={errors.apellidoMaterno}
-                />
-                <TextField
-                  label="Fecha de Nacimiento"
-                  name="fechaNacimiento"
-                  type="date"
-                  fullWidth
-                  margin="dense"
-                  InputLabelProps={{ shrink: true }}
-                  value={formData.fechaNacimiento}
-                  onChange={handleChange}
-                  error={!!errors.fechaNacimiento}
-                  helperText={errors.fechaNacimiento}
-                />
-
-                <TextField
-                  label="Género"
-                  name="genero"
-                  select
-                  fullWidth
-                  margin="dense"
-                  value={formData.genero}
-                  onChange={handleChange}
-                  error={!!errors.genero}
-                  helperText={errors.genero}
-                >
-                  <MenuItem value="Masculino">Masculino</MenuItem>
-                  <MenuItem value="Femenino">Femenino</MenuItem>
-                  <MenuItem value="Otro">Otro</MenuItem>
-                </TextField>
-                <TextField
-                  label="Teléfono"
-                  name="telefono"
-                  type="tel"
-                  fullWidth
-                  margin="dense"
-                  value={formData.telefono}
-                  onChange={handleChange}
-                  error={!!errors.telefono}
-                  helperText={errors.telefono}
-                />
+                <Box sx={{ display: "flex", gap: "30px" }}>
+                  <TextField
+                    label="Nombre"
+                    name="nombre"
+                    variant="outlined"
+                    value={formData.nombre}
+                    onChange={handleChange}
+                    error={!!errors.nombre}
+                    helperText={errors.nombre}
+                    sx={{
+                      flex: 1,
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
+                        "&:hover fieldset": { borderColor: "#0057b7" },
+                        "&.Mui-focused fieldset": { borderColor: "#003087" },
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        borderRadius: "10px",
+                        transition: "all 0.3s ease",
+                      },
+                      "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
+                      "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                      "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
+                      fontFamily: "'Poppins', sans-serif",
+                    }}
+                  />
+                  <TextField
+                    label="Apellido Paterno"
+                    name="apellidoPaterno"
+                    variant="outlined"
+                    value={formData.apellidoPaterno}
+                    onChange={handleChange}
+                    error={!!errors.apellidoPaterno}
+                    helperText={errors.apellidoPaterno}
+                    sx={{
+                      flex: 1,
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
+                        "&:hover fieldset": { borderColor: "#0057b7" },
+                        "&.Mui-focused fieldset": { borderColor: "#003087" },
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        borderRadius: "10px",
+                        transition: "all 0.3s ease",
+                      },
+                      "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
+                      "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                      "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
+                      fontFamily: "'Poppins', sans-serif",
+                    }}
+                  />
+                </Box>
+                <Box sx={{ display: "flex", gap: "30px" }}>
+                  <TextField
+                    label="Apellido Materno"
+                    name="apellidoMaterno"
+                    variant="outlined"
+                    value={formData.apellidoMaterno}
+                    onChange={handleChange}
+                    error={!!errors.apellidoMaterno}
+                    helperText={errors.apellidoMaterno}
+                    sx={{
+                      flex: 1,
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
+                        "&:hover fieldset": { borderColor: "#0057b7" },
+                        "&.Mui-focused fieldset": { borderColor: "#003087" },
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        borderRadius: "10px",
+                        transition: "all 0.3s ease",
+                      },
+                      "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
+                      "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                      "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
+                      fontFamily: "'Poppins', sans-serif",
+                    }}
+                  />
+                  <TextField
+                    label="Fecha de Nacimiento"
+                    name="fechaNacimiento"
+                    type="date"
+                    variant="outlined"
+                    InputLabelProps={{ shrink: true }}
+                    value={formData.fechaNacimiento}
+                    onChange={handleChange}
+                    error={!!errors.fechaNacimiento}
+                    helperText={errors.fechaNacimiento}
+                    sx={{
+                      flex: 1,
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
+                        "&:hover fieldset": { borderColor: "#0057b7" },
+                        "&.Mui-focused fieldset": { borderColor: "#003087" },
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        borderRadius: "10px",
+                        transition: "all 0.3s ease",
+                      },
+                      "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
+                      "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                      "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
+                      fontFamily: "'Poppins', sans-serif",
+                    }}
+                  />
+                </Box>
+                <Box sx={{ display: "flex", gap: "30px" }}>
+                  <TextField
+                    label="Género"
+                    name="genero"
+                    select
+                    variant="outlined"
+                    value={formData.genero}
+                    onChange={handleChange}
+                    error={!!errors.genero}
+                    helperText={errors.genero}
+                    sx={{
+                      flex: 1,
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
+                        "&:hover fieldset": { borderColor: "#0057b7" },
+                        "&.Mui-focused fieldset": { borderColor: "#003087" },
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        borderRadius: "10px",
+                        transition: "all 0.3s ease",
+                      },
+                      "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
+                      "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                      "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
+                      fontFamily: "'Poppins', sans-serif",
+                    }}
+                  >
+                    <MenuItem value="Masculino">Masculino</MenuItem>
+                    <MenuItem value="Femenino">Femenino</MenuItem>
+                    <MenuItem value="Otro">Otro</MenuItem>
+                  </TextField>
+                  <TextField
+                    label="Teléfono"
+                    name="telefono"
+                    type="tel"
+                    variant="outlined"
+                    value={formData.telefono}
+                    onChange={handleChange}
+                    error={!!errors.telefono}
+                    helperText={errors.telefono}
+                    sx={{
+                      flex: 1,
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
+                        "&:hover fieldset": { borderColor: "#0057b7" },
+                        "&.Mui-focused fieldset": { borderColor: "#003087" },
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        borderRadius: "10px",
+                        transition: "all 0.3s ease",
+                      },
+                      "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
+                      "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                      "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
+                      fontFamily: "'Poppins', sans-serif",
+                    }}
+                  />
+                </Box>
               </>
             )}
 
@@ -390,73 +501,134 @@ const Registro = () => {
                   label="Correo Electrónico"
                   name="correo"
                   type="email"
-                  fullWidth
-                  margin="dense"
+                  variant="outlined"
                   value={formData.correo}
                   onChange={handleChange}
                   error={!!errors.correo}
                   helperText={errors.correo}
-                />
-                <TextField
-                  label="Contraseña"
-                  name="contrasena"
-                  type="password"
-                  fullWidth
-                  margin="dense"
-                  value={formData.contrasena}
-                  onChange={handleChange}
-                  error={!!errors.contrasena}
-                  helperText={errors.contrasena}
-                />
-                <TextField
-                  label="Repetir Contraseña"
-                  name="repetirContrasena"
-                  type="password"
-                  fullWidth
-                  margin="dense"
-                  value={formData.repetirContrasena}
-                  onChange={handleChange}
-                  error={!!errors.repetirContrasena}
-                  helperText={errors.repetirContrasena}
-                />
-
-                <Box
                   sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 1,
-                    marginTop: 1,
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
+                      "&:hover fieldset": { borderColor: "#0057b7" },
+                      "&.Mui-focused fieldset": { borderColor: "#003087" },
+                      backgroundColor: "rgba(255, 255, 255, 0.9)",
+                      borderRadius: "10px",
+                      transition: "all 0.3s ease",
+                    },
+                    "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
+                    "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                    "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
+                    fontFamily: "'Poppins', sans-serif",
                   }}
-                >
+                />
+                <Box sx={{ display: "flex", gap: "30px" }}>
+                  <TextField
+                    label="Contraseña"
+                    name="contrasena"
+                    type={showPassword ? "text" : "password"}
+                    variant="outlined"
+                    value={formData.contrasena}
+                    onChange={handleChange}
+                    error={!!errors.contrasena}
+                    helperText={errors.contrasena}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton onClick={togglePasswordVisibility}>
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      flex: 1,
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
+                        "&:hover fieldset": { borderColor: "#0057b7" },
+                        "&.Mui-focused fieldset": { borderColor: "#003087" },
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        borderRadius: "10px",
+                        transition: "all 0.3s ease",
+                      },
+                      "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
+                      "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                      "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
+                      fontFamily: "'Poppins', sans-serif",
+                    }}
+                  />
+                  <TextField
+                    label="Repetir Contraseña"
+                    name="repetirContrasena"
+                    type={showRepeatPassword ? "text" : "password"}
+                    variant="outlined"
+                    value={formData.repetirContrasena}
+                    onChange={handleChange}
+                    error={!!errors.repetirContrasena}
+                    helperText={errors.repetirContrasena}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton onClick={toggleRepeatPasswordVisibility}>
+                            {showRepeatPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      flex: 1,
+                      "& .MuiOutlinedInput-root": {
+                        "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
+                        "&:hover fieldset": { borderColor: "#0057b7" },
+                        "&.Mui-focused fieldset": { borderColor: "#003087" },
+                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                        borderRadius: "10px",
+                        transition: "all 0.3s ease",
+                      },
+                      "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
+                      "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                      "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
+                      fontFamily: "'Poppins', sans-serif",
+                    }}
+                  />
+                </Box>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 2 }}>
                   <Typography
-                    variant="body2"
-                    color={
-                      passwordStrength.score < 2 ? "error" : passwordStrength.score < 4 ? "warning" : "success"
-                    }
-                    sx={{ fontWeight: "bold" }}
+                    variant="h6"
+                    sx={{
+                      fontWeight: "bold",
+                      color:
+                        passwordStrength.score < 2
+                          ? "#d32f2f"
+                          : passwordStrength.score < 4
+                          ? "#ff9800"
+                          : "#4caf50",
+                      fontFamily: "'Poppins', sans-serif",
+                    }}
                   >
                     Fortaleza: {passwordStrength.level}
                   </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      gap: 0.5,
-                      marginTop: 1,
-                    }}
-                  >
+                  <Box sx={{ display: "flex", gap: 1 }}>
                     {[0, 1, 2, 3, 4].map((i) => (
                       <Box
                         key={i}
                         sx={{
-                          height: "8px",
+                          height: "12px",
                           flex: 1,
-                          borderRadius: 1,
-                          backgroundColor: i <= passwordStrength.score ? "#4caf50" : "#e0e0e0",
+                          borderRadius: "4px",
+                          backgroundColor:
+                            i <= passwordStrength.score
+                              ? passwordStrength.score < 2
+                                ? "#d32f2f"
+                                : passwordStrength.score < 4
+                                ? "#ff9800"
+                                : "#4caf50"
+                              : "#e0e0e0",
+                          transition: "background-color 0.3s",
                         }}
-                      ></Box>
+                      />
                     ))}
                   </Box>
-                  <Typography variant="caption" color="textSecondary">
+                  <Typography variant="body1" color="textSecondary" fontFamily="'Poppins', sans-serif">
                     {passwordStrength.suggestions}
                   </Typography>
                 </Box>
@@ -467,31 +639,69 @@ const Registro = () => {
               <TextField
                 label="Código de Verificación"
                 name="codigoVerificacion"
-                fullWidth
-                margin="dense"
+                variant="outlined"
                 value={formData.codigoVerificacion}
                 onChange={handleChange}
                 error={!!errors.codigoVerificacion}
                 helperText={errors.codigoVerificacion}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
+                    "&:hover fieldset": { borderColor: "#0057b7" },
+                    "&.Mui-focused fieldset": { borderColor: "#003087" },
+                    backgroundColor: "rgba(255, 255, 255, 0.9)",
+                    borderRadius: "10px",
+                    transition: "all 0.3s ease",
+                  },
+                  "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
+                  "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                  "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
+                  fontFamily: "'Poppins', sans-serif",
+                }}
               />
             )}
           </Box>
 
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginTop: "10px",
-            }}
-          >
-            <Button variant="outlined" onClick={handleBack} disabled={step === 0}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", marginTop: "40px" }}>
+            <Button
+              variant="outlined"
+              onClick={handleBack}
+              disabled={step === 0}
+              sx={{
+                borderRadius: "12px",
+                padding: "15px 40px",
+                textTransform: "none",
+                fontSize: "1.2rem",
+                color: "#003087",
+                borderColor: "#003087",
+                fontFamily: "'Poppins', sans-serif",
+                "&:hover": {
+                  borderColor: "#0057b7",
+                  backgroundColor: "rgba(0, 87, 183, 0.04)",
+                },
+              }}
+            >
               Atrás
             </Button>
             <Button
               variant="contained"
               onClick={handleNext}
               disabled={!validateStep()}
-              sx={{ backgroundColor: "#0077b6" }}
+              sx={{
+                background: "linear-gradient(135deg, #003087 0%, #0057b7 100%)",
+                borderRadius: "12px",
+                padding: "15px 40px",
+                textTransform: "none",
+                fontSize: "1.2rem",
+                fontFamily: "'Poppins', sans-serif",
+                fontWeight: 600,
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #0057b7 0%, #003087 100%)",
+                  boxShadow: "0 4px 15px rgba(0, 87, 183, 0.4)",
+                  transform: "translateY(-2px)",
+                },
+              }}
             >
               {step === steps.length - 1 ? "Finalizar" : "Siguiente"}
             </Button>
@@ -505,7 +715,11 @@ const Registro = () => {
         onClose={handleCloseAlert}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={handleCloseAlert} severity={alert.severity}>
+        <Alert
+          onClose={handleCloseAlert}
+          severity={alert.severity}
+          sx={{ borderRadius: "12px", boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)" }}
+        >
           {alert.message}
         </Alert>
       </Snackbar>

@@ -351,7 +351,7 @@ const NavbarPaciente = () => {
               onMouseEnter={() => handleSubMenuEnter("services")}
               onMouseLeave={() => handleSubMenuLeave("services")}
             >
-              <Tooltip title="Mis Citas" placement="" arrow>
+              <Tooltip title="Mis Citas" placement="top" arrow>
                 <IconButton
                   sx={{
                     color: "#fff",

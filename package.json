@@ -24,7 +24,7 @@
     "chart.js": "^4.4.7",
     "date-fns": "^2.29.3",
     "formik": "^2.4.6",
-    "framer-motion": "^12.4.7",
+    "framer-motion": "^12.5.0",
     "js-cookie": "^3.0.5",
     "jwt-decode": "^4.0.0",
     "moment": "^2.30.1",
