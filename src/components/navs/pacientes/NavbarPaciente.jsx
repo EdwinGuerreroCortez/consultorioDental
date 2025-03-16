@@ -30,9 +30,9 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import ScheduleIcon from "@mui/icons-material/Schedule"; // Ícono para citas
-import HistoryIcon from "@mui/icons-material/History"; // Ícono para historial
-import PaymentIcon from "@mui/icons-material/Payment"; // Ícono para pagos
+import ScheduleIcon from "@mui/icons-material/Schedule";
+import HistoryIcon from "@mui/icons-material/History";
+import PaymentIcon from "@mui/icons-material/Payment";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import "@fontsource/poppins";
 import logo from "../../../assets/images/logo.png";
@@ -160,33 +160,27 @@ const NavbarPaciente = () => {
     );
   };
 
-  // Funciones para manejar hover en submenús
+  // Funciones mejoradas para manejar hover en submenús con transiciones suaves
   const handleSubMenuEnter = (menu) => {
-    if (menu === "services") {
-      clearTimeout(servicesTimeout);
-      setServicesOpen(true);
-    }
-    if (menu === "treatments") {
-      clearTimeout(treatmentsTimeout);
-      setSubMenuOpen(true);
-    }
-    if (menu === "payments") {
-      clearTimeout(paymentsTimeout);
-      setPaymentsOpen(true);
-    }
+    clearTimeout(servicesTimeout);
+    clearTimeout(treatmentsTimeout);
+    clearTimeout(paymentsTimeout);
+    setServicesOpen(menu === "services");
+    setSubMenuOpen(menu === "treatments");
+    setPaymentsOpen(menu === "payments");
   };
 
   const handleSubMenuLeave = (menu) => {
     if (menu === "services") {
-      const timeout = setTimeout(() => setServicesOpen(false), 200);
+      const timeout = setTimeout(() => setServicesOpen(false), 300);
       setServicesTimeout(timeout);
     }
     if (menu === "treatments") {
-      const timeout = setTimeout(() => setSubMenuOpen(false), 200);
+      const timeout = setTimeout(() => setSubMenuOpen(false), 300);
       setTreatmentsTimeout(timeout);
     }
     if (menu === "payments") {
-      const timeout = setTimeout(() => setPaymentsOpen(false), 200);
+      const timeout = setTimeout(() => setPaymentsOpen(false), 300);
       setPaymentsTimeout(timeout);
     }
   };
@@ -196,6 +190,22 @@ const NavbarPaciente = () => {
     if (menu === "services") setServicesOpen(!servicesOpen);
     if (menu === "treatments") setSubMenuOpen(!subMenuOpen);
     if (menu === "payments") setPaymentsOpen(!paymentsOpen);
+  };
+
+  // Estilo mejorado para submenús con mayor contraste y visibilidad
+  const submenuStyle = {
+    position: "absolute",
+    top: "100%",
+    left: 0,
+    background: "linear-gradient(135deg, #ffffff 0%, #e6f0fa 100%)", // Gradiente más claro y definido
+    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.2)", // Sombra más pronunciada
+    borderRadius: "12px",
+    border: "1px solid #0077b6", // Borde más visible
+    width: "260px", // Un poco más ancho para mejor legibilidad
+    padding: "8px 0",
+    zIndex: 20,
+    transform: "translateY(5px)",
+    transition: "opacity 0.25s ease-in-out, transform 0.25s ease-in-out",
   };
 
   return (
@@ -292,15 +302,16 @@ const NavbarPaciente = () => {
                     position: "absolute",
                     top: "100%",
                     left: 0,
-                    backgroundColor: "#ffffff",
+                    background: "linear-gradient(135deg, #ffffff 0%, #e6f0fa 100%)",
                     boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                    borderRadius: "8px",
+                    borderRadius: "12px",
                     marginTop: "8px",
                     width: "100%",
                     zIndex: 9999,
                     padding: "8px 0",
                     maxHeight: "300px",
                     overflowY: "auto",
+                    border: "1px solid #0077b6",
                   }}
                 >
                   <List>
@@ -312,6 +323,7 @@ const NavbarPaciente = () => {
                             color: "#0077b6",
                             "&:hover": { backgroundColor: "#0077b6", color: "#ffffff" },
                             transition: "background-color 0.2s",
+                            padding: "10px 16px",
                           }}
                         >
                           <ListItemText
@@ -345,7 +357,7 @@ const NavbarPaciente = () => {
               </IconButton>
             </Tooltip>
 
-            {/* Submenú de "Mis Citas" - Más visible y alineado a la izquierda */}
+            {/* Submenú de "Mis Citas" */}
             <Box
               sx={{ position: "relative" }}
               onMouseEnter={() => handleSubMenuEnter("services")}
@@ -366,32 +378,20 @@ const NavbarPaciente = () => {
                   <CalendarMonthIcon />
                 </IconButton>
               </Tooltip>
-              <Fade in={servicesOpen} timeout={300}>
+              <Fade in={servicesOpen} timeout={250}>
                 <Box
                   sx={{
-                    position: "absolute",
-                    top: "100%",
-                    left: 0, // Alineado a la izquierda
-                    backgroundColor: "#ffffff", // Fondo blanco sólido para mayor visibilidad
-                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.2)", // Sombra más pronunciada
-                    borderRadius: "10px",
-                    border: "1px solid #0077b6", // Borde para destacar
-                    overflow: "hidden",
-                    zIndex: 20,
-                    width: "250px", // Ancho más grande
-                    padding: "10px 0",
-                    transform: servicesOpen ? "translateY(0)" : "translateY(-10px)",
-                    transition: "transform 0.3s ease",
+                    ...submenuStyle,
+                    opacity: servicesOpen ? 1 : 0,
+                    transform: servicesOpen ? "translateY(5px)" : "translateY(-5px)",
                   }}
-                  onMouseEnter={() => handleSubMenuEnter("services")}
-                  onMouseLeave={() => handleSubMenuLeave("services")}
                 >
                   <List>
                     <ListItem disablePadding>
                       <ListItemButton
                         href="/citas-agendadas"
                         sx={{
-                          padding: "14px 20px", // Más espacio interno
+                          padding: "12px 20px",
                           "&:hover": {
                             backgroundColor: "#0077b6",
                             color: "#ffffff",
@@ -404,9 +404,9 @@ const NavbarPaciente = () => {
                           primary="Citas Agendadas"
                           sx={{
                             "& .MuiListItemText-primary": {
-                              fontSize: "1rem", // Fuente más grande
-                              fontWeight: "bold", // Negrita para mayor visibilidad
-                              color: "#333", // Color oscuro para contraste
+                              fontSize: "1rem",
+                              fontWeight: "bold",
+                              color: "#1a237e", // Color más oscuro para mejor contraste
                             },
                           }}
                         />
@@ -416,7 +416,7 @@ const NavbarPaciente = () => {
                       <ListItemButton
                         href="/agendar-cita"
                         sx={{
-                          padding: "14px 20px",
+                          padding: "12px 20px",
                           "&:hover": {
                             backgroundColor: "#0077b6",
                             color: "#ffffff",
@@ -431,7 +431,7 @@ const NavbarPaciente = () => {
                             "& .MuiListItemText-primary": {
                               fontSize: "1rem",
                               fontWeight: "bold",
-                              color: "#333",
+                              color: "#1a237e",
                             },
                           }}
                         />
@@ -442,7 +442,7 @@ const NavbarPaciente = () => {
               </Fade>
             </Box>
 
-            {/* Submenú de "Tratamientos" - Más visible y alineado a la izquierda */}
+            {/* Submenú de "Tratamientos" */}
             <Box
               sx={{ position: "relative" }}
               onMouseEnter={() => handleSubMenuEnter("treatments")}
@@ -463,32 +463,20 @@ const NavbarPaciente = () => {
                   <ReceiptLongIcon />
                 </IconButton>
               </Tooltip>
-              <Fade in={subMenuOpen} timeout={300}>
+              <Fade in={subMenuOpen} timeout={250}>
                 <Box
                   sx={{
-                    position: "absolute",
-                    top: "100%",
-                    left: 0, // Alineado a la izquierda
-                    backgroundColor: "#ffffff", // Fondo blanco sólido
-                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.2)",
-                    borderRadius: "10px",
-                    border: "1px solid #0077b6",
-                    overflow: "hidden",
-                    zIndex: 20,
-                    width: "250px",
-                    padding: "10px 0",
-                    transform: subMenuOpen ? "translateY(0)" : "translateY(-10px)",
-                    transition: "transform 0.3s ease",
+                    ...submenuStyle,
+                    opacity: subMenuOpen ? 1 : 0,
+                    transform: subMenuOpen ? "translateY(5px)" : "translateY(-5px)",
                   }}
-                  onMouseEnter={() => handleSubMenuEnter("treatments")}
-                  onMouseLeave={() => handleSubMenuLeave("treatments")}
                 >
                   <List>
                     <ListItem disablePadding>
                       <ListItemButton
                         href="/tratamientos-activos"
                         sx={{
-                          padding: "14px 20px",
+                          padding: "12px 20px",
                           "&:hover": {
                             backgroundColor: "#0077b6",
                             color: "#ffffff",
@@ -503,7 +491,7 @@ const NavbarPaciente = () => {
                             "& .MuiListItemText-primary": {
                               fontSize: "1rem",
                               fontWeight: "bold",
-                              color: "#333",
+                              color: "#1a237e",
                             },
                           }}
                         />
@@ -513,7 +501,7 @@ const NavbarPaciente = () => {
                       <ListItemButton
                         href="/historial-tratamientos"
                         sx={{
-                          padding: "14px 20px",
+                          padding: "12px 20px",
                           "&:hover": {
                             backgroundColor: "#0077b6",
                             color: "#ffffff",
@@ -528,7 +516,7 @@ const NavbarPaciente = () => {
                             "& .MuiListItemText-primary": {
                               fontSize: "1rem",
                               fontWeight: "bold",
-                              color: "#333",
+                              color: "#1a237e",
                             },
                           }}
                         />
@@ -539,7 +527,7 @@ const NavbarPaciente = () => {
               </Fade>
             </Box>
 
-            {/* Submenú de "Pagos" - Más visible y alineado a la izquierda */}
+            {/* Submenú de "Pagos" */}
             <Box
               sx={{ position: "relative" }}
               onMouseEnter={() => handleSubMenuEnter("payments")}
@@ -560,32 +548,20 @@ const NavbarPaciente = () => {
                   <AttachMoneyIcon />
                 </IconButton>
               </Tooltip>
-              <Fade in={paymentsOpen} timeout={300}>
+              <Fade in={paymentsOpen} timeout={250}>
                 <Box
                   sx={{
-                    position: "absolute",
-                    top: "100%",
-                    left: 0, // Alineado a la izquierda
-                    backgroundColor: "#ffffff", // Fondo blanco sólido
-                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.2)",
-                    borderRadius: "10px",
-                    border: "1px solid #0077b6",
-                    overflow: "hidden",
-                    zIndex: 20,
-                    width: "250px",
-                    padding: "10px 0",
-                    transform: paymentsOpen ? "translateY(0)" : "translateY(-10px)",
-                    transition: "transform 0.3s ease",
+                    ...submenuStyle,
+                    opacity: paymentsOpen ? 1 : 0,
+                    transform: paymentsOpen ? "translateY(5px)" : "translateY(-5px)",
                   }}
-                  onMouseEnter={() => handleSubMenuEnter("payments")}
-                  onMouseLeave={() => handleSubMenuLeave("payments")}
                 >
                   <List>
                     <ListItem disablePadding>
                       <ListItemButton
                         href="/historial-pagos"
                         sx={{
-                          padding: "14px 20px",
+                          padding: "12px 20px",
                           "&:hover": {
                             backgroundColor: "#0077b6",
                             color: "#ffffff",
@@ -600,7 +576,7 @@ const NavbarPaciente = () => {
                             "& .MuiListItemText-primary": {
                               fontSize: "1rem",
                               fontWeight: "bold",
-                              color: "#333",
+                              color: "#1a237e",
                             },
                           }}
                         />
@@ -610,7 +586,7 @@ const NavbarPaciente = () => {
                       <ListItemButton
                         href="/facturacion"
                         sx={{
-                          padding: "14px 20px",
+                          padding: "12px 20px",
                           "&:hover": {
                             backgroundColor: "#0077b6",
                             color: "#ffffff",
@@ -625,7 +601,7 @@ const NavbarPaciente = () => {
                             "& .MuiListItemText-primary": {
                               fontSize: "1rem",
                               fontWeight: "bold",
-                              color: "#333",
+                              color: "#1a237e",
                             },
                           }}
                         />
@@ -726,7 +702,7 @@ const NavbarPaciente = () => {
               </ListItemButton>
             </ListItem>
 
-            {/* Submenú de "Mis Citas" en el Drawer - Más visible */}
+            {/* Submenú de "Mis Citas" en el Drawer */}
             <ListItem disablePadding>
               <ListItemButton onClick={() => handleSubMenuToggle("services")}>
                 <CalendarMonthIcon sx={{ marginRight: "10px", color: "#01579b" }} />
@@ -760,7 +736,7 @@ const NavbarPaciente = () => {
                         "& .MuiListItemText-primary": {
                           fontSize: "1rem",
                           fontWeight: "bold",
-                          color: "#333",
+                          color: "#1a237e",
                         },
                       }}
                     />
@@ -787,7 +763,7 @@ const NavbarPaciente = () => {
                         "& .MuiListItemText-primary": {
                           fontSize: "1rem",
                           fontWeight: "bold",
-                          color: "#333",
+                          color: "#1a237e",
                         },
                       }}
                     />
@@ -796,7 +772,7 @@ const NavbarPaciente = () => {
               </List>
             </Collapse>
 
-            {/* Submenú de "Tratamientos" en el Drawer - Más visible */}
+            {/* Submenú de "Tratamientos" en el Drawer */}
             <ListItem disablePadding>
               <ListItemButton onClick={() => handleSubMenuToggle("treatments")}>
                 <ReceiptLongIcon sx={{ marginRight: "10px", color: "#01579b" }} />
@@ -830,7 +806,7 @@ const NavbarPaciente = () => {
                         "& .MuiListItemText-primary": {
                           fontSize: "1rem",
                           fontWeight: "bold",
-                          color: "#333",
+                          color: "#1a237e",
                         },
                       }}
                     />
@@ -857,7 +833,7 @@ const NavbarPaciente = () => {
                         "& .MuiListItemText-primary": {
                           fontSize: "1rem",
                           fontWeight: "bold",
-                          color: "#333",
+                          color: "#1a237e",
                         },
                       }}
                     />
@@ -866,7 +842,7 @@ const NavbarPaciente = () => {
               </List>
             </Collapse>
 
-            {/* Submenú de "Pagos" en el Drawer - Más visible */}
+            {/* Submenú de "Pagos" en el Drawer */}
             <ListItem disablePadding>
               <ListItemButton onClick={() => handleSubMenuToggle("payments")}>
                 <AttachMoneyIcon sx={{ marginRight: "10px", color: "#01579b" }} />
@@ -900,7 +876,7 @@ const NavbarPaciente = () => {
                         "& .MuiListItemText-primary": {
                           fontSize: "1rem",
                           fontWeight: "bold",
-                          color: "#333",
+                          color: "#1a237e",
                         },
                       }}
                     />
@@ -927,7 +903,7 @@ const NavbarPaciente = () => {
                         "& .MuiListItemText-primary": {
                           fontSize: "1rem",
                           fontWeight: "bold",
-                          color: "#333",
+                          color: "#1a237e",
                         },
                       }}
                     />
@@ -972,11 +948,11 @@ const NavbarPaciente = () => {
       {/* Alerta de éxito */}
       <Snackbar
         open={alertaExito}
-        autoHideDuration={2000}  // La alerta se cierra automáticamente después de 2 segundos
+        autoHideDuration={2000}
         onClose={() => setAlertaExito(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}  // Posición inferior izquierda
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
       >
-        <Alert onClose={() => setAlertaExito(false)} severity="success" sx={{ width: '100%' }}>
+        <Alert onClose={() => setAlertaExito(false)} severity="success" sx={{ width: "100%" }}>
           Sesión cerrada correctamente.
         </Alert>
       </Snackbar>
