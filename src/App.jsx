@@ -28,6 +28,7 @@ import TratamientosActivos from "./pages/pacientes/TratamientosActivos";
 import CitasAgendadas from "./pages/pacientes/CitasAgendadas";
 import Perfil from "./pages/pacientes/Perfil";
 
+import HistorialTratamientoPaciente from "./pages/pacientes/HistorialTratamientoPaciente";
 //Admin
 import LayoutAdmin from "./components/navs/admin/LayoutAdmin";
 import BienvenidaAdmin from "./pages/admin/BienvenidaAdmin";
@@ -69,7 +70,7 @@ const App = () => {
       <Router>
         <Loader>
           <Routes>
-            {/* Rutas públicas */}
+{/**************************************************** Rutas públicas *******************************************************/}
             <Route
               path="/"
               element={
@@ -151,9 +152,7 @@ const App = () => {
               }
             />
 
-
-
-            {/* Rutas paciente */}
+{/**************************************************** Rutas paciente*******************************************************/}
             <Route
               path="/paciente"
               element={
@@ -226,9 +225,18 @@ const App = () => {
                 </RutaProtegida>
               }
             />
+            <Route
+              path="/historial-tratamientos"
+              element={
+                <RutaProtegida tiposPermitidos={['paciente']}>
+                  <LayoutPaciente>
+                    <HistorialTratamientoPaciente/>
+                  </LayoutPaciente>
+                </RutaProtegida>
+              }
+            />
 
-
-            {/* Rutas admin */}
+{/**************************************************** Rutas admin*******************************************************/}
             <Route
               path="/admin"
               element={

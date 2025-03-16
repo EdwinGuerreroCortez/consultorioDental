@@ -3,7 +3,6 @@ import {
   AppBar,
   Toolbar,
   Typography,
-  Button,
   IconButton,
   Box,
   Drawer,
@@ -14,6 +13,7 @@ import {
   Divider,
   TextField,
   Tooltip,
+  Fade,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
@@ -43,7 +43,11 @@ const NavbarPublico = () => {
   useEffect(() => {
     const handleScroll = () => {
       const currentScroll = window.scrollY;
-      setShowNavbar(currentScroll <= lastScroll || currentScroll <= 100);
+      if (currentScroll > lastScroll && currentScroll > 100) {
+        setShowNavbar(false);
+      } else {
+        setShowNavbar(true);
+      }
       setLastScroll(currentScroll);
     };
 
@@ -54,7 +58,7 @@ const NavbarPublico = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchBoxRef.current && !searchBoxRef.current.contains(event.target)) {
-        setSearchResults([]); // Cierra el cuadro de resultados
+        setSearchResults([]);
       }
     };
 
@@ -86,6 +90,10 @@ const NavbarPublico = () => {
     typography: {
       fontFamily: "Poppins, Arial, sans-serif",
     },
+    palette: {
+      primary: { main: "#0077b6" },
+      secondary: { main: "#80deea" },
+    },
   });
 
   const highlightMatch = (text, searchTerm) => {
@@ -94,7 +102,11 @@ const NavbarPublico = () => {
     const parts = text.split(regex);
     return parts.map((part, index) =>
       part.toLowerCase() === searchTerm.toLowerCase() ? (
-        <Typography key={index} component="span" sx={{ fontWeight: "bold", textDecoration: "underline", color: "#d32f2f" }}>
+        <Typography
+          key={index}
+          component="span"
+          sx={{ fontWeight: "bold", textDecoration: "underline", color: "#d32f2f" }}
+        >
           {part}
         </Typography>
       ) : (
@@ -107,9 +119,8 @@ const NavbarPublico = () => {
     <ThemeProvider theme={theme}>
       <AppBar
         sx={{
-          height: "100px",
-          background: "linear-gradient(90deg, #0077b6, #00aaff)",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+          height: "80px",
+          background: "linear-gradient(90deg, #003366, #0077b6)",
           transform: showNavbar ? "translateY(0)" : "translateY(-100%)",
           transition: "transform 0.4s ease-in-out",
           position: "fixed",
@@ -117,19 +128,56 @@ const NavbarPublico = () => {
           left: 0,
           width: "100%",
           zIndex: 10,
+          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
         }}
       >
         <Toolbar sx={{ height: "100%", display: "flex", alignItems: "center", paddingX: 2 }}>
-          <IconButton color="inherit" edge="start" onClick={toggleDrawer(true)} sx={{ display: { xs: "block", md: "none" } }}>
+          <IconButton
+            color="inherit"
+            edge="start"
+            onClick={toggleDrawer(true)}
+            sx={{
+              display: { xs: "block", md: "none" },
+              "&:hover": { transform: "rotate(180deg)", transition: "transform 0.3s" },
+            }}
+            aria-label="Abrir menú lateral"
+          >
             <MenuIcon />
           </IconButton>
 
           <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
-            <img src={logo} alt="Consultorio Dental" style={{ height: "100px", width: "auto", marginRight: "12px", borderRadius: "50px" }} />
-            <Typography variant="h6" sx={{ fontWeight: "bold", color: "#ffffff" }}>
+            <img
+              src={logo}
+              alt="Consultorio Dental"
+              style={{
+                height: "60px",
+                width: "auto",
+                marginRight: "12px",
+                borderRadius: "50%",
+                transition: "transform 0.3s",
+                "&:hover": { transform: "scale(1.1)" },
+              }}
+            />
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: "bold",
+                color: "#ffffff",
+                letterSpacing: "0.5px",
+                textShadow: "1px 1px 2px rgba(0, 0, 0, 0.2)",
+              }}
+            >
               Consultorio Dental
             </Typography>
-            <Box sx={{ marginLeft: "16px", flexGrow: 1, maxWidth: "400px", position: "relative" }} ref={searchBoxRef}>
+            <Box
+              sx={{
+                marginLeft: "16px",
+                flexGrow: 1,
+                maxWidth: "400px",
+                position: "relative",
+              }}
+              ref={searchBoxRef}
+            >
               <TextField
                 fullWidth
                 variant="outlined"
@@ -145,11 +193,14 @@ const NavbarPublico = () => {
                 }}
                 sx={{
                   backgroundColor: "#ffffff",
-                  borderRadius: "8px",
+                  borderRadius: "20px",
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": { borderColor: "#0077b6" },
                     "&:hover fieldset": { borderColor: "#005f8a" },
+                    "&.Mui-focused fieldset": { borderColor: "#0077b6", borderWidth: "2px" },
                   },
+                  transition: "all 0.3s",
+                  "&:hover": { boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)" },
                 }}
               />
               {searchResults.length > 0 && (
@@ -165,6 +216,8 @@ const NavbarPublico = () => {
                     width: "100%",
                     zIndex: 9999,
                     padding: "8px 0",
+                    maxHeight: "300px",
+                    overflowY: "auto",
                   }}
                 >
                   <List>
@@ -174,19 +227,13 @@ const NavbarPublico = () => {
                           href={`/catalogo-servicios/${result.hash}`}
                           sx={{
                             color: "#0077b6",
-                            "&:hover": {
-                              backgroundColor: "#0077b6",
-                              color: "#ffffff",
-                            },
+                            "&:hover": { backgroundColor: "#0077b6", color: "#ffffff" },
+                            transition: "background-color 0.2s",
                           }}
                         >
                           <ListItemText
                             primary={highlightMatch(result.nombre, searchTerm)}
-                            sx={{
-                              "& .MuiListItemText-primary": {
-                                fontWeight: "bold",
-                              },
-                            }}
+                            sx={{ "& .MuiListItemText-primary": { fontWeight: "bold" } }}
                           />
                         </ListItemButton>
                       </ListItem>
@@ -197,152 +244,111 @@ const NavbarPublico = () => {
             </Box>
           </Box>
 
-          <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center" }}>
-            {/* Botón Inicio */}
+          <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 1 }}>
             <Tooltip title="Inicio" placement="top" arrow>
-              <Button
-                color="inherit"
+              <IconButton
                 href="/"
                 sx={{
-                  fontSize: "16px",
-                  color: "#ffffff",
-                  borderRadius: "8px",
-                  padding: "8px 16px",
-                  marginX: 1,
-                  position: "relative",
-                  "&:hover .menu-text": {
-                    display: "block",
-                    opacity: 1,
-                  },
+                  color: "#fff",
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  borderRadius: "50%",
+                  p: 1.5,
+                  "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.4)", transform: "scale(1.1)" },
+                  transition: "all 0.3s",
                 }}
+                aria-label="Inicio"
               >
                 <HomeIcon />
-                <Box
-                  className="menu-text"
-                  sx={{
-                    display: "none",
-                    opacity: 0,
-                    transition: "opacity 0.3s ease-in-out",
-                    position: "absolute",
-                    top: "100%",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    color: "#ffffff",
-                    fontWeight: "bold",
-                    marginTop: "4px",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-
-                </Box>
-              </Button>
+              </IconButton>
             </Tooltip>
 
-            {/* Botón Servicios */}
             <Tooltip title="Servicios" placement="top" arrow>
-              <Button
-                color="inherit"
+              <IconButton
                 href="/catalogo-servicios"
                 sx={{
-                  fontSize: "16px",
-                  color: "#ffffff",
-                  borderRadius: "8px",
-                  padding: "8px 16px",
-                  marginX: 1,
-                  position: "relative",
-                  "&:hover .menu-text": {
-                    display: "block",
-                    opacity: 1,
-                  },
+                  color: "#fff",
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  borderRadius: "50%",
+                  p: 1.5,
+                  "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.4)", transform: "scale(1.1)" },
+                  transition: "all 0.3s",
                 }}
+                aria-label="Servicios"
               >
                 <ListAltIcon />
-                <Box
-                  className="menu-text"
-                  sx={{
-                    display: "none",
-                    opacity: 0,
-                    transition: "opacity 0.3s ease-in-out",
-                    position: "absolute",
-                    top: "100%",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    color: "#ffffff",
-                    fontWeight: "bold",
-                    marginTop: "4px",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                </Box>
-              </Button>
+              </IconButton>
             </Tooltip>
 
-            {/* Botón Login */}
             <Tooltip title="Iniciar Sesión" placement="top" arrow>
-              <Button
-                color="inherit"
+              <IconButton
                 href="/login"
                 sx={{
-                  fontSize: "16px",
-                  color: "#ffffff",
-                  borderRadius: "8px",
-                  padding: "8px 16px",
-                  marginX: 1,
-                  position: "relative",
-                  "&:hover .menu-text": {
-                    display: "block",
-                    opacity: 1,
-                  },
+                  color: "#fff",
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  borderRadius: "50%",
+                  p: 1.5,
+                  "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.4)", transform: "scale(1.1)" },
+                  transition: "all 0.3s",
                 }}
+                aria-label="Iniciar Sesión"
               >
                 <LoginIcon />
-                <Box
-                  className="menu-text"
-                  sx={{
-                    display: "none",
-                    opacity: 0,
-                    transition: "opacity 0.3s ease-in-out",
-                    position: "absolute",
-                    top: "100%",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    color: "#ffffff",
-                    fontWeight: "bold",
-                    marginTop: "4px",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                </Box>
-              </Button>
+              </IconButton>
             </Tooltip>
           </Box>
-
         </Toolbar>
       </AppBar>
 
       <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
-        <Box sx={{ width: 250, backgroundColor: "#e0f7fa", height: "100%" }} role="presentation" onClick={toggleDrawer(false)} onKeyDown={toggleDrawer(false)}>
-          <Typography variant="h6" sx={{ padding: "16px", fontWeight: "bold", textAlign: "center", background: "linear-gradient(90deg, #0077b6, #00aaff)", color: "#ffffff" }}>
+        <Box
+          sx={{
+            width: 250,
+            backgroundColor: "#e0f7fa",
+            height: "100%",
+            borderRight: "1px solid rgba(0, 0, 0, 0.1)",
+          }}
+          role="presentation"
+        >
+          <Typography
+            variant="h6"
+            sx={{
+              padding: "16px",
+              fontWeight: "bold",
+              textAlign: "center",
+              background: "linear-gradient(90deg, #0077b6, #00aaff)",
+              color: "#ffffff",
+              boxShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
+            }}
+          >
             Consultorio Dental
           </Typography>
           <Divider />
           <List>
             <ListItem disablePadding>
-              <ListItemButton href="/">
+              <ListItemButton href="/" onClick={toggleDrawer(false)}>
                 <HomeIcon sx={{ marginRight: "10px", color: "#01579b" }} />
-                <ListItemText primary="Inicio" sx={{ color: "#01579b", "& .MuiListItemText-primary": { fontWeight: "bold" } }} />
+                <ListItemText
+                  primary="Inicio"
+                  sx={{ color: "#01579b", "& .MuiListItemText-primary": { fontWeight: "bold" } }}
+                />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
-              <ListItemButton href="/catalogo-servicios">
+              <ListItemButton href="/catalogo-servicios" onClick={toggleDrawer(false)}>
                 <ListAltIcon sx={{ marginRight: "10px", color: "#01579b" }} />
-                <ListItemText primary="Catálogo de Servicios" sx={{ color: "#01579b", "& .MuiListItemText-primary": { fontWeight: "bold" } }} />
+                <ListItemText
+                  primary="Catálogo de Servicios"
+                  sx={{ color: "#01579b", "& .MuiListItemText-primary": { fontWeight: "bold" } }}
+                />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
-              <ListItemButton href="/login">
+              <ListItemButton href="/login" onClick={toggleDrawer(false)}>
                 <LoginIcon sx={{ marginRight: "10px", color: "#01579b" }} />
-                <ListItemText primary="Login" sx={{ color: "#01579b", "& .MuiListItemText-primary": { fontWeight: "bold" } }} />
+                <ListItemText
+                  primary="Login"
+                  sx={{ color: "#01579b", "& .MuiListItemText-primary": { fontWeight: "bold" } }}
+                />
               </ListItemButton>
             </ListItem>
           </List>
