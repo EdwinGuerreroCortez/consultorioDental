@@ -15,7 +15,18 @@ import {
   InputAdornment,
   IconButton,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import {
+  Visibility,
+  VisibilityOff,
+  Person,
+  CalendarToday,
+  Phone,
+  Email,
+  Lock,
+  ArrowBack,
+  ArrowForward,
+  CheckCircle,
+} from "@mui/icons-material"; // Importamos los íconos necesarios
 import axios from "axios";
 import "./bubbles.css";
 import {
@@ -266,7 +277,7 @@ const Registro = () => {
         alignItems: "center",
         minHeight: "100vh",
         overflow: "hidden",
-        background: "linear-gradient(135deg, #e0f7fa, #b2ebf2)",
+        backgroundColor: "#e6f7ff",
       }}
     >
       <div className="bubbles">
@@ -285,12 +296,13 @@ const Registro = () => {
         ))}
       </div>
 
-      <Box sx={{ position: "relative", zIndex: 2 }}>
+      <Box sx={{ position: "relative", zIndex: 2, width: "100%", maxWidth: "1100px", padding: "16px" }}>
         <Paper
           elevation={6}
           sx={{
-            padding: "50px",
-            width: "900px",
+            padding: { xs: "16px", sm: "24px", md: "50px" }, // Responsive padding
+            width: "100%", // Full width on all screens
+            maxWidth: "100%", // Ensure it doesn't exceed viewport
             borderRadius: "20px",
             backgroundColor: "rgba(255, 255, 255, 0.85)",
             backdropFilter: "blur(10px)",
@@ -304,15 +316,25 @@ const Registro = () => {
               color: "#003087",
               textAlign: "center",
               fontWeight: "700",
-              marginBottom: "30px",
+              marginBottom: { xs: "16px", md: "30px" }, // Responsive margin
               fontFamily: "'Poppins', sans-serif",
               textShadow: "1px 1px 2px rgba(0, 0, 0, 0.1)",
+              fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" }, // Responsive font size
             }}
           >
             Registro - {steps[step]}
           </Typography>
 
-          <Stepper activeStep={step} alternativeLabel sx={{ marginBottom: "40px" }}>
+          <Stepper
+            activeStep={step}
+            alternativeLabel
+            sx={{
+              marginBottom: { xs: "16px", md: "40px" }, // Responsive margin
+              "& .MuiStepLabel-label": {
+                fontSize: { xs: "0.9rem", sm: "1.1rem", md: "1.2rem" }, // Responsive font size
+              },
+            }}
+          >
             {steps.map((label, index) => (
               <Step key={index}>
                 <StepLabel
@@ -320,7 +342,6 @@ const Registro = () => {
                     "& .MuiStepLabel-label": {
                       color: step >= index ? "#003087" : "#757575",
                       fontWeight: step === index ? "bold" : "normal",
-                      fontSize: "1.2rem",
                       fontFamily: "'Poppins', sans-serif",
                     },
                   }}
@@ -331,10 +352,16 @@ const Registro = () => {
             ))}
           </Stepper>
 
-          <Box sx={{ display: "flex", flexDirection: "column", gap: "30px" }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: "16px", md: "30px" } }}>
             {step === 0 && (
               <>
-                <Box sx={{ display: "flex", gap: "30px" }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" }, // Stack on mobile, row on larger screens
+                    gap: { xs: "16px", md: "30px" },
+                  }}
+                >
                   <TextField
                     label="Nombre"
                     name="nombre"
@@ -343,8 +370,15 @@ const Registro = () => {
                     onChange={handleChange}
                     error={!!errors.nombre}
                     helperText={errors.nombre}
+                    fullWidth
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person sx={{ color: "#003087" }} />
+                        </InputAdornment>
+                      ),
+                    }}
                     sx={{
-                      flex: 1,
                       "& .MuiOutlinedInput-root": {
                         "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
                         "&:hover fieldset": { borderColor: "#0057b7" },
@@ -353,8 +387,14 @@ const Registro = () => {
                         borderRadius: "10px",
                         transition: "all 0.3s ease",
                       },
-                      "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
-                      "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                      "& .MuiInputBase-input": {
+                        fontSize: { xs: "1rem", md: "1.2rem" },
+                        padding: { xs: "12px 20px", md: "15px 25px" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#003087",
+                        fontSize: { xs: "0.9rem", md: "1.1rem" },
+                      },
                       "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
                       fontFamily: "'Poppins', sans-serif",
                     }}
@@ -367,8 +407,15 @@ const Registro = () => {
                     onChange={handleChange}
                     error={!!errors.apellidoPaterno}
                     helperText={errors.apellidoPaterno}
+                    fullWidth
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person sx={{ color: "#003087" }} />
+                        </InputAdornment>
+                      ),
+                    }}
                     sx={{
-                      flex: 1,
                       "& .MuiOutlinedInput-root": {
                         "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
                         "&:hover fieldset": { borderColor: "#0057b7" },
@@ -377,14 +424,26 @@ const Registro = () => {
                         borderRadius: "10px",
                         transition: "all 0.3s ease",
                       },
-                      "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
-                      "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                      "& .MuiInputBase-input": {
+                        fontSize: { xs: "1rem", md: "1.2rem" },
+                        padding: { xs: "12px 20px", md: "15px 25px" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#003087",
+                        fontSize: { xs: "0.9rem", md: "1.1rem" },
+                      },
                       "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
                       fontFamily: "'Poppins', sans-serif",
                     }}
                   />
                 </Box>
-                <Box sx={{ display: "flex", gap: "30px" }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: { xs: "16px", md: "30px" },
+                  }}
+                >
                   <TextField
                     label="Apellido Materno"
                     name="apellidoMaterno"
@@ -393,8 +452,15 @@ const Registro = () => {
                     onChange={handleChange}
                     error={!!errors.apellidoMaterno}
                     helperText={errors.apellidoMaterno}
+                    fullWidth
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person sx={{ color: "#003087" }} />
+                        </InputAdornment>
+                      ),
+                    }}
                     sx={{
-                      flex: 1,
                       "& .MuiOutlinedInput-root": {
                         "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
                         "&:hover fieldset": { borderColor: "#0057b7" },
@@ -403,8 +469,14 @@ const Registro = () => {
                         borderRadius: "10px",
                         transition: "all 0.3s ease",
                       },
-                      "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
-                      "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                      "& .MuiInputBase-input": {
+                        fontSize: { xs: "1rem", md: "1.2rem" },
+                        padding: { xs: "12px 20px", md: "15px 25px" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#003087",
+                        fontSize: { xs: "0.9rem", md: "1.1rem" },
+                      },
                       "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
                       fontFamily: "'Poppins', sans-serif",
                     }}
@@ -419,8 +491,15 @@ const Registro = () => {
                     onChange={handleChange}
                     error={!!errors.fechaNacimiento}
                     helperText={errors.fechaNacimiento}
+                    fullWidth
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <CalendarToday sx={{ color: "#003087" }} />
+                        </InputAdornment>
+                      ),
+                    }}
                     sx={{
-                      flex: 1,
                       "& .MuiOutlinedInput-root": {
                         "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
                         "&:hover fieldset": { borderColor: "#0057b7" },
@@ -429,14 +508,26 @@ const Registro = () => {
                         borderRadius: "10px",
                         transition: "all 0.3s ease",
                       },
-                      "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
-                      "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                      "& .MuiInputBase-input": {
+                        fontSize: { xs: "1rem", md: "1.2rem" },
+                        padding: { xs: "12px 20px", md: "15px 25px" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#003087",
+                        fontSize: { xs: "0.9rem", md: "1.1rem" },
+                      },
                       "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
                       fontFamily: "'Poppins', sans-serif",
                     }}
                   />
                 </Box>
-                <Box sx={{ display: "flex", gap: "30px" }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: { xs: "16px", md: "30px" },
+                  }}
+                >
                   <TextField
                     label="Género"
                     name="genero"
@@ -446,8 +537,47 @@ const Registro = () => {
                     onChange={handleChange}
                     error={!!errors.genero}
                     helperText={errors.genero}
+                    fullWidth
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person sx={{ color: "#003087" }} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    SelectProps={{
+                      MenuProps: {
+                        PaperProps: {
+                          sx: {
+                            backgroundColor: "rgba(255, 255, 255, 0.95)",
+                            borderRadius: "10px",
+                            boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.2)",
+                            border: "1px solid rgba(255, 255, 255, 0.18)",
+                            maxHeight: "300px",
+                            "& .MuiMenuItem-root": {
+                              fontFamily: "'Poppins', sans-serif",
+                              fontSize: { xs: "1rem", md: "1.2rem" },
+                              color: "#003087",
+                              padding: { xs: "10px 20px", md: "15px 25px" },
+                              transition: "all 0.3s ease",
+                              "&:hover": {
+                                backgroundColor: "rgba(0, 87, 183, 0.1)",
+                                color: "#0057b7",
+                              },
+                              "&.Mui-selected": {
+                                backgroundColor: "rgba(0, 87, 183, 0.2)",
+                                color: "#003087",
+                                fontWeight: "bold",
+                                "&:hover": {
+                                  backgroundColor: "rgba(0, 87, 183, 0.3)",
+                                },
+                              },
+                            },
+                          },
+                        },
+                      },
+                    }}
                     sx={{
-                      flex: 1,
                       "& .MuiOutlinedInput-root": {
                         "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
                         "&:hover fieldset": { borderColor: "#0057b7" },
@@ -456,8 +586,14 @@ const Registro = () => {
                         borderRadius: "10px",
                         transition: "all 0.3s ease",
                       },
-                      "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
-                      "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                      "& .MuiInputBase-input": {
+                        fontSize: { xs: "1rem", md: "1.2rem" },
+                        padding: { xs: "12px 20px", md: "15px 25px" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#003087",
+                        fontSize: { xs: "0.9rem", md: "1.1rem" },
+                      },
                       "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
                       fontFamily: "'Poppins', sans-serif",
                     }}
@@ -475,8 +611,15 @@ const Registro = () => {
                     onChange={handleChange}
                     error={!!errors.telefono}
                     helperText={errors.telefono}
+                    fullWidth
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Phone sx={{ color: "#003087" }} />
+                        </InputAdornment>
+                      ),
+                    }}
                     sx={{
-                      flex: 1,
                       "& .MuiOutlinedInput-root": {
                         "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
                         "&:hover fieldset": { borderColor: "#0057b7" },
@@ -485,8 +628,14 @@ const Registro = () => {
                         borderRadius: "10px",
                         transition: "all 0.3s ease",
                       },
-                      "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
-                      "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                      "& .MuiInputBase-input": {
+                        fontSize: { xs: "1rem", md: "1.2rem" },
+                        padding: { xs: "12px 20px", md: "15px 25px" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#003087",
+                        fontSize: { xs: "0.9rem", md: "1.1rem" },
+                      },
                       "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
                       fontFamily: "'Poppins', sans-serif",
                     }}
@@ -506,6 +655,14 @@ const Registro = () => {
                   onChange={handleChange}
                   error={!!errors.correo}
                   helperText={errors.correo}
+                  fullWidth
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Email sx={{ color: "#003087" }} />
+                      </InputAdornment>
+                    ),
+                  }}
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
@@ -515,13 +672,25 @@ const Registro = () => {
                       borderRadius: "10px",
                       transition: "all 0.3s ease",
                     },
-                    "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
-                    "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                    "& .MuiInputBase-input": {
+                      fontSize: { xs: "1rem", md: "1.2rem" },
+                      padding: { xs: "12px 20px", md: "15px 25px" },
+                    },
+                    "& .MuiInputLabel-root": {
+                      color: "#003087",
+                      fontSize: { xs: "0.9rem", md: "1.1rem" },
+                    },
                     "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
                     fontFamily: "'Poppins', sans-serif",
                   }}
                 />
-                <Box sx={{ display: "flex", gap: "30px" }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: { xs: "16px", md: "30px" },
+                  }}
+                >
                   <TextField
                     label="Contraseña"
                     name="contrasena"
@@ -532,6 +701,11 @@ const Registro = () => {
                     error={!!errors.contrasena}
                     helperText={errors.contrasena}
                     InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Lock sx={{ color: "#003087" }} />
+                        </InputAdornment>
+                      ),
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton onClick={togglePasswordVisibility}>
@@ -540,8 +714,8 @@ const Registro = () => {
                         </InputAdornment>
                       ),
                     }}
+                    fullWidth
                     sx={{
-                      flex: 1,
                       "& .MuiOutlinedInput-root": {
                         "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
                         "&:hover fieldset": { borderColor: "#0057b7" },
@@ -550,8 +724,14 @@ const Registro = () => {
                         borderRadius: "10px",
                         transition: "all 0.3s ease",
                       },
-                      "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
-                      "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                      "& .MuiInputBase-input": {
+                        fontSize: { xs: "1rem", md: "1.2rem" },
+                        padding: { xs: "12px 20px", md: "15px 25px" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#003087",
+                        fontSize: { xs: "0.9rem", md: "1.1rem" },
+                      },
                       "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
                       fontFamily: "'Poppins', sans-serif",
                     }}
@@ -566,6 +746,11 @@ const Registro = () => {
                     error={!!errors.repetirContrasena}
                     helperText={errors.repetirContrasena}
                     InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Lock sx={{ color: "#003087" }} />
+                        </InputAdornment>
+                      ),
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton onClick={toggleRepeatPasswordVisibility}>
@@ -574,8 +759,8 @@ const Registro = () => {
                         </InputAdornment>
                       ),
                     }}
+                    fullWidth
                     sx={{
-                      flex: 1,
                       "& .MuiOutlinedInput-root": {
                         "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
                         "&:hover fieldset": { borderColor: "#0057b7" },
@@ -584,8 +769,14 @@ const Registro = () => {
                         borderRadius: "10px",
                         transition: "all 0.3s ease",
                       },
-                      "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
-                      "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                      "& .MuiInputBase-input": {
+                        fontSize: { xs: "1rem", md: "1.2rem" },
+                        padding: { xs: "12px 20px", md: "15px 25px" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#003087",
+                        fontSize: { xs: "0.9rem", md: "1.1rem" },
+                      },
                       "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
                       fontFamily: "'Poppins', sans-serif",
                     }}
@@ -603,6 +794,7 @@ const Registro = () => {
                           ? "#ff9800"
                           : "#4caf50",
                       fontFamily: "'Poppins', sans-serif",
+                      fontSize: { xs: "1rem", md: "1.25rem" },
                     }}
                   >
                     Fortaleza: {passwordStrength.level}
@@ -628,7 +820,12 @@ const Registro = () => {
                       />
                     ))}
                   </Box>
-                  <Typography variant="body1" color="textSecondary" fontFamily="'Poppins', sans-serif">
+                  <Typography
+                    variant="body1"
+                    color="textSecondary"
+                    fontFamily="'Poppins', sans-serif"
+                    sx={{ fontSize: { xs: "0.8rem", md: "1rem" } }}
+                  >
                     {passwordStrength.suggestions}
                   </Typography>
                 </Box>
@@ -644,6 +841,14 @@ const Registro = () => {
                 onChange={handleChange}
                 error={!!errors.codigoVerificacion}
                 helperText={errors.codigoVerificacion}
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <CheckCircleIllustration sx={{ color: "#003087" }} />
+                    </InputAdornment>
+                  ),
+                }}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
@@ -653,8 +858,14 @@ const Registro = () => {
                     borderRadius: "10px",
                     transition: "all 0.3s ease",
                   },
-                  "& .MuiInputBase-input": { fontSize: "1.2rem", padding: "15px 25px" },
-                  "& .MuiInputLabel-root": { color: "#003087", fontSize: "1.1rem" },
+                  "& .MuiInputBase-input": {
+                    fontSize: { xs: "1rem", md: "1.2rem" },
+                    padding: { xs: "12px 20px", md: "15px 25px" },
+                  },
+                  "& .MuiInputLabel-root": {
+                    color: "#003087",
+                    fontSize: { xs: "0.9rem", md: "1.1rem" },
+                  },
                   "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
                   fontFamily: "'Poppins', sans-serif",
                 }}
@@ -662,16 +873,25 @@ const Registro = () => {
             )}
           </Box>
 
-          <Box sx={{ display: "flex", justifyContent: "space-between", marginTop: "40px" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              justifyContent: "space-between",
+              marginTop: { xs: "16px", md: "40px" },
+              gap: { xs: "16px", sm: "0" },
+            }}
+          >
             <Button
               variant="outlined"
               onClick={handleBack}
               disabled={step === 0}
+              startIcon={<ArrowBack />}
               sx={{
                 borderRadius: "12px",
-                padding: "15px 40px",
+                padding: { xs: "10px 20px", md: "15px 40px" },
                 textTransform: "none",
-                fontSize: "1.2rem",
+                fontSize: { xs: "1rem", md: "1.2rem" },
                 color: "#003087",
                 borderColor: "#003087",
                 fontFamily: "'Poppins', sans-serif",
@@ -679,6 +899,7 @@ const Registro = () => {
                   borderColor: "#0057b7",
                   backgroundColor: "rgba(0, 87, 183, 0.04)",
                 },
+                width: { xs: "100%", sm: "auto" },
               }}
             >
               Atrás
@@ -687,12 +908,13 @@ const Registro = () => {
               variant="contained"
               onClick={handleNext}
               disabled={!validateStep()}
+              startIcon={step === steps.length - 1 ? <CheckCircle /> : <ArrowForward />}
               sx={{
                 background: "linear-gradient(135deg, #003087 0%, #0057b7 100%)",
                 borderRadius: "12px",
-                padding: "15px 40px",
+                padding: { xs: "10px 20px", md: "15px 40px" },
                 textTransform: "none",
-                fontSize: "1.2rem",
+                fontSize: { xs: "1rem", md: "1.2rem" },
                 fontFamily: "'Poppins', sans-serif",
                 fontWeight: 600,
                 transition: "all 0.3s ease",
@@ -701,6 +923,7 @@ const Registro = () => {
                   boxShadow: "0 4px 15px rgba(0, 87, 183, 0.4)",
                   transform: "translateY(-2px)",
                 },
+                width: { xs: "100%", sm: "auto" },
               }}
             >
               {step === steps.length - 1 ? "Finalizar" : "Siguiente"}

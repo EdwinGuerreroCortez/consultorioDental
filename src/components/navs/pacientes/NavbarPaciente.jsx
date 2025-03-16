@@ -39,8 +39,6 @@ import logo from "../../../assets/images/logo.png";
 
 const NavbarPaciente = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [showNavbar, setShowNavbar] = useState(true);
-  const [lastScroll, setLastScroll] = useState(0);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [subMenuOpen, setSubMenuOpen] = useState(false);
   const [paymentsOpen, setPaymentsOpen] = useState(false);
@@ -116,20 +114,6 @@ const NavbarPaciente = () => {
     }
     setDrawerOpen(open);
   };
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScroll = window.scrollY;
-      if (currentScroll > lastScroll && currentScroll > 100) {
-        setShowNavbar(false);
-      } else {
-        setShowNavbar(true);
-      }
-      setLastScroll(currentScroll);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScroll]);
 
   const theme = createTheme({
     typography: {
@@ -214,11 +198,7 @@ const NavbarPaciente = () => {
         sx={{
           height: "80px",
           background: "linear-gradient(90deg, #003366, #0077b6)",
-          transform: showNavbar ? "translateY(0)" : "translateY(-100%)",
-          transition: "transform 0.4s ease-in-out",
-          position: "fixed",
-          top: 0,
-          left: 0,
+          position: "static", // Cambiado de "fixed" a "static" para que se desplace con el scroll
           width: "100%",
           zIndex: 10,
           boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",

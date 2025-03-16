@@ -27,8 +27,6 @@ import logo from "../../../assets/images/logo.png";
 
 const NavbarPublico = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [showNavbar, setShowNavbar] = useState(true);
-  const [lastScroll, setLastScroll] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const searchBoxRef = useRef(null);
@@ -39,21 +37,6 @@ const NavbarPublico = () => {
     }
     setDrawerOpen(open);
   };
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScroll = window.scrollY;
-      if (currentScroll > lastScroll && currentScroll > 100) {
-        setShowNavbar(false);
-      } else {
-        setShowNavbar(true);
-      }
-      setLastScroll(currentScroll);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScroll]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -119,19 +102,27 @@ const NavbarPublico = () => {
     <ThemeProvider theme={theme}>
       <AppBar
         sx={{
-          height: "80px",
+          height: "80px", // Altura fija del Navbar
           background: "linear-gradient(90deg, #003366, #0077b6)",
-          transform: showNavbar ? "translateY(0)" : "translateY(-100%)",
-          transition: "transform 0.4s ease-in-out",
-          position: "fixed",
-          top: 0,
-          left: 0,
+          position: "static", // Desplazamiento natural
           width: "100%",
           zIndex: 10,
           boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
+          margin: 0, // Sin márgenes alrededor del AppBar
+          padding: 0, // Sin relleno externo
         }}
       >
-        <Toolbar sx={{ height: "100%", display: "flex", alignItems: "center", paddingX: 2 }}>
+        <Toolbar
+          sx={{
+            height: "80px", // Igualamos la altura al AppBar
+            minHeight: "80px !important", // Forzamos la altura mínima para evitar valores predeterminados de MUI
+            display: "flex",
+            alignItems: "center",
+            paddingX: 2,
+            paddingY: 0, // Sin relleno vertical
+            margin: 0, // Sin márgenes internos
+          }}
+        >
           <IconButton
             color="inherit"
             edge="start"
@@ -139,13 +130,14 @@ const NavbarPublico = () => {
             sx={{
               display: { xs: "block", md: "none" },
               "&:hover": { transform: "rotate(180deg)", transition: "transform 0.3s" },
+              margin: 0, // Sin márgenes en el botón
             }}
             aria-label="Abrir menú lateral"
           >
             <MenuIcon />
           </IconButton>
 
-          <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
+          <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center", margin: 0 }}>
             <img
               src={logo}
               alt="Consultorio Dental"
@@ -153,9 +145,10 @@ const NavbarPublico = () => {
                 height: "60px",
                 width: "auto",
                 marginRight: "12px",
+                marginTop: 0,
+                marginBottom: 0,
                 borderRadius: "50%",
                 transition: "transform 0.3s",
-                "&:hover": { transform: "scale(1.1)" },
               }}
             />
             <Typography
@@ -165,6 +158,7 @@ const NavbarPublico = () => {
                 color: "#ffffff",
                 letterSpacing: "0.5px",
                 textShadow: "1px 1px 2px rgba(0, 0, 0, 0.2)",
+                margin: 0, // Sin márgenes en el texto
               }}
             >
               Consultorio Dental
@@ -175,6 +169,8 @@ const NavbarPublico = () => {
                 flexGrow: 1,
                 maxWidth: "400px",
                 position: "relative",
+                marginTop: 0,
+                marginBottom: 0,
               }}
               ref={searchBoxRef}
             >
@@ -201,6 +197,7 @@ const NavbarPublico = () => {
                   },
                   transition: "all 0.3s",
                   "&:hover": { boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)" },
+                  margin: 0, // Sin márgenes en el TextField
                 }}
               />
               {searchResults.length > 0 && (
@@ -244,7 +241,9 @@ const NavbarPublico = () => {
             </Box>
           </Box>
 
-          <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 1 }}>
+          <Box
+            sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 1, margin: 0 }}
+          >
             <Tooltip title="Inicio" placement="top" arrow>
               <IconButton
                 href="/"
@@ -255,6 +254,7 @@ const NavbarPublico = () => {
                   p: 1.5,
                   "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.4)", transform: "scale(1.1)" },
                   transition: "all 0.3s",
+                  margin: 0, // Sin márgenes en el botón
                 }}
                 aria-label="Inicio"
               >
@@ -272,6 +272,7 @@ const NavbarPublico = () => {
                   p: 1.5,
                   "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.4)", transform: "scale(1.1)" },
                   transition: "all 0.3s",
+                  margin: 0, // Sin márgenes en el botón
                 }}
                 aria-label="Servicios"
               >
@@ -289,6 +290,7 @@ const NavbarPublico = () => {
                   p: 1.5,
                   "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.4)", transform: "scale(1.1)" },
                   transition: "all 0.3s",
+                  margin: 0, // Sin márgenes en el botón
                 }}
                 aria-label="Iniciar Sesión"
               >

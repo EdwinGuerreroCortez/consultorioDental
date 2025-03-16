@@ -14,9 +14,8 @@ const LayoutPublico = ({ children }) => {
       {/* Breadcrumb */}
       <Box
         sx={{
-          marginTop: "94px",  // Altura del Navbar para evitar que el breadcrumb quede oculto
           padding: "0px",
-          backgroundColor: "#ffffff",
+          backgroundColor: "#e6f7ff",
           zIndex: 2,
           position: "relative",
         }}

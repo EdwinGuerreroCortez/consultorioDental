@@ -214,9 +214,7 @@ const Perfil = () => {
             variant="filled"
             sx={{ mt: 2 }}
           />
-          <IconButton color="primary" onClick={() => setOpen(true)} sx={{ ml: 2 }}>
-            <Lock sx={{ fontSize: 28 }} />
-          </IconButton>
+
         </CardContent>
 
         <Divider sx={{ my: 3 }} />
@@ -235,9 +233,12 @@ const Perfil = () => {
               }),
             },
             { icon: <Wc sx={{ color: "#27AE60" }} />, label: "Sexo", value: perfil.sexo },
+            { icon: <Lock sx={{ color: "#5562EA" }} />,  value: "Cambiar Contraseña", onClick:() => setOpen(true) },
+
           ].map((item, index) => (
             <Grid item xs={12} md={6} key={index}>
-              <InfoItem whileHover={{ scale: 1.05 }} transition={{ duration: 0.3 }} elevation={3}>
+              <InfoItem whileHover={{ scale: 1.05 }} transition={{ duration: 0.3 }} elevation={3}         onClick={item.onClick} // Aquí se abre el formulario solo cuando se haga clic en Teléfono
+              >
                 {item.icon}
                 <Box>
                   <Typography variant="subtitle2" color="text.secondary">

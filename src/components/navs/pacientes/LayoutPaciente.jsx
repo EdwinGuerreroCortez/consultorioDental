@@ -18,23 +18,25 @@ const LayoutPaciente = ({ children }) => {
           margin: 0,
           padding: 0,
           boxSizing: "border-box", // Reset general para todos los elementos
+          backgroundColor: "#e6f7ff",
+
+          
         }}
       >
 
         <NavbarPaciente />
         {/* Breadcrumb */}
-      <Box
-        sx={{
-          marginTop: "94px",  // Altura del Navbar para evitar que el breadcrumb quede oculto
-          backgroundColor: "#ffffff",
-          zIndex: 2,
-          position: "relative",
-        }}
-      >
-        <BreadcrumbNav userType="paciente" />
-      </Box>
-       
-          {children}
+        <Box
+          sx={{
+            backgroundColor: "#ffffff",
+            zIndex: 2,
+            position: "relative",
+          }}
+        >
+          <BreadcrumbNav userType="paciente" />
+        </Box>
+
+        {children}
         <FooterPaciente />
       </Box>
     </>
