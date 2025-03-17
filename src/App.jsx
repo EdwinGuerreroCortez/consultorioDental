@@ -324,11 +324,11 @@ const App = () => {
               }
             />
             <Route
-              path="/admin/citas-evaluar"
+              path="/admin/citas-valorar"
               element={
                 <RutaProtegida tiposPermitidos={['admin']}>
 
-                  <LayoutAdmin title={"Evaluar Citas Pendientes"}>
+                  <LayoutAdmin title={"Valorar Citas Pendientes"}>
                     <EvaluarCitasPendientes />
                   </LayoutAdmin>
                 </RutaProtegida>
