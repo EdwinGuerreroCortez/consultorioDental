@@ -12,11 +12,13 @@ import {
     Snackbar,
     Alert,
     Paper,
+    InputAdornment,
 } from "@mui/material";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
-import InputAdornment from '@mui/material/InputAdornment';
 import MedicalServicesOutlinedIcon from "@mui/icons-material/MedicalServicesOutlined";
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CheckCircle from "@mui/icons-material/CheckCircle";
+import ArrowBack from "@mui/icons-material/ArrowBack";
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -161,15 +163,15 @@ const AgendarCita = () => {
             });
         }
     };
+
     const obtenerTokenCSRF = () => {
         const csrfToken = document.cookie
-          .split("; ")
-          .find(row => row.startsWith("XSRF-TOKEN="))
-          ?.split("=")[1];
-      
-        return csrfToken || ""; // Evita valores undefined
-      };
-      
+            .split("; ")
+            .find(row => row.startsWith("XSRF-TOKEN="))
+            ?.split("=")[1];
+        return csrfToken || "";
+    };
+
     const handleAgendarCita = async () => {
         if (!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada) {
             setAlerta({
@@ -181,7 +183,7 @@ const AgendarCita = () => {
         }
 
         try {
-            const csrfToken = obtenerTokenCSRF(); // 🔹 Obtener token CSRF
+            const csrfToken = obtenerTokenCSRF();
 
             const tratamientoSeleccionado = servicios.find(s => s.nombre === servicioSeleccionado);
             const estadoTratamiento = tratamientoSeleccionado.requiere_evaluacion ? 'pendiente' : 'en progreso';
@@ -204,13 +206,13 @@ const AgendarCita = () => {
                 estado: estadoTratamiento,
                 precio: tratamientoSeleccionado.precio,
                 requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
-            },{
+            }, {
                 headers: {
-                  "X-XSRF-TOKEN": csrfToken, // 🔹 Agregar token CSRF
-                  "Content-Type": "application/json",
+                    "X-XSRF-TOKEN": csrfToken,
+                    "Content-Type": "application/json",
                 },
-                withCredentials: true, // 🔹 Permitir cookies con CSRF
-              });
+                withCredentials: true,
+            });
 
             setAlerta({
                 mostrar: true,
@@ -230,279 +232,436 @@ const AgendarCita = () => {
         }
     };
 
+    const handleBack = () => {
+        // Aquí podrías implementar una lógica para regresar, como navegar a otra página
+        console.log("Regresar a la página anterior");
+    };
+
     const horasDisponibles = useMemo(() => obtenerHorasDisponibles(), [fechaSeleccionada, citasOcupadas]);
+
+    // Estilos personalizados para el menú desplegable de los Select
+    const menuProps = {
+        PaperProps: {
+            sx: {
+                borderRadius: "10px",
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                backgroundColor: "rgba(255, 255, 255, 0.95)",
+                backdropFilter: "blur(5px)",
+                maxHeight: "300px",
+                "& .MuiMenu-list": {
+                    padding: "8px",
+                },
+            },
+        },
+    };
 
     return (
         <Box
             sx={{
-                padding: { xs: "20px", md: "40px" },
-                backgroundColor: "#e6f7ff",
-                minHeight: "100vh",
-                boxSizing: "border-box",
                 display: "flex",
-                flexDirection: "column",
+                justifyContent: "center",
                 alignItems: "center",
-                justifyContent: "flex-start",
+                minHeight: "100vh",
+                backgroundColor: "#e6f7ff", // Fondo claro como en Registro
             }}
         >
-            {/* Título del componente */}
-            <Box
-                sx={{
-                    width: "100%",
-                    maxWidth: "600px",
-                    background: "linear-gradient(135deg, #0288d1, #26c6da)",
-                    clipPath: "polygon(0 0, 100% 0, 80% 100%, 0% 100%)",
-                    color: "#ffffff",
-                    padding: { xs: "15px 20px", md: "20px 40px" },
-                    borderRadius: "12px",
-                    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
-                    textAlign: "left",
-                    marginBottom: "20px",
-                }}
-            >
-                <Typography
-                    variant="h4"
-                    sx={{
-                        fontWeight: "bold",
-                        fontSize: { xs: "22px", md: "28px" },
-                        fontFamily: "'Poppins', sans-serif",
-                        textShadow: "1px 1px 6px rgba(0, 0, 0, 0.2)",
-                    }}
-                >
-                    Agendar Cita Dental
-                </Typography>
-                <Typography
-                    variant="subtitle1"
-                    sx={{
-                        fontSize: { xs: "14px", md: "16px" },
-                        fontStyle: "italic",
-                        marginTop: "4px",
-                    }}
-                >
-                    ¡Cuidamos tu sonrisa con tratamientos personalizados!
-                </Typography>
-            </Box>
-
-            {/* Si el usuario tiene un tratamiento en curso, mostrar el mensaje */}
-            {tratamientoActivo && (
-                <Box
-                    sx={{
-                        width: "100%",
-                        maxWidth: "600px",
-                        textAlign: "center",
-                        backgroundColor: "#fff",
-                        padding: { xs: "15px", md: "20px" },
-                        borderRadius: "12px",
-                        boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
-                    }}
-                >
-                    <Typography
-                        variant="h5"
-                        sx={{
-                            fontWeight: "bold",
-                            fontSize: { xs: "18px", md: "22px" },
-                            color: "#d32f2f",
-                        }}
-                    >
-                        Ya tienes un tratamiento en curso.
-                    </Typography>
-                    <Typography
-                        variant="body1"
-                        sx={{
-                            fontSize: { xs: "14px", md: "16px" },
-                            marginTop: "10px",
-                            color: "#333",
-                        }}
-                    >
-                        Debes finalizar tu tratamiento actual antes de agendar otro.
-                    </Typography>
-                </Box>
-            )}
-
-            {/* Si no tiene tratamiento activo, mostrar el formulario */}
-            {!tratamientoActivo && (
+            <Box sx={{ width: "100%", maxWidth: "1100px", padding: "16px" }}>
                 <Paper
                     elevation={6}
                     sx={{
+                        padding: { xs: "16px", sm: "24px", md: "50px" }, // Responsive padding
                         width: "100%",
-                        maxWidth: "600px",
-                        padding: { xs: "20px", md: "30px" },
-                        borderRadius: "16px",
-                        background: "linear-gradient(135deg, #fff, #bbdefb)",
-                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: { xs: "20px", md: "25px" },
+                        maxWidth: "100%",
+                        borderRadius: "20px",
+                        backgroundColor: "rgba(255, 255, 255, 0.85)", // Fondo translúcido como en Registro
+                        backdropFilter: "blur(10px)",
+                        boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.2)",
+                        border: "1px solid rgba(255, 255, 255, 0.18)",
                     }}
                 >
-
-                    {/* Campo: Servicio */}
-                    <FormControl fullWidth>
-                        <Typography
-                            variant="subtitle1"
-                            sx={{ fontWeight: "medium", color: "#333", mb: 1 }}
-                        >
-                            Selecciona un servicio
-                        </Typography>
-                        <Select
-                            value={servicioSeleccionado}
-                            onChange={(e) => setServicioSeleccionado(e.target.value)}
-                            displayEmpty
-                            sx={{
-                                borderRadius: "12px",
-                                backgroundColor: "transparent",
-                                "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-                                backgroundColor: "#f5faff",
-                            }}
-                            startAdornment={
-                                <InputAdornment position="start">
-                                    <MedicalServicesOutlinedIcon sx={{ color: "#0288d1" }} />
-                                </InputAdornment>
-                            }
-                        >
-                            <MenuItem disabled value="">
-                                Selecciona un servicio
-                            </MenuItem>
-                            {servicios.map((servicio) => (
-                                <MenuItem key={servicio.id} value={servicio.nombre}>
-                                    {servicio.nombre} -{' '}
-                                    {servicio.requiere_evaluacion ? (
-                                        <em>Requiere evaluación</em>
-                                    ) : (
-                                        `$${servicio.precio} MXN`
-                                    )}
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-
-                    {/* Campo: Fecha de la cita */}
-                    <Box>
-                        <Typography
-                            variant="subtitle1"
-                            sx={{ fontWeight: "medium", color: "#333", mb: 1 }}
-                        >
-                            Fecha de la cita
-                        </Typography>
-                        <Typography
-                            variant="body2"
-                            sx={{ color: "#d32f2f", fontWeight: "bold", mb: 1 }}
-                        >
-                            Solo se pueden agendar citas en: Lunes, Martes, Miércoles y Sábado.
-                        </Typography>
-                        <LocalizationProvider dateAdapter={AdapterDateFns} locale={es}>
-                            <DatePicker
-                                value={fechaSeleccionada}
-                                onChange={(newValue) => setFechaSeleccionada(newValue)}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        fullWidth
-                                        sx={{
-                                            "& .MuiOutlinedInput-root": {
-                                                borderRadius: "12px",
-                                                backgroundColor: "#f5faff",
-                                                "& fieldset": { border: "none" },
-                                            },
-                                        }}
-                                        InputProps={{
-                                            startAdornment: (
-                                                <InputAdornment position="start">
-                                                    <CalendarMonthOutlinedIcon sx={{ color: "#0288d1" }} />
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                )}
-                                disablePast
-                                maxDate={new Date(new Date().setDate(new Date().getDate() + 30))}
-                                inputFormat="dd/MM/yyyy"
-                                shouldDisableDate={(date) => {
-                                    const day = date.getDay();
-                                    return ![1, 2, 3, 6].includes(day);
-                                }}
-                            />
-                        </LocalizationProvider>
-                    </Box>
-
-                    {/* Campo: Hora */}
-                    <FormControl fullWidth>
-                        <Typography
-                            variant="subtitle1"
-                            sx={{ fontWeight: "medium", color: "#333", mb: 1 }}
-                        >
-                            Hora de la cita
-                        </Typography>
-                        <Select
-                            value={horaSeleccionada}
-                            onChange={(e) => {
-                                setHoraSeleccionada(e.target.value);
-                                console.log("🕒 Hora seleccionada:", e.target.value);
-                                console.log("📦 Datos actuales antes de enviar:", {
-                                    usuarioId,
-                                    servicioSeleccionado,
-                                    fechaSeleccionada: fechaSeleccionada ? fechaSeleccionada.toISOString().split('T')[0] : "No seleccionada",
-                                    horaSeleccionada: e.target.value
-                                });
-                            }}
-                            displayEmpty
-                            sx={{
-                                borderRadius: "12px",
-                                backgroundColor: "#f5faff",
-                                "& .MuiOutlinedInput-notchedOutline": { border: "none" },
-                            }}
-                            startAdornment={
-                                <InputAdornment position="start">
-                                    <AccessTimeIcon sx={{ color: "#0288d1" }} />
-                                </InputAdornment>
-                            }
-                            disabled={!fechaSeleccionada || horasDisponibles.length === 0}
-                        >
-                            {horasDisponibles.length > 0 ? (
-                                horasDisponibles.map((hora, index) => (
-                                    <MenuItem key={index} value={hora}>
-                                        {hora}
-                                    </MenuItem>
-                                ))
-                            ) : (
-                                <MenuItem disabled>No hay horarios disponibles</MenuItem>
-                            )}
-                        </Select>
-                    </FormControl>
-
-                    {/* Botón: Confirmar Cita */}
-                    <Button
-                        variant="contained"
-                        fullWidth
-                        onClick={handleAgendarCita}
-                        startIcon={<Typography component="span">🦷</Typography>}
+                    <Typography
+                        variant="h4"
                         sx={{
-                            padding: "14px",
-                            fontWeight: "bold",
-                            fontSize: "16px",
-                            borderRadius: "12px",
-                            background: "linear-gradient(135deg, #0288d1, #26c6da)",
-                            textTransform: "uppercase",
-                            "&:hover": {
-                                background: "linear-gradient(135deg, #0277bd, #1e88e5)",
-                            },
-                            boxShadow: "0 6px 15px rgba(0, 119, 182, 0.3)",
-                            mt: 2,
+                            color: "#003087", // Color principal como en Registro
+                            textAlign: "center",
+                            fontWeight: "700",
+                            marginBottom: { xs: "16px", md: "30px" },
+                            fontFamily: "'Poppins', sans-serif",
+                            textShadow: "1px 1px 2px rgba(0, 0, 0, 0.1)",
+                            fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" },
                         }}
                     >
-                        Confirmar Cita
-                    </Button>
+                        Agendar Cita Dental
+                    </Typography>
+
+                    {/* Si el usuario tiene un tratamiento en curso, mostrar el mensaje */}
+                    {tratamientoActivo ? (
+                        <Box sx={{ textAlign: "center" }}>
+                            <Typography
+                                variant="h5"
+                                sx={{
+                                    fontWeight: "bold",
+                                    fontSize: { xs: "18px", md: "22px" },
+                                    color: "#d32f2f",
+                                    fontFamily: "'Poppins', sans-serif",
+                                }}
+                            >
+                                Ya tienes un tratamiento en curso.
+                            </Typography>
+                            <Typography
+                                variant="body1"
+                                sx={{
+                                    fontSize: { xs: "14px", md: "16px" },
+                                    marginTop: "10px",
+                                    color: "#333",
+                                    fontFamily: "'Poppins', sans-serif",
+                                }}
+                            >
+                                Debes finalizar tu tratamiento actual antes de agendar otro.
+                            </Typography>
+                        </Box>
+                    ) : (
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: "16px", md: "30px" } }}>
+                            {/* Campo: Servicio */}
+                            <FormControl fullWidth>
+                                <Typography
+                                    variant="subtitle1"
+                                    sx={{
+                                        fontWeight: "medium",
+                                        color: "#003087",
+                                        mb: 1,
+                                        fontFamily: "'Poppins', sans-serif",
+                                        fontSize: { xs: "0.9rem", md: "1.1rem" },
+                                    }}
+                                >
+                                    Selecciona un servicio
+                                </Typography>
+                                <Select
+                                    value={servicioSeleccionado}
+                                    onChange={(e) => setServicioSeleccionado(e.target.value)}
+                                    displayEmpty
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
+                                            "&:hover fieldset": { borderColor: "#0057b7" },
+                                            "&.Mui-focused fieldset": { borderColor: "#003087" },
+                                            backgroundColor: "rgba(255, 255, 255, 0.9)",
+                                            borderRadius: "10px",
+                                            transition: "all 0.3s ease",
+                                        },
+                                        "& .MuiInputBase-input": {
+                                            fontSize: { xs: "1rem", md: "1.2rem" },
+                                            padding: { xs: "12px 20px", md: "15px 25px" },
+                                        },
+                                        fontFamily: "'Poppins', sans-serif",
+                                    }}
+                                    startAdornment={
+                                        <InputAdornment position="start">
+                                            <MedicalServicesOutlinedIcon sx={{ color: "#003087" }} />
+                                        </InputAdornment>
+                                    }
+                                    MenuProps={menuProps} // Aplicamos los estilos al menú desplegable
+                                >
+                                    <MenuItem
+                                        disabled
+                                        value=""
+                                        sx={{
+                                            fontFamily: "'Poppins', sans-serif",
+                                            fontSize: { xs: "0.9rem", md: "1rem" },
+                                            color: "#666",
+                                            "&.Mui-disabled": {
+                                                opacity: 0.7,
+                                            },
+                                        }}
+                                    >
+                                        Selecciona un servicio
+                                    </MenuItem>
+                                    {servicios.map((servicio) => (
+                                        <MenuItem
+                                            key={servicio.id}
+                                            value={servicio.nombre}
+                                            sx={{
+                                                fontFamily: "'Poppins', sans-serif",
+                                                fontSize: { xs: "0.9rem", md: "1rem" },
+                                                color: "#333",
+                                                padding: "10px 16px",
+                                                borderRadius: "8px",
+                                                transition: "all 0.3s ease",
+                                                "&:hover": {
+                                                    backgroundColor: "rgba(0, 87, 183, 0.1)",
+                                                    color: "#003087",
+                                                },
+                                                "&.Mui-selected": {
+                                                    backgroundColor: "rgba(0, 87, 183, 0.2)",
+                                                    color: "#003087",
+                                                    "&:hover": {
+                                                        backgroundColor: "rgba(0, 87, 183, 0.3)",
+                                                    },
+                                                },
+                                            }}
+                                        >
+                                            {servicio.nombre} -{' '}
+                                            {servicio.requiere_evaluacion ? (
+                                                <em style={{ color: "#d32f2f", fontStyle: "italic" }}>
+                                                    Requiere evaluación
+                                                </em>
+                                            ) : (
+                                                <span style={{ fontWeight: "bold" }}>
+                                                    ${servicio.precio} MXN
+                                                </span>
+                                            )}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            {/* Campo: Fecha de la cita */}
+                            <Box>
+                                <Typography
+                                    variant="subtitle1"
+                                    sx={{
+                                        fontWeight: "medium",
+                                        color: "#003087",
+                                        mb: 1,
+                                        fontFamily: "'Poppins', sans-serif",
+                                        fontSize: { xs: "0.9rem", md: "1.1rem" },
+                                    }}
+                                >
+                                    Fecha de la cita
+                                </Typography>
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        color: "#d32f2f",
+                                        fontWeight: "bold",
+                                        mb: 1,
+                                        fontFamily: "'Poppins', sans-serif",
+                                        fontSize: { xs: "0.8rem", md: "1rem" },
+                                    }}
+                                >
+                                    Solo se pueden agendar citas en: Lunes, Martes, Miércoles y Sábado.
+                                </Typography>
+                                <LocalizationProvider dateAdapter={AdapterDateFns} locale={es}>
+                                    <DatePicker
+                                        value={fechaSeleccionada}
+                                        onChange={(newValue) => setFechaSeleccionada(newValue)}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                fullWidth
+                                                sx={{
+                                                    "& .MuiOutlinedInput-root": {
+                                                        "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
+                                                        "&:hover fieldset": { borderColor: "#0057b7" },
+                                                        "&.Mui-focused fieldset": { borderColor: "#003087" },
+                                                        backgroundColor: "rgba(255, 255, 255, 0.9)",
+                                                        borderRadius: "10px",
+                                                        transition: "all 0.3s ease",
+                                                    },
+                                                    "& .MuiInputBase-input": {
+                                                        fontSize: { xs: "1rem", md: "1.2rem" },
+                                                        padding: { xs: "12px 20px", md: "15px 25px" },
+                                                    },
+                                                    "& .MuiInputLabel-root": {
+                                                        color: "#003087",
+                                                        fontSize: { xs: "0.9rem", md: "1.1rem" },
+                                                    },
+                                                    "& .MuiInputLabel-root.Mui-focused": { color: "#0057b7" },
+                                                    fontFamily: "'Poppins', sans-serif",
+                                                }}
+                                                InputProps={{
+                                                    startAdornment: (
+                                                        <InputAdornment position="start">
+                                                            <CalendarMonthOutlinedIcon sx={{ color: "#003087" }} />
+                                                        </InputAdornment>
+                                                    ),
+                                                }}
+                                            />
+                                        )}
+                                        disablePast
+                                        maxDate={new Date(new Date().setDate(new Date().getDate() + 30))}
+                                        inputFormat="dd/MM/yyyy"
+                                        shouldDisableDate={(date) => {
+                                            const day = date.getDay();
+                                            return ![1, 2, 3, 6].includes(day);
+                                        }}
+                                    />
+                                </LocalizationProvider>
+                            </Box>
+
+                            {/* Campo: Hora */}
+                            <FormControl fullWidth>
+                                <Typography
+                                    variant="subtitle1"
+                                    sx={{
+                                        fontWeight: "medium",
+                                        color: "#003087",
+                                        mb: 1,
+                                        fontFamily: "'Poppins', sans-serif",
+                                        fontSize: { xs: "0.9rem", md: "1.1rem" },
+                                    }}
+                                >
+                                    Hora de la cita
+                                </Typography>
+                                <Select
+                                    value={horaSeleccionada}
+                                    onChange={(e) => {
+                                        setHoraSeleccionada(e.target.value);
+                                        console.log("🕒 Hora seleccionada:", e.target.value);
+                                        console.log("📦 Datos actuales antes de enviar:", {
+                                            usuarioId,
+                                            servicioSeleccionado,
+                                            fechaSeleccionada: fechaSeleccionada ? fechaSeleccionada.toISOString().split('T')[0] : "No seleccionada",
+                                            horaSeleccionada: e.target.value
+                                        });
+                                    }}
+                                    displayEmpty
+                                    disabled={!fechaSeleccionada || horasDisponibles.length === 0}
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
+                                            "&:hover fieldset": { borderColor: "#0057b7" },
+                                            "&.Mui-focused fieldset": { borderColor: "#003087" },
+                                            backgroundColor: "rgba(255, 255, 255, 0.9)",
+                                            borderRadius: "10px",
+                                            transition: "all 0.3s ease",
+                                        },
+                                        "& .MuiInputBase-input": {
+                                            fontSize: { xs: "1rem", md: "1.2rem" },
+                                            padding: { xs: "12px 20px", md: "15px 25px" },
+                                        },
+                                        fontFamily: "'Poppins', sans-serif",
+                                    }}
+                                    startAdornment={
+                                        <InputAdornment position="start">
+                                            <AccessTimeIcon sx={{ color: "#003087" }} />
+                                        </InputAdornment>
+                                    }
+                                    MenuProps={menuProps} // Aplicamos los estilos al menú desplegable
+                                >
+                                    {horasDisponibles.length > 0 ? (
+                                        horasDisponibles.map((hora, index) => (
+                                            <MenuItem
+                                                key={index}
+                                                value={hora}
+                                                sx={{
+                                                    fontFamily: "'Poppins', sans-serif",
+                                                    fontSize: { xs: "0.9rem", md: "1rem" },
+                                                    color: "#333",
+                                                    padding: "10px 16px",
+                                                    borderRadius: "8px",
+                                                    transition: "all 0.3s ease",
+                                                    "&:hover": {
+                                                        backgroundColor: "rgba(0, 87, 183, 0.1)",
+                                                        color: "#003087",
+                                                    },
+                                                    "&.Mui-selected": {
+                                                        backgroundColor: "rgba(0, 87, 183, 0.2)",
+                                                        color: "#003087",
+                                                        "&:hover": {
+                                                            backgroundColor: "rgba(0, 87, 183, 0.3)",
+                                                        },
+                                                    },
+                                                }}
+                                            >
+                                                {hora}
+                                            </MenuItem>
+                                        ))
+                                    ) : (
+                                        <MenuItem
+                                            disabled
+                                            sx={{
+                                                fontFamily: "'Poppins', sans-serif",
+                                                fontSize: { xs: "0.9rem", md: "1rem" },
+                                                color: "#666",
+                                                "&.Mui-disabled": {
+                                                    opacity: 0.7,
+                                                },
+                                            }}
+                                        >
+                                            No hay horarios disponibles
+                                        </MenuItem>
+                                    )}
+                                </Select>
+                            </FormControl>
+
+                            {/* Botones */}
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    flexDirection: { xs: "column", sm: "row" },
+                                    justifyContent: "space-between",
+                                    marginTop: { xs: "16px", md: "40px" },
+                                    gap: { xs: "16px", sm: "0" },
+                                }}
+                            >
+                                <Button
+                                    variant="outlined"
+                                    onClick={handleBack}
+                                    startIcon={<ArrowBack />}
+                                    sx={{
+                                        borderRadius: "12px",
+                                        padding: { xs: "10px 20px", md: "15px 40px" },
+                                        textTransform: "none",
+                                        fontSize: { xs: "1rem", md: "1.2rem" },
+                                        color: "#003087",
+                                        borderColor: "#003087",
+                                        fontFamily: "'Poppins', sans-serif",
+                                        "&:hover": {
+                                            borderColor: "#0057b7",
+                                            backgroundColor: "rgba(0, 87, 183, 0.04)",
+                                        },
+                                        width: { xs: "100%", sm: "auto" },
+                                    }}
+                                >
+                                    Atrás
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    onClick={handleAgendarCita}
+                                    startIcon={<CheckCircle />}
+                                    disabled={!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada}
+                                    sx={{
+                                        background: "linear-gradient(135deg, #003087 0%, #0057b7 100%)",
+                                        borderRadius: "12px",
+                                        padding: { xs: "10px 20px", md: "15px 40px" },
+                                        textTransform: "none",
+                                        fontSize: { xs: "1rem", md: "1.2rem" },
+                                        fontFamily: "'Poppins', sans-serif",
+                                        fontWeight: 600,
+                                        transition: "all 0.3s ease",
+                                        "&:hover": {
+                                            background: "linear-gradient(135deg, #0057b7 0%, #003087 100%)",
+                                            boxShadow: "0 4px 15px rgba(0, 87, 183, 0.4)",
+                                            transform: "translateY(-2px)",
+                                        },
+                                        width: { xs: "100%", sm: "auto" },
+                                    }}
+                                >
+                                    Confirmar Cita
+                                </Button>
+                            </Box>
+                        </Box>
+                    )}
                 </Paper>
-            )}
+            </Box>
 
             {/* Snackbar para alertas */}
             <Snackbar
                 open={alerta.mostrar}
                 onClose={() => setAlerta({ mostrar: false, mensaje: '', tipo: '' })}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
                 autoHideDuration={5000}
             >
-                <Alert severity={alerta.tipo} onClose={() => setAlerta({ mostrar: false, mensaje: '', tipo: '' })}>
+                <Alert
+                    severity={alerta.tipo}
+                    onClose={() => setAlerta({ mostrar: false, mensaje: '', tipo: '' })}
+                    sx={{
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                        fontFamily: "'Poppins', sans-serif",
+                    }}
+                >
                     {alerta.mensaje}
                 </Alert>
             </Snackbar>
