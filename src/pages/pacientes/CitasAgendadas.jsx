@@ -112,7 +112,6 @@ const MisCitas = () => {
       sx={{
         minHeight: "100vh",
         width: "100vw",
-        backgroundColor: "#f5f6fa",
         padding: { xs: "1rem", md: "2rem" },
         fontFamily: "'Roboto', sans-serif",
         display: "flex",
