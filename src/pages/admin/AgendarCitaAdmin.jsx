@@ -7,25 +7,17 @@ import {
   MenuItem,
   Select,
   FormControl,
-  InputLabel,
   TextField,
   Button,
   Alert,
   Grid,
-
 } from "@mui/material";
-import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
-import InputAdornment from '@mui/material/InputAdornment';
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
-
-import MedicalServicesOutlinedIcon from "@mui/icons-material/MedicalServicesOutlined";
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { es } from 'date-fns/locale';
 import { motion } from "framer-motion";
-
 
 const AgendarCitaAdmin = () => {
   const [usuarioId, setUsuarioId] = useState(null);
@@ -34,101 +26,114 @@ const AgendarCitaAdmin = () => {
   const [servicioSeleccionado, setServicioSeleccionado] = useState('');
   const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
   const [horaSeleccionada, setHoraSeleccionada] = useState('');
-  const [disponibilidad, setDisponibilidad] = useState([
+  const [disponibilidad] = useState([
     '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM',
     '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM'
   ]);
   const [citasOcupadas, setCitasOcupadas] = useState([]);
   const [alerta, setAlerta] = useState({ mostrar: false, mensaje: '', tipo: '' });
-  const [usuarioEncontrado, setUsuarioEncontrado] = useState(null); // Guardará el usuario encontrado
+  const [usuarioEncontrado, setUsuarioEncontrado] = useState(null);
   const [busquedaUsuario, setBusquedaUsuario] = useState({
     nombre: '',
     apellido_paterno: '',
     apellido_materno: '',
-    fecha_nacimiento: null, // Antes estaba como ''
+    fecha_nacimiento: null,
     email: '',
     telefono: ''
   });
   const [pasoActual, setPasoActual] = useState(1);
+
   const inputStyle = {
     "& .MuiOutlinedInput-root": {
+      borderRadius: "12px",
+      backgroundColor: "#fff",
+      fontFamily: "'Poppins', sans-serif",
+      height: "56px",
       transition: "all 0.3s ease-in-out",
-      "&:hover fieldset": { borderColor: "#0077b6" },
-      "&.Mui-focused fieldset": { borderColor: "#005f8a" },
+      "&:hover fieldset": { borderColor: "#78c1c8" },
+      "&.Mui-focused fieldset": { borderColor: "#006d77", borderWidth: "2px" },
+    },
+    "& .MuiInputLabel-root": {
+      fontFamily: "'Poppins', sans-serif",
+      color: "#03445e",
+      "&.Mui-focused": { color: "#006d77" },
+    },
+  };
+
+  const selectStyle = {
+    borderRadius: "12px",
+    backgroundColor: "#fff",
+    fontFamily: "'Poppins', sans-serif",
+    height: "56px",
+    "& .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#d2f4ea",
+    },
+    "&:hover .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#78c1c8",
+    },
+    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#006d77",
+      borderWidth: "2px",
+    },
+  };
+
+  const menuItemStyle = {
+    fontFamily: "'Poppins', sans-serif",
+    padding: "12px 20px",
+    borderBottom: "1px solid #e0f7fa",
+    transition: "all 0.3s ease-in-out",
+    "&:hover": {
+      backgroundColor: "#78c1c8",
+      color: "#fff",
+      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
     },
   };
 
   useEffect(() => {
     if (alerta.mostrar) {
-      const timer = setTimeout(() => {
-        setAlerta({ mostrar: false, mensaje: '', tipo: '' });
-      }, 3000);
+      const timer = setTimeout(() => setAlerta({ mostrar: false, mensaje: '', tipo: '' }), 3000);
       return () => clearTimeout(timer);
     }
   }, [alerta.mostrar]);
 
-
-  // ✅ Obtiene el usuario autenticado al montar el componente
   useEffect(() => {
     const obtenerUsuario = async () => {
       const usuario = await verificarAutenticacion();
-      if (usuario) {
-        setUsuarioId(usuario.id);
-      } else {
-        setAlerta({
-          mostrar: true,
-          mensaje: 'No se ha encontrado la sesión del usuario. Inicia sesión nuevamente.',
-          tipo: 'error',
-        });
-      }
+      if (usuario) setUsuarioId(usuario.id);
+      else setAlerta({ mostrar: true, mensaje: 'No se ha encontrado la sesión del usuario.', tipo: 'error' });
     };
     obtenerUsuario();
   }, []);
 
-  // ✅ Configurar Axios con la URL de producción
   const axiosInstance = axios.create({
     baseURL: 'http://localhost:4000/api',
     withCredentials: true,
   });
 
-  // ✅ Ejecuta las peticiones solo cuando `usuarioId` tiene valor
   useEffect(() => {
     if (usuarioEncontrado) {
       verificarTratamientoActivo();
       obtenerTratamientos();
     }
   }, [usuarioEncontrado]);
+
   const obtenerCitasOcupadas = async () => {
     try {
       const response = await axiosInstance.get('/citas/activas');
-      const citas = response.data || [];
-
-      const citasConZonaHoraria = citas.map(cita => {
-        const fechaUTC = new Date(cita.fecha_hora);
-        const fechaMX = new Intl.DateTimeFormat('es-MX', {
+      const citas = response.data.map(cita => ({
+        ...cita,
+        fecha_hora_mx: new Intl.DateTimeFormat('es-MX', {
           timeZone: 'America/Mexico_City',
           year: 'numeric', month: '2-digit', day: '2-digit',
           hour: '2-digit', minute: '2-digit', second: '2-digit',
           hour12: true
-        }).format(fechaUTC);
-
-        return { ...cita, fecha_hora_mx: fechaMX };
-      });
-
-      console.log("📅 Fechas obtenidas en UTC:", citas);
-      console.log("🇲🇽 Fechas convertidas a Hora Centro de México:", citasConZonaHoraria);
-
-      setCitasOcupadas(citasConZonaHoraria);
+        }).format(new Date(cita.fecha_hora)),
+      }));
+      setCitasOcupadas(citas);
     } catch (error) {
-      console.error('❌ Error al obtener las citas ocupadas:', error);
-      setAlerta({
-        mostrar: true,
-        mensaje: 'Error al obtener las citas. Intenta nuevamente.',
-        tipo: 'error',
-      });
+      setAlerta({ mostrar: true, mensaje: 'Error al obtener citas ocupadas.', tipo: 'error' });
     }
   };
-
 
   const ultimaFechaConsultada = useRef(null);
   useEffect(() => {
@@ -138,305 +143,171 @@ const AgendarCitaAdmin = () => {
     }
   }, [fechaSeleccionada]);
 
-
   const verificarTratamientoActivo = async () => {
     if (!usuarioEncontrado?.id || !usuarioEncontrado?.tipo) return;
-
     try {
-        const response = await axiosInstance.get(`/tratamientos-pacientes/verificar/${usuarioEncontrado.tipo}/${usuarioEncontrado.id}`);
-        setTratamientoActivo(response.data.tieneTratamientoActivo);
-        console.log("⚠️ Tratamiento activo:", response.data.tieneTratamientoActivo);
-
-        if (response.data.tieneTratamientoActivo) {
-            setAlerta({
-                mostrar: true,
-                mensaje: 'El paciente ya tiene un tratamiento activo. No puede agendar otra cita.',
-                tipo: 'warning',
-            });
-        }
+      const response = await axiosInstance.get(`/tratamientos-pacientes/verificar/${usuarioEncontrado.tipo}/${usuarioEncontrado.id}`);
+      setTratamientoActivo(response.data.tieneTratamientoActivo);
+      if (response.data.tieneTratamientoActivo) {
+        setAlerta({ mostrar: true, mensaje: 'El paciente ya tiene un tratamiento activo.', tipo: 'warning' });
+      }
     } catch (error) {
-        console.error('❌ Error al verificar tratamiento:', error);
-        setAlerta({
-            mostrar: true,
-            mensaje: 'Error al verificar el tratamiento activo.',
-            tipo: 'error',
-        });
+      setAlerta({ mostrar: true, mensaje: 'Error al verificar tratamiento.', tipo: 'error' });
     }
-};
-
-
-  // ✅ Llamar a la función cada vez que se encuentra un usuario
-  useEffect(() => {
-    if (usuarioEncontrado) {
-      verificarTratamientoActivo();
-      obtenerTratamientos();
-    }
-  }, [usuarioEncontrado]);
+  };
 
   const obtenerHorasDisponibles = () => {
     if (!fechaSeleccionada) return disponibilidad;
-
-    const fechaFormateada = fechaSeleccionada ? new Date(fechaSeleccionada).toISOString().split('T')[0] : null;
-
-    if (!fechaFormateada) return disponibilidad; // Retorna disponibilidad completa si la fecha es inválida
-
+    const fechaFormateada = fechaSeleccionada.toISOString().split('T')[0];
     const horasOcupadas = citasOcupadas
-      .filter(cita => {
-        const fechaCita = new Date(cita.fecha_hora).toISOString().split('T')[0];
-        return fechaCita === fechaFormateada;
-      })
-      .map(cita => {
-        return new Date(cita.fecha_hora).toLocaleTimeString('es-MX', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        }).toUpperCase().replace(/\./g, "");
-      });
-
+      .filter(cita => new Date(cita.fecha_hora).toISOString().split('T')[0] === fechaFormateada)
+      .map(cita => new Date(cita.fecha_hora).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase().replace(/\./g, ""));
     return disponibilidad.filter(hora => !horasOcupadas.includes(hora));
   };
-
-
 
   const obtenerTratamientos = async () => {
     if (!usuarioId) return;
     try {
       const response = await axiosInstance.get('/tratamientos');
-      setServicios(response.data.filter(tratamiento => tratamiento.estado === 1));
+      setServicios(response.data.filter(t => t.estado === 1));
     } catch (error) {
-      setAlerta({
-        mostrar: true,
-        mensaje: 'Error al cargar los tratamientos.',
-        tipo: 'error',
-      });
+      setAlerta({ mostrar: true, mensaje: 'Error al cargar tratamientos.', tipo: 'error' });
     }
   };
+
   const buscarUsuario = async () => {
-    // Convertir la fecha de nacimiento a formato 'YYYY-MM-DD' si existe
     const datosEnvio = {
-        ...busquedaUsuario,
-        fecha_nacimiento: busquedaUsuario.fecha_nacimiento
-            ? busquedaUsuario.fecha_nacimiento.toISOString().split('T')[0]
-            : ""
+      ...busquedaUsuario,
+      fecha_nacimiento: busquedaUsuario.fecha_nacimiento ? busquedaUsuario.fecha_nacimiento.toISOString().split('T')[0] : "",
     };
-
-    console.log("🔍 Enviando solicitud para buscar usuario con los datos:", datosEnvio);
-
     try {
-      // 1️⃣ Obtener el token CSRF desde las cookies
-      const csrfToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1];
-        const response = await axios.post('http://localhost:4000/api/usuarios/buscar', datosEnvio,{
-          headers: {
-              'X-XSRF-TOKEN': csrfToken,
-          },
+      const csrfToken = document.cookie.split("; ").find(row => row.startsWith("XSRF-TOKEN="))?.split("=")[1];
+      const response = await axios.post('http://localhost:4000/api/usuarios/buscar', datosEnvio, {
+        headers: { 'X-XSRF-TOKEN': csrfToken },
         withCredentials: true,
-        });
-        console.log("✅ Respuesta recibida del servidor:", response.data);
-
-        if (response.data.length > 0) {
-            const usuario = response.data[0];
-
-            setUsuarioEncontrado({
-                ...usuario,
-                tipo: usuario.tipo, // 🔥 Ahora el frontend sabrá si es 'usuario' o 'paciente_sin_plataforma'
-                fecha_nacimiento: usuario.fecha_nacimiento ? new Date(usuario.fecha_nacimiento) : null
-            });
-
-            setAlerta({
-                mostrar: true,
-                mensaje: "Usuario encontrado correctamente.",
-                tipo: "success",
-            });
-
-            // Solo pasar al paso 2 si hay un usuario encontrado
-            setPasoActual(2);
-        } else {
-            console.log("⚠️ No se encontró ningún usuario con los datos proporcionados.");
-            setUsuarioEncontrado(null);
-            setPasoActual(1);
-
-            setAlerta({
-                mostrar: true,
-                mensaje: "No se encontró el usuario. Verifica los datos.",
-                tipo: "error",
-            });
-        }
-    } catch (error) {
-        console.error("❌ Error al buscar usuario:", error);
+      });
+      if (response.data.length > 0) {
+        const usuario = response.data[0];
+        setUsuarioEncontrado({ ...usuario, tipo: usuario.tipo, fecha_nacimiento: usuario.fecha_nacimiento ? new Date(usuario.fecha_nacimiento) : null });
+        setAlerta({ mostrar: true, mensaje: 'Usuario encontrado correctamente.', tipo: 'success' });
+        setPasoActual(2);
+      } else {
         setUsuarioEncontrado(null);
         setPasoActual(1);
-        setAlerta({
-            mostrar: true,
-            mensaje: "Error al buscar el usuario.",
-            tipo: "error",
-        });
-    }
-};
-
-useEffect(() => {
-  const obtenerTokenCSRF = async () => {
-    try {
-      await fetch("http://localhost:4000/api/get-csrf-token", {
-        credentials: "include",
-      });
+        setAlerta({ mostrar: true, mensaje: 'No se encontró el usuario.', tipo: 'error' });
+      }
     } catch (error) {
-      console.error("Error obteniendo el token CSRF:", error);
+      setAlerta({ mostrar: true, mensaje: 'Error al buscar usuario.', tipo: 'error' });
     }
   };
 
-  obtenerTokenCSRF();
-}, []);
+  useEffect(() => {
+    const obtenerTokenCSRF = async () => {
+      try {
+        await fetch("http://localhost:4000/api/get-csrf-token", { credentials: "include" });
+      } catch (error) {
+        console.error("Error obteniendo el token CSRF:", error);
+      }
+    };
+    obtenerTokenCSRF();
+  }, []);
 
-const handleAgendarCita = async () => {
-  if (!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada) {
-      setAlerta({
-          mostrar: true,
-          mensaje: 'Por favor, completa todos los campos.',
-          tipo: 'error',
-      });
+  const handleAgendarCita = async () => {
+    if (!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada) {
+      setAlerta({ mostrar: true, mensaje: 'Completa todos los campos.', tipo: 'error' });
       return;
-  }
-
-  try {
-      // 1️⃣ Obtener el token CSRF desde las cookies
-      const csrfToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1];
+    }
+    try {
+      const csrfToken = document.cookie.split("; ").find(row => row.startsWith("XSRF-TOKEN="))?.split("=")[1];
       const tratamientoSeleccionado = servicios.find(s => s.nombre === servicioSeleccionado);
       const estadoTratamiento = tratamientoSeleccionado.requiere_evaluacion ? 'pendiente' : 'en progreso';
-
       const fechaSeleccionadaStr = fechaSeleccionada.toISOString().split('T')[0];
-
       const [hora, minutos] = horaSeleccionada.replace(/( AM| PM)/, '').split(':').map(Number);
       const esPM = horaSeleccionada.includes('PM');
-
       let horaFinal = esPM && hora !== 12 ? hora + 12 : hora;
-      if (!esPM && hora === 12) horaFinal = 0; 
-
+      if (!esPM && hora === 12) horaFinal = 0;
       const fechaHoraLocal = new Date(`${fechaSeleccionadaStr}T${horaFinal.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:00`);
       const fechaHoraUTC = new Date(fechaHoraLocal.getTime() - fechaHoraLocal.getTimezoneOffset() * 60000);
-
-      // ✅ **Asegurar que usuarioId o pacienteId no sean null**
-      let usuarioId = null;
-      let pacienteId = null;
-
+  
+      let usuarioId = null, pacienteId = null;
       if (usuarioEncontrado) {
-          if (usuarioEncontrado.tipo === 'usuario') {
-              usuarioId = usuarioEncontrado.id;
-          } else if (usuarioEncontrado.tipo === 'paciente_sin_plataforma') {
-              pacienteId = usuarioEncontrado.id;
-          }
+        if (usuarioEncontrado.tipo === 'usuario') usuarioId = usuarioEncontrado.id;
+        else if (usuarioEncontrado.tipo === 'paciente_sin_plataforma') pacienteId = usuarioEncontrado.id;
       }
-
-      if (!usuarioId && !pacienteId) {
-          console.error("🚨 No se pudo identificar si es un usuario registrado o un paciente sin plataforma.");
-          throw new Error("❌ No se pudo identificar si es un usuario registrado o un paciente sin plataforma.");
-      }
-
+      if (!usuarioId && !pacienteId) throw new Error("No se pudo identificar el tipo de usuario.");
+  
       const datosEnvio = {
-          usuarioId,
-          pacienteId,
-          tratamientoId: tratamientoSeleccionado.id,
-          citasTotales: tratamientoSeleccionado.citas_requeridas || 0,
-          fechaInicio: fechaHoraUTC.toISOString(),
-          estado: estadoTratamiento,
-          precio: tratamientoSeleccionado.precio,
-          requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
+        usuarioId,
+        pacienteId,
+        tratamientoId: tratamientoSeleccionado.id,
+        citasTotales: tratamientoSeleccionado.citas_requeridas || 0,
+        fechaInicio: fechaHoraUTC.toISOString(),
+        estado: estadoTratamiento,
+        precio: tratamientoSeleccionado.precio,
+        requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
       };
-
-      console.log("📦 Enviando datos al backend:", datosEnvio);
-
-      await axiosInstance.post('/tratamientos-pacientes/crear', datosEnvio,{
-          headers: {
-              'X-XSRF-TOKEN': csrfToken,
-          },
-      });
-
+      await axiosInstance.post('/tratamientos-pacientes/crear', datosEnvio, { headers: { 'X-XSRF-TOKEN': csrfToken } });
       setAlerta({
-          mostrar: true,
-          mensaje: tratamientoSeleccionado.requiere_evaluacion
-              ? 'Tratamiento creado correctamente, pendiente de evaluación.'
-              : 'Tratamiento, citas y pagos creados correctamente.',
-          tipo: 'success',
+        mostrar: true,
+        mensaje: tratamientoSeleccionado.requiere_evaluacion ? 'Tratamiento pendiente de evaluación.' : 'Cita agendada correctamente.',
+        tipo: 'success',
       });
-
-  } catch (error) {
-      console.error('❌ Error al agendar la cita:', error);
-      setAlerta({
-          mostrar: true,
-          mensaje: 'Error al agendar la cita. Inténtalo nuevamente.',
-          tipo: 'error',
-      });
-  }
-};
-
-
+      // Add a small delay to allow the success message to be visible before reloading
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000); // 2-second delay before reload
+    } catch (error) {
+      setAlerta({ mostrar: true, mensaje: 'Error al agendar la cita.', tipo: 'error' });
+    }
+  };
 
   const horasDisponibles = useMemo(() => obtenerHorasDisponibles(), [fechaSeleccionada, citasOcupadas]);
+
   return (
     <Box
       sx={{
-        padding: { xs: "20px", md: "5px" },
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        boxSizing: "border-box",
+        flexGrow: 1,
+        padding: { xs: "20px", md: "40px 80px" },
+        width: "100%",
+        maxWidth: "1800px",
         backgroundColor: "transparent",
+        fontFamily: "'Poppins', sans-serif",
+        mx: "auto",
       }}
     >
-      {/* 🔍 FORMULARIO PARA BUSCAR USUARIO */}
+      {/* Paso 1: Buscar Paciente */}
       {pasoActual === 1 && (
-        <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <Box
             sx={{
               width: "100%",
-              maxWidth: "800px",
-              padding: "50px",
-              background: "linear-gradient(135deg, #ffffff 30%, #f0f9ff 100%)",
-              borderRadius: "20px",
-              boxShadow: "0 12px 45px rgba(0, 0, 0, 0.2)",
-              marginBottom: "35px",
-              border: "2px solid #cceeff",
-              transition: "all 0.4s ease-in-out",
-              "&:hover": {
-                boxShadow: "0 20px 55px rgba(0, 0, 0, 0.25)",
-                transform: "scale(1.02)"
-              },
+              padding: { xs: "30px", md: "40px" },
+              background: "linear-gradient(135deg, #ffffff 0%, #e0f7fa 100%)",
+              borderRadius: "16px",
+              boxShadow: "0 8px 24px rgba(0, 0, 0, 0.15)",
+              border: "1px solid #78c1c8",
             }}
           >
             <Typography
               variant="h5"
               sx={{
-                fontWeight: "bold",
-                marginBottom: "25px",
+                fontWeight: 700,
+                mb: "30px",
                 textAlign: "center",
-                color: "#0077b6",
-                letterSpacing: "1.8px",
-                textTransform: "uppercase",
-                fontSize: "1.7rem",
-                transition: "all 0.3s ease-in-out",
+                color: "#006d77",
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: "1.8rem",
               }}
             >
               Buscar Paciente
             </Typography>
-
             <Grid container spacing={3}>
               {[
                 { label: "Nombre", value: "nombre" },
                 { label: "Apellido Paterno", value: "apellido_paterno" },
                 { label: "Apellido Materno", value: "apellido_materno" },
                 { label: "Correo Electrónico (Opcional)", value: "email" },
-                { label: "Teléfono (Opcional)", value: "telefono" }
+                { label: "Teléfono (Opcional)", value: "telefono" },
               ].map((field, index) => (
                 <Grid item xs={12} sm={6} key={index}>
                   <TextField
@@ -449,332 +320,225 @@ const handleAgendarCita = async () => {
                   />
                 </Grid>
               ))}
-
               <Grid item xs={12} sm={6}>
                 <LocalizationProvider dateAdapter={AdapterDateFns} locale={es}>
                   <DatePicker
                     label="Fecha de Nacimiento"
-                    value={busquedaUsuario.fecha_nacimiento ? new Date(busquedaUsuario.fecha_nacimiento) : null}
+                    value={busquedaUsuario.fecha_nacimiento}
                     onChange={(newValue) => setBusquedaUsuario({ ...busquedaUsuario, fecha_nacimiento: newValue })}
                     renderInput={(params) => <TextField {...params} fullWidth sx={inputStyle} />}
                   />
                 </LocalizationProvider>
               </Grid>
             </Grid>
-
-            <motion.div
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ duration: 0.2 }}
-              style={{ marginTop: "25px" }}
-            >
-              <Box sx={{ display: "flex", justifyContent: "center", marginTop: "25px" }}>
-                <Button
-                  variant="contained"
-                  onClick={buscarUsuario}
-                  sx={{
-                    padding: "12px",
-                    fontWeight: "bold",
-                    height: "50px",
-                    width: "250px",
-                    borderRadius: "10px",
-                    fontSize: "1rem",
-                    backgroundColor: "#0077b6",
-                    transition: "all 0.3s ease-in-out",
-                    "&:hover": {
-                      backgroundColor: "#005f8a",
-                      boxShadow: "0 5px 15px rgba(0, 119, 182, 0.4)",
-                      transform: "translateY(-2px)"
-                    },
-                  }}
-                >
-                  Buscar Paciente
-                </Button>
-              </Box>
-
-            </motion.div>
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+              <Button
+                variant="contained"
+                onClick={buscarUsuario}
+                sx={{
+                  backgroundColor: "#006d77",
+                  color: "#e0f7fa",
+                  padding: "12px 40px",
+                  borderRadius: "12px",
+                  fontFamily: "'Poppins', sans-serif",
+                  fontWeight: 600,
+                  "&:hover": { backgroundColor: "#78c1c8", transform: "translateY(-2px)" },
+                  transition: "all 0.3s ease-in-out",
+                }}
+              >
+                Buscar Paciente
+              </Button>
+            </Box>
           </Box>
         </motion.div>
       )}
-      {/* 🔴 Si el usuario tiene un tratamiento en curso, mostrar el mensaje debajo del título */}
+
+      {/* Tratamiento Activo */}
       {tratamientoActivo && (
-        <motion.div
-          initial={{ opacity: 0, y: -50, scale: 0.8 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -30, scale: 0.5 }}
-          transition={{
-            duration: 0.8,
-            ease: "easeOut",
-            type: "spring",
-            stiffness: 150
-          }}
-        >
-          <motion.div
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Box
-              sx={{
-                width: "100%",
-                maxWidth: "600px",
-                textAlign: "center",
-                backgroundColor: "#FFEBEE", // 🔴 Fondo rojo claro
-                padding: { xs: "20px", md: "25px" },
-                borderRadius: "15px",
-                boxShadow: "0 12px 35px rgba(211, 47, 47, 0.3)", // 🔥 Más brillo en la sombra
-                border: "2px solid #D32F2F",
-                marginTop: "20px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                transition: "all 0.3s ease-in-out",
-                "&:hover": {
-                  boxShadow: "0 15px 40px rgba(211, 47, 47, 0.5)", // ✨ Más realce en hover
-                  transform: "scale(1.02)"
-                },
-              }}
-            >
-              {/* Icono con animación de oscilación y brillo */}
-              <motion.div
-                animate={{ rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] }}
-                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-              >
-                <ErrorOutlineOutlinedIcon
-                  sx={{
-                    fontSize: { xs: "50px", md: "60px" },
-                    color: "#D32F2F",
-                    marginBottom: "10px",
-                    filter: "drop-shadow(0px 0px 10px rgba(211, 47, 47, 0.5))" // ✨ Efecto de brillo en el icono
-                  }}
-                />
-              </motion.div>
-
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: "bold",
-                  fontSize: { xs: "18px", md: "22px" },
-                  color: "#D32F2F",
-                  textShadow: "0px 0px 5px rgba(211, 47, 47, 0.3)", // ✨ Texto con brillo sutil
-                }}
-              >
-                No puedes agendar una cita
-              </Typography>
-
-              <Typography
-                variant="body1"
-                sx={{
-                  fontSize: { xs: "14px", md: "16px" },
-                  marginTop: "10px",
-                  color: "#B71C1C",
-                  fontWeight: "500",
-                }}
-              >
-                Este paciente ya tiene un tratamiento en curso. Debe finalizarlo antes de agendar otra cita.
-              </Typography>
-            </Box>
-          </motion.div>
-        </motion.div>
-      )}
-      {/* ✅ Si no tiene tratamiento activo, mostrar el formulario pegado al mensaje */}
-      {pasoActual === 2 && usuarioEncontrado && !tratamientoActivo && (
-        <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-        >
+        <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
           <Box
             sx={{
               width: "100%",
-              maxWidth: "900px",
-              padding: { xs: "30px", md: "50px" },
-              background: "linear-gradient(135deg, #ffffff 30%, #f0f9ff 100%)",
-              borderRadius: "16px",
-              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.15)",
-              marginBottom: "40px",
-              border: "1px solid #cceeff",
+              maxWidth: "600px",
+              textAlign: "center",
+              backgroundColor: "#FFEBEE",
+              padding: { xs: "20px", md: "25px" },
+              borderRadius: "15px",
+              boxShadow: "0 12px 35px rgba(211, 47, 47, 0.3)",
+              border: "2px solid #D32F2F",
+              mt: "20px",
+              mx: "auto",
               transition: "all 0.3s ease-in-out",
               "&:hover": {
-                boxShadow: "0 14px 40px rgba(0, 0, 0, 0.2)",
+                boxShadow: "0 15px 40px rgba(211, 47, 47, 0.5)",
                 transform: "scale(1.02)"
               },
+            }}
+          >
+            <ErrorOutlineOutlinedIcon sx={{ fontSize: 60, color: "#D32F2F", mb: 2 }} />
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                color: "#D32F2F",
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: "1.5rem",
+              }}
+            >
+              No puedes agendar una cita
+            </Typography>
+            <Typography
+              sx={{
+                mt: 1,
+                color: "#B71C1C",
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: "1.1rem",
+              }}
+            >
+              Este paciente ya tiene un tratamiento en curso.
+            </Typography>
+          </Box>
+        </motion.div>
+      )}
+
+      {/* Paso 2: Agendar Cita */}
+      {pasoActual === 2 && usuarioEncontrado && !tratamientoActivo && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <Box
+            sx={{
+              width: "100%",
+              padding: { xs: "30px", md: "40px" },
+              background: "linear-gradient(135deg, #ffffff 0%, #e0f7fa 100%)",
+              borderRadius: "16px",
+              boxShadow: "0 8px 24px rgba(0, 0, 0, 0.15)",
+              border: "1px solid #78c1c8",
             }}
           >
             <Typography
               variant="h5"
               sx={{
-                fontWeight: "bold",
-                marginBottom: "30px",
+                fontWeight: 700,
+                mb: "40px",
                 textAlign: "center",
-                color: "#0077b6",
-                letterSpacing: "1.5px",
-                textTransform: "uppercase",
-                fontSize: "1.7rem",
+                color: "#006d77",
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: "1.8rem",
               }}
             >
               Agendar Cita
             </Typography>
-
-            {/* 🔹 Información del usuario encontrado */}
             {usuarioEncontrado && (
-              <Box
-                sx={{
-                  padding: "15px",
-                  backgroundColor: "#e6f7ff",
-                  borderRadius: "10px",
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                  marginBottom: "25px",
-                }}
-              >
-                <Typography variant="h6" sx={{ fontWeight: "bold", color: "#0077b6", marginBottom: "5px" }}>
-                  Información del Paciente
-
+              <Box sx={{ mb: 4, p: 3, backgroundColor: "#d2f4ea", borderRadius: "12px" }}>
+                <Typography variant="h6" sx={{ color: "#006d77", fontWeight: 600, fontFamily: "'Poppins', sans-serif" }}>
+                  Paciente: {usuarioEncontrado.nombre.toUpperCase()} {usuarioEncontrado.apellido_paterno.toUpperCase()} {usuarioEncontrado.apellido_materno.toUpperCase()}
                 </Typography>
-                <Typography variant="body1">
-                  <strong >Nombre:</strong> {usuarioEncontrado.nombre.toUpperCase()} {usuarioEncontrado.apellido_paterno.toUpperCase()} {usuarioEncontrado.apellido_materno.toUpperCase()}
-                </Typography>
-                <Typography variant="body1">
-                  <strong>Fecha de Nacimiento:</strong> {new Date(usuarioEncontrado.fecha_nacimiento).toLocaleDateString()}
+                <Typography sx={{ color: "#03445e", fontFamily: "'Poppins', sans-serif" }}>
+                  Fecha de Nacimiento: {new Date(usuarioEncontrado.fecha_nacimiento).toLocaleDateString()}
                 </Typography>
               </Box>
             )}
-
-            {/* 🔹 Diseño de 2 Columnas */}
-            <Grid container spacing={3}>
-              {/* Servicio */}
+            <Grid container spacing={4}>
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth>
-                  <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333", marginBottom: "5px" }}>
-                    Servicio
-                  </Typography>
+                  <Typography sx={{ mb: 1, color: "#03445e", fontWeight: 600, fontFamily: "'Poppins', sans-serif" }}>Servicio</Typography>
                   <Select
                     value={servicioSeleccionado}
                     onChange={(e) => setServicioSeleccionado(e.target.value)}
-                    displayEmpty
-                    sx={{
-                      borderRadius: "10px",
-                      backgroundColor: "#e6f7ff",
-                      height: "55px",
+                    sx={selectStyle}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          borderRadius: "12px",
+                          boxShadow: "0 4px 16px rgba(0, 0, 0, 0.15)",
+                          backgroundColor: "#fff",
+                        },
+                      },
                     }}
-                    startAdornment={
-                      <InputAdornment position="start">
-                        <MedicalServicesOutlinedIcon color="primary" />
-                      </InputAdornment>
-                    }
                   >
-                    <MenuItem disabled value="">Selecciona un servicio</MenuItem>
+                    <MenuItem value="" disabled sx={menuItemStyle}>Selecciona un servicio</MenuItem>
                     {servicios.map((servicio) => (
-                      <MenuItem key={servicio.id} value={servicio.nombre}>
-                        {servicio.nombre} -{" "}
-                        {servicio.requiere_evaluacion ? <em>Requiere evaluación</em> : `$${servicio.precio} MXN`}
+                      <MenuItem key={servicio.id} value={servicio.nombre} sx={menuItemStyle}>
+                        {servicio.nombre} - {servicio.requiere_evaluacion ? "Requiere evaluación" : `$${servicio.precio} MXN`}
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
-
-              {/* Fecha */}
               <Grid item xs={12} md={6}>
-                <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333", marginBottom: "5px" }}>
-                  Fecha de la cita
-                </Typography>
+                <Typography sx={{ mb: 1, color: "#03445e", fontWeight: 600, fontFamily: "'Poppins', sans-serif" }}>Fecha</Typography>
                 <LocalizationProvider dateAdapter={AdapterDateFns} locale={es}>
                   <DatePicker
                     value={fechaSeleccionada}
                     onChange={(newValue) => setFechaSeleccionada(newValue)}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        fullWidth
-                        sx={{
-                          "& .MuiOutlinedInput-root": { borderRadius: "10px", height: "55px" },
-                        }}
-                      />
-                    )}
+                    renderInput={(params) => <TextField {...params} fullWidth sx={inputStyle} />}
                     disablePast
                     maxDate={new Date(new Date().setDate(new Date().getDate() + 30))}
-                    inputFormat="dd/MM/yyyy"
                     shouldDisableDate={(date) => ![1, 2, 3, 6].includes(date.getDay())}
                   />
                 </LocalizationProvider>
-                <Typography variant="body2" sx={{ color: "#d32f2f", fontWeight: "bold", marginTop: "5px" }}>
-                  Solo se pueden agendar citas en: Lunes, Martes, Miércoles y Sábado.
+                <Typography sx={{ mt: 1, color: "#d32f2f", fontFamily: "'Poppins', sans-serif" }}>
+                  Solo Lunes, Martes, Miércoles y Sábado.
                 </Typography>
               </Grid>
-
-              {/* Hora (centrado y bien alineado) */}
               <Grid item xs={12}>
                 <FormControl fullWidth>
-                  <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333", marginBottom: "8px" }}>
-                    Hora
-                  </Typography>
+                  <Typography sx={{ mb: 1, color: "#03445e", fontWeight: 600, fontFamily: "'Poppins', sans-serif" }}>Hora</Typography>
                   <Select
                     value={horaSeleccionada}
                     onChange={(e) => setHoraSeleccionada(e.target.value)}
-                    displayEmpty
-                    startAdornment={
-                      <InputAdornment position="start">
-                        <AccessTimeIcon color="primary" />
-                      </InputAdornment>
-                    }
-                    sx={{ height: "55px" }}
+                    sx={selectStyle}
                     disabled={!fechaSeleccionada || horasDisponibles.length === 0}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          borderRadius: "12px",
+                          boxShadow: "0 4px 16px rgba(0, 0, 0, 0.15)",
+                          backgroundColor: "#fff",
+                        },
+                      },
+                    }}
                   >
                     {horasDisponibles.length > 0 ? (
                       horasDisponibles.map((hora, index) => (
-                        <MenuItem key={index} value={hora}>
-                          {hora}
-                        </MenuItem>
+                        <MenuItem key={index} value={hora} sx={menuItemStyle}>{hora}</MenuItem>
                       ))
                     ) : (
-                      <MenuItem disabled>No hay horarios disponibles</MenuItem>
+                      <MenuItem disabled sx={menuItemStyle}>No hay horarios disponibles</MenuItem>
                     )}
                   </Select>
                 </FormControl>
               </Grid>
             </Grid>
-
-            {/* 🔹 BOTONES (Bien alineados y centrados) */}
-            <Box sx={{ display: "flex", justifyContent: "center", marginTop: "35px", gap: "20px" }}>
+            <Box sx={{ display: "flex", justifyContent: "center", gap: 3, mt: 5 }}>
               <Button
                 variant="contained"
                 onClick={handleAgendarCita}
-                sx={{
-                  padding: "12px",
-                  fontWeight: "bold",
-                  height: "50px",
-                  width: "250px",
-                  borderRadius: "10px",
-                  fontSize: "1rem",
-                  backgroundColor: tratamientoActivo ? "#ccc" : "#0077b6",
-                  transition: "all 0.3s ease-in-out",
-                  "&:hover": {
-                    backgroundColor: tratamientoActivo ? "#ccc" : "#005f8a",
-                    boxShadow: "0 4px 12px rgba(0, 119, 182, 0.4)",
-                    transform: "translateY(-2px)"
-                  },
-                }}
                 disabled={tratamientoActivo}
+                sx={{
+                  backgroundColor: tratamientoActivo ? "#ccc" : "#006d77",
+                  color: "#e0f7fa",
+                  padding: "12px 40px",
+                  borderRadius: "12px",
+                  fontFamily: "'Poppins', sans-serif",
+                  fontWeight: 600,
+                  "&:hover": { backgroundColor: tratamientoActivo ? "#ccc" : "#78c1c8", transform: "translateY(-2px)" },
+                  transition: "all 0.3s ease-in-out",
+                }}
               >
                 Confirmar Cita
               </Button>
-
               <Button
                 variant="outlined"
                 onClick={() => setPasoActual(1)}
                 sx={{
-                  padding: "12px",
-                  fontWeight: "bold",
-                  height: "50px",
-                  width: "250px",
-                  borderRadius: "10px",
-                  fontSize: "1rem",
+                  borderColor: "#006d77",
+                  color: "#006d77",
+                  padding: "12px 40px",
+                  borderRadius: "12px",
+                  fontFamily: "'Poppins', sans-serif",
+                  fontWeight: 600,
+                  "&:hover": { borderColor: "#78c1c8", color: "#78c1c8", transform: "translateY(-2px)" },
                   transition: "all 0.3s ease-in-out",
-                  "&:hover": {
-                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                    transform: "translateY(-2px)"
-                  },
                 }}
               >
                 Volver
@@ -783,17 +547,10 @@ const handleAgendarCita = async () => {
           </Box>
         </motion.div>
       )}
+
+      {/* Alerta */}
       {alerta.mostrar && (
-        <Box
-          sx={{
-            position: "fixed",
-            bottom: 20,
-            left: 20,
-            zIndex: 2000,
-            width: "auto",
-            maxWidth: "400px",
-          }}
-        >
+        <Box sx={{ position: "fixed", bottom: 20, left: 20, zIndex: 2000 }}>
           <Alert
             severity={alerta.tipo} // 🔹 Cambia el icono y estilo según el tipo
             variant="filled"
@@ -819,4 +576,5 @@ const handleAgendarCita = async () => {
     </Box>
   );
 };
+
 export default AgendarCitaAdmin;

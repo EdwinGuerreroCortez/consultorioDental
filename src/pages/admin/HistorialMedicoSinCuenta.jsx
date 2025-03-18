@@ -1,423 +1,694 @@
 import React, { useState, useEffect } from "react";
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Button,
-    Typography,
-    TextField,
-    Box,
-    Divider,
-    Grid,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Alert,
-    Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Typography,
+  TextField,
+  Box,
+  Divider,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Alert,
 } from "@mui/material";
 import DientesImage from "../../assets/images/Dientes.jpg"; // Imagen de dientes
 
 const HistorialMedicoSincuenta = ({ open, handleClose, paciente }) => {
-    // Estados para información médica
-    const [signosVitales, setSignosVitales] = useState("");
-    const [bajoTratamiento, setBajoTratamiento] = useState("");
-    const [tipoTratamiento, setTipoTratamiento] = useState("");
-    const [medicamentos, setMedicamentos] = useState("");
-    const [comentario, setComentario] = useState("");
-    const [tieneHistorial, setTieneHistorial] = useState(false); // ✅ Estado para verificar si hay historial
-    const [modoEdicion, setModoEdicion] = useState(false);
-    const [historiales, setHistoriales] = useState([]);
-    const [historialSeleccionado, setHistorialSeleccionado] = useState(null);
-    const [openSnackbar, setOpenSnackbar] = useState(false);
-    const [snackbarMessage, setSnackbarMessage] = useState("");
-    const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [signosVitales, setSignosVitales] = useState("");
+  const [bajoTratamiento, setBajoTratamiento] = useState("");
+  const [tipoTratamiento, setTipoTratamiento] = useState("");
+  const [medicamentos, setMedicamentos] = useState("");
+  const [comentario, setComentario] = useState("");
+  const [tieneHistorial, setTieneHistorial] = useState(false);
+  const [modoEdicion, setModoEdicion] = useState(false);
+  const [historiales, setHistoriales] = useState([]);
+  const [historialSeleccionado, setHistorialSeleccionado] = useState(null);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
+  const obtenerHistorial = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:4000/api/historial/usuario/sin-Plataforma/${paciente.id}`
+      );
 
+      if (!response.ok) {
+        console.warn(`⚠️ No se encontró historial médico.`);
+        setHistoriales([]);
+        setHistorialSeleccionado(null);
+        setTieneHistorial(false);
+        setModoEdicion(false);
+        limpiarCampos();
+        return;
+      }
 
-    // 🔹 Define obtenerHistorial ANTES del useEffect para que pueda ser llamada desde guardarHistorial
-    const obtenerHistorial = async () => {
-        try {
-            const response = await fetch(`http://localhost:4000/api/historial/usuario/sin-Plataforma/${paciente.id}`);
+      const data = await response.json();
 
-            if (!response.ok) {
-                console.warn(`⚠️ No se encontró historial médico.`);
-                setHistoriales([]);
-                setHistorialSeleccionado(null);
-                setTieneHistorial(false);
-                setModoEdicion(false);
-                limpiarCampos();
-                return;
-            }
+      if (!Array.isArray(data) || data.length === 0) {
+        console.warn(`⚠️ No hay historiales médicos.`);
+        setHistoriales([]);
+        setHistorialSeleccionado(null);
+        setTieneHistorial(false);
+        setModoEdicion(false);
+        limpiarCampos();
+        return;
+      }
 
-            const data = await response.json();
+      const historialOrdenado = data.sort(
+        (a, b) => new Date(b.fecha_registro) - new Date(a.fecha_registro)
+      );
 
-            if (!Array.isArray(data) || data.length === 0) {
-                console.warn(`⚠️ No hay historiales médicos.`);
-                setHistoriales([]);
-                setHistorialSeleccionado(null);
-                setTieneHistorial(false);
-                setModoEdicion(false);
-                limpiarCampos();
-                return;
-            }
+      setHistoriales(historialOrdenado);
+      setHistorialSeleccionado(historialOrdenado[0]);
+      setTieneHistorial(true);
+      setModoEdicion(false);
+    } catch (error) {
+      console.error("Error al obtener historial médico:", error);
+    }
+  };
 
-            // 🔹 Ordenar por fecha y obtener todos los historiales
-            const historialOrdenado = data.sort((a, b) => new Date(b.fecha_registro) - new Date(a.fecha_registro));
+  useEffect(() => {
+    if (!open || !paciente || !paciente.id) {
+      return;
+    }
+    obtenerHistorial();
+  }, [open, paciente]);
 
-            setHistoriales(historialOrdenado);
-            setHistorialSeleccionado(historialOrdenado[0]); // ✅ Selecciona el más reciente por defecto
-            setTieneHistorial(true);
-            setModoEdicion(false);
-        } catch (error) {
-            console.error("Error al obtener historial médico:", error);
+  const obtenerTokenCSRF = () => {
+    const csrfToken = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("XSRF-TOKEN="))
+      ?.split("=")[1];
+
+    console.log("🔹 Token CSRF obtenido:", csrfToken);
+
+    return csrfToken || "";
+  };
+
+  const guardarHistorial = async () => {
+    if (!paciente || !paciente.id) {
+      console.error("Error: No hay paciente seleccionado.");
+      return;
+    }
+
+    const fechaActual = new Date().toLocaleString("es-MX", { timeZone: "America/Mexico_City" });
+
+    const historialData = {
+      paciente_sin_plataforma_id: paciente.id,
+      signos_vitales: signosVitales,
+      bajo_tratamiento: bajoTratamiento === "Sí" ? 1 : 0,
+      tipo_tratamiento: tipoTratamiento,
+      medicamentos_recetados: medicamentos,
+      observaciones_medicas: comentario,
+      fecha_registro: fechaActual,
+    };
+
+    try {
+      const csrfToken = obtenerTokenCSRF();
+      const response = await fetch(
+        `http://localhost:4000/api/historial/usuario/sin-Plataforma/${paciente.id}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": csrfToken },
+          credentials: "include",
+          body: JSON.stringify(historialData),
         }
-    };
+      );
 
+      if (!response.ok) {
+        throw new Error("⚠️ Error al guardar el historial");
+      }
 
-    // 🔹 Solo un `useEffect` que llama a `obtenerHistorial`
-    useEffect(() => {
-        if (!open || !paciente || !paciente.id) {
-            return;
-        }
-        obtenerHistorial();
-    }, [open, paciente]);
+      console.log("✅ Historial guardado correctamente");
+      setSnackbarMessage("Historial guardado exitosamente");
+      setSnackbarSeverity("success");
+      setOpenSnackbar(true);
+      setTimeout(() => setOpenSnackbar(false), 3000);
 
+      await obtenerHistorial();
+      setModoEdicion(false);
+    } catch (error) {
+      console.error("Error al guardar historial médico:", error);
+      setSnackbarMessage("Error al guardar historial médico");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+    }
+  };
 
-    const obtenerTokenCSRF = () => {
-        const csrfToken = document.cookie
-            .split("; ")
-            .find(row => row.startsWith("XSRF-TOKEN="))
-            ?.split("=")[1];
-    
-        console.log("🔹 Token CSRF obtenido:", csrfToken); // Verificar si se obtiene el token correctamente
-    
-        return csrfToken || ""; // Evitar valores undefined o null
-    };
-    const guardarHistorial = async () => {
-        if (!paciente || !paciente.id) {
-            console.error("Error: No hay paciente seleccionado.");
-            return;
-        }
+  const limpiarCampos = () => {
+    setSignosVitales("");
+    setBajoTratamiento("");
+    setTipoTratamiento("");
+    setMedicamentos("");
+    setComentario("");
+    setModoEdicion(true);
+  };
 
-        const fechaActual = new Date().toLocaleString("es-MX", { timeZone: "America/Mexico_City" });
+  const manejarCambioHistorial = (event) => {
+    const historialSeleccionado = historiales.find((h) => h.id === event.target.value);
+    setHistorialSeleccionado(historialSeleccionado);
+  };
 
-        const historialData = {
-            paciente_sin_plataforma_id: paciente.id,
-            signos_vitales: signosVitales,
-            bajo_tratamiento: bajoTratamiento === "Sí" ? 1 : 0,
-            tipo_tratamiento: tipoTratamiento,
-            medicamentos_recetados: medicamentos,
-            observaciones_medicas: comentario,
-            fecha_registro: fechaActual,
-        };
-
-        try {
-            const csrfToken = obtenerTokenCSRF();
-            const response = await fetch(`http://localhost:4000/api/historial/usuario/sin-Plataforma/${paciente.id}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json","X-XSRF-TOKEN": csrfToken },
-                credentials: "include",
-                body: JSON.stringify(historialData),
-            });
-
-            if (!response.ok) {
-                throw new Error("⚠️ Error al guardar el historial");
-            }
-
-            console.log("✅ Historial guardado correctamente");
-            setSnackbarMessage("Historial guardado exitosamente");
-            setSnackbarSeverity("success");
-            setOpenSnackbar(true);
-            setTimeout(() => setOpenSnackbar(false), 3000);
-
-            // 🔹 Volver a obtener los datos más recientes desde el backend
-            await obtenerHistorial();
-
-            // 🔹 Desactivar la edición después de guardar
-            setModoEdicion(false);
-
-        } catch (error) {
-            console.error("Error al guardar historial médico:", error);
-            setSnackbarMessage("Error al guardar historial médico");
-            setSnackbarSeverity("error");
-            setOpenSnackbar(true);
-
-        }
-    };
-
-
-
-
-    // Función para limpiar los campos y permitir añadir otro historial
-    const limpiarCampos = () => {
-        setSignosVitales("");
-        setBajoTratamiento("");
-        setTipoTratamiento("");
-        setMedicamentos("");
-        setComentario("");
-        setModoEdicion(true); // 🔹 Activa la edición
-    };
-    const manejarCambioHistorial = (event) => {
-        const historialSeleccionado = historiales.find(h => h.id === event.target.value);
-        setHistorialSeleccionado(historialSeleccionado);
-    };
-
-
-
-    return (
-        <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-            {/* 🔹 ENCABEZADO */}
-            <DialogTitle sx={{ backgroundColor: "#0077b6", color: "white", textAlign: "center", fontWeight: "bold" }}>
-                {paciente ? `Historial Médico de ${paciente.nombre} ${paciente.apellido_paterno}` : "Cargando Historial Médico..."}
-            </DialogTitle>
-            <DialogContent
-                dividers
-                sx={{
-                    padding: "1.5rem",
-                    overflowY: "auto", // Habilita el scroll
-                    "&::-webkit-scrollbar": {
-                        width: "8px", // Ancho de la barra
-                    },
-                    "&::-webkit-scrollbar-thumb": {
-                        backgroundColor: "#0077b6", // Color de la barra de desplazamiento
-                        borderRadius: "4px",
-                    },
-                    "&::-webkit-scrollbar-track": {
-                        backgroundColor: "#f1f1f1", // Color del fondo de la barra
-                    },
-                }}
-            >
-                {/* 🔹 Mostrar mensaje si paciente es null */}
-                {!paciente ? (
-                    <Typography variant="body1" align="center">
-                        🔄 Cargando información del paciente...
-                    </Typography>
-                ) : (
-                    <>
-
-
-                        {/* 🔹 SECCIÓN: Datos personales */}
-                        <Box sx={{ marginBottom: "1.5rem" }}>
-                            {historiales.length > 0 && (
-                                <FormControl fullWidth sx={{ mb: 2 }}>
-                                    <InputLabel>Seleccionar historial</InputLabel>
-                                    <Select value={historialSeleccionado?.id || ""} onChange={manejarCambioHistorial}>
-                                        {historiales.map(historial => (
-                                            <MenuItem key={historial.id} value={historial.id}>
-                                                {new Date(historial.fecha_registro).toLocaleString("es-MX")}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            )}
-
-                            <Typography variant="h6" sx={{ fontWeight: "bold", color: "#0077b6" }}>
-                                Datos Personales
-                            </Typography>
-                            <Divider sx={{ marginBottom: "1rem" }} />
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} md={6}>
-                                    <TextField label="Nombre" fullWidth variant="outlined"
-                                        value={paciente?.nombre || ""}
-                                        InputProps={{ readOnly: true }} />
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <TextField label="Apellido Paterno" fullWidth variant="outlined"
-                                        value={paciente?.apellido_paterno || ""}
-                                        InputProps={{ readOnly: true }} />
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <TextField label="Apellido Materno" fullWidth variant="outlined"
-                                        value={paciente?.apellido_materno || ""}
-                                        InputProps={{ readOnly: true }} />
-                                </Grid>
-                                <Grid item xs={12} md={3}>
-                                    <TextField label="Fecha de Nacimiento" fullWidth variant="outlined"
-                                        value={paciente?.fecha_nacimiento ? new Date(paciente.fecha_nacimiento).toLocaleDateString("es-MX") : ""}
-                                        InputProps={{ readOnly: true }} />
-                                </Grid>
-                                <Grid item xs={12} md={3}>
-                                    <TextField label="Sexo" fullWidth variant="outlined"
-                                        value={paciente?.sexo ? paciente.sexo.charAt(0).toUpperCase() : ""}
-                                        InputProps={{ readOnly: true }} />
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <TextField label="Ocupación" fullWidth variant="outlined"
-                                        value={paciente?.ocupacion || "No especificada"}
-                                        InputProps={{ readOnly: true }} />
-                                </Grid>
-                                <Grid item xs={12} md={6}>
-                                    <TextField label="Teléfono" fullWidth variant="outlined"
-                                        value={paciente?.telefono || ""}
-                                        InputProps={{ readOnly: true }} />
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <TextField label="Email" fullWidth variant="outlined"
-                                        value={paciente?.email || ""}
-                                        InputProps={{ readOnly: true }} />
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <TextField label="Dirección" fullWidth variant="outlined"
-                                        value={paciente?.direccion || "No disponible"}
-                                        InputProps={{ readOnly: true }} />
-                                </Grid>
-                            </Grid>
-                        </Box>
-                        {/* 🔹 IMAGEN */}
-                        <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
-                            <img src={DientesImage} alt="Dientes" style={{ width: "700px", borderRadius: "10px" }} />
-                        </Box>
-                        {/* 🔹 SECCIÓN: Información médica */}
-                        <Box sx={{ marginBottom: "1.5rem" }}>
-                            <Typography variant="h6" sx={{ fontWeight: "bold", color: "#0077b6" }}>
-                                Información Médica
-                            </Typography>
-                            <Divider sx={{ marginBottom: "1rem" }} />
-                            <TextField
-                                label="Signos Vitales"
-                                fullWidth
-                                variant="outlined"
-                                value={modoEdicion ? signosVitales : historialSeleccionado?.signos_vitales || ""}
-                                onChange={(e) => setSignosVitales(e.target.value)}
-                                InputProps={{ readOnly: !modoEdicion }}
-
-                            />
-
-                        </Box>
-
-                        {/* 🔹 SECCIÓN: Tratamiento Dental */}
-                        <Box sx={{ marginBottom: "1.5rem" }}>
-                            <Typography variant="h6" sx={{ fontWeight: "bold", color: "#0077b6" }}>
-                                Tratamiento Dental
-                            </Typography>
-                            <Divider sx={{ marginBottom: "1rem" }} />
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} md={6}>
-                                    <FormControl fullWidth variant="outlined">
-                                        <InputLabel>Bajo Tratamiento</InputLabel>
-                                        <Select
-                                            value={modoEdicion ? bajoTratamiento : historialSeleccionado?.bajo_tratamiento ? "Sí" : "No"}
-                                            onChange={(e) => setBajoTratamiento(e.target.value)}
-                                            label="Bajo Tratamiento"
-                                            disabled={!modoEdicion} // Desactiva cuando no está en edición
-                                        >
-                                            <MenuItem value="Sí">Sí</MenuItem>
-                                            <MenuItem value="No">No</MenuItem>
-                                        </Select>
-                                    </FormControl>
-                                </Grid>
-
-                                <Grid item xs={12} md={6}>
-                                    <TextField
-                                        label="Tipo de Tratamiento"
-                                        fullWidth
-                                        variant="outlined"
-                                        value={modoEdicion ? tipoTratamiento : historialSeleccionado?.tipo_tratamiento || ""}
-                                        onChange={(e) => setTipoTratamiento(e.target.value)}
-                                        InputProps={{ readOnly: !modoEdicion }}
-                                    />
-
-
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <TextField
-                                        label="Medicamentos Recetados"
-                                        fullWidth
-                                        variant="outlined"
-                                        value={modoEdicion ? medicamentos : historialSeleccionado?.medicamentos_recetados || ""}
-                                        onChange={(e) => setMedicamentos(e.target.value)}
-                                        InputProps={{ readOnly: !modoEdicion }}
-
-                                    />
-                                </Grid>
-                            </Grid>
-                        </Box>
-
-                        {/* 🔹 SECCIÓN: Observaciones médicas */}
-                        <Box sx={{ marginBottom: "1.5rem" }}>
-                            <Typography variant="h6" sx={{ fontWeight: "bold", color: "#0077b6" }}>
-                                Observaciones Médicas
-                            </Typography>
-                            <Divider sx={{ marginBottom: "1rem" }} />
-                            <TextField
-                                label="Observaciones o notas del paciente"
-                                multiline
-                                rows={4}
-                                variant="outlined"
-                                fullWidth
-                                value={modoEdicion ? comentario : historialSeleccionado?.observaciones_medicas || ""}
-                                onChange={(e) => setComentario(e.target.value)}
-                                InputProps={{ readOnly: !modoEdicion }}
-
-                            />
-
-                        </Box>
-                    </>
-                )}
-            </DialogContent>
-
-
-
-            {/* 🔹 BOTÓN DE CIERRE Y GUARDAR */}
-            <DialogActions sx={{ justifyContent: "space-between", padding: "1rem" }}>
-                <Button onClick={handleClose} variant="contained" sx={{ backgroundColor: "#0077b6", "&:hover": { backgroundColor: "#005f91" } }}>
-                    Cerrar
-                </Button>
-                <Button variant="contained" color="warning" onClick={limpiarCampos}>
-                    Agregar Otro Historial
-                </Button>
-
-                <Button variant="contained" color="success" onClick={guardarHistorial} disabled={!modoEdicion}>
-                    {tieneHistorial ? "Actualizar Historial" : "Registrar Nuevo"}
-                </Button>
-
-
-
-            </DialogActions>
-            {/* 🔹 ALERTA EN LA ESQUINA INFERIOR IZQUIERDA */}
-            {openSnackbar && (
-                <Box
+  return (
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      <DialogTitle
+        sx={{
+          background: "linear-gradient(90deg, #006d77 0%, #78c1c8 100%)", // Consistente con TratamientosEnCurso
+          color: "#e0f7fa", // Consistente con TratamientosEnCurso
+          textAlign: "center",
+          fontWeight: "bold",
+          fontFamily: "'Poppins', sans-serif",
+        }}
+      >
+        {paciente
+          ? `Historial Médico de ${paciente.nombre} ${paciente.apellido_paterno}`
+          : "Cargando Historial Médico..."}
+      </DialogTitle>
+      <DialogContent
+        dividers
+        sx={{
+          padding: "2rem", // Aumentado para consistencia
+          overflowY: "auto",
+          "&::-webkit-scrollbar": {
+            width: "8px",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "#006d77", // Consistente con TratamientosEnCurso
+            borderRadius: "4px",
+          },
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: "#f1f1f1",
+          },
+        }}
+      >
+        {!paciente ? (
+          <Typography
+            variant="body1"
+            align="center"
+            sx={{ color: "#03445e", fontFamily: "'Poppins', sans-serif" }}
+          >
+            🔄 Cargando información del paciente...
+          </Typography>
+        ) : (
+          <>
+            <Box sx={{ marginBottom: "2rem" }}>
+              {historiales.length > 0 && (
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel
+                    sx={{ color: "#03445e", fontFamily: "'Poppins', sans-serif" }}
+                  >
+                    Seleccionar historial
+                  </InputLabel>
+                  <Select
+                    value={historialSeleccionado?.id || ""}
+                    onChange={manejarCambioHistorial}
                     sx={{
-                        position: "fixed",
-                        bottom: 20,
-                        left: 20,
-                        zIndex: 1000,
-                        maxWidth: "350px",
+                      "& .MuiSelect-select": { fontFamily: "'Poppins', sans-serif" },
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        "&:hover fieldset": { borderColor: "#78c1c8" },
+                        "&.Mui-focused fieldset": { borderColor: "#006d77" },
+                      },
                     }}
-                >
-                    <Alert
-                        severity={snackbarSeverity}
-                        variant="filled"
-                        sx={{
-                            backgroundColor:
-                                snackbarSeverity === "success"
-                                    ? "#DFF6DD"
-                                    : snackbarSeverity === "error"
-                                        ? "#F8D7DA"
-                                        : snackbarSeverity === "warning"
-                                            ? "#FFF3CD"
-                                            : "#D1ECF1",
-                            color:
-                                snackbarSeverity === "success"
-                                    ? "#1E4620"
-                                    : snackbarSeverity === "error"
-                                        ? "#721C24"
-                                        : snackbarSeverity === "warning"
-                                            ? "#856404"
-                                            : "#0C5460",
-                        }}
-                        onClose={() => setOpenSnackbar(false)}
+                  >
+                    {historiales.map((historial) => (
+                      <MenuItem
+                        key={historial.id}
+                        value={historial.id}
+                        sx={{ fontFamily: "'Poppins', sans-serif" }}
+                      >
+                        {new Date(historial.fecha_registro).toLocaleString("es-MX")}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: "bold",
+                  color: "#006d77",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
+                Datos Personales
+              </Typography>
+              <Divider sx={{ marginBottom: "1.5rem", borderColor: "#78c1c8" }} />
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="Nombre"
+                    fullWidth
+                    variant="outlined"
+                    value={paciente?.nombre || ""}
+                    InputProps={{ readOnly: true }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        "&:hover fieldset": { borderColor: "#78c1c8" },
+                        "&.Mui-focused fieldset": { borderColor: "#006d77" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#03445e",
+                        fontFamily: "'Poppins', sans-serif",
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="Apellido Paterno"
+                    fullWidth
+                    variant="outlined"
+                    value={paciente?.apellido_paterno || ""}
+                    InputProps={{ readOnly: true }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        "&:hover fieldset": { borderColor: "#78c1c8" },
+                        "&.Mui-focused fieldset": { borderColor: "#006d77" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#03445e",
+                        fontFamily: "'Poppins', sans-serif",
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="Apellido Materno"
+                    fullWidth
+                    variant="outlined"
+                    value={paciente?.apellido_materno || ""}
+                    InputProps={{ readOnly: true }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        "&:hover fieldset": { borderColor: "#78c1c8" },
+                        "&.Mui-focused fieldset": { borderColor: "#006d77" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#03445e",
+                        fontFamily: "'Poppins', sans-serif",
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <TextField
+                    label="Fecha de Nacimiento"
+                    fullWidth
+                    variant="outlined"
+                    value={
+                      paciente?.fecha_nacimiento
+                        ? new Date(paciente.fecha_nacimiento).toLocaleDateString("es-MX")
+                        : ""
+                    }
+                    InputProps={{ readOnly: true }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        "&:hover fieldset": { borderColor: "#78c1c8" },
+                        "&.Mui-focused fieldset": { borderColor: "#006d77" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#03445e",
+                        fontFamily: "'Poppins', sans-serif",
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <TextField
+                    label="Sexo"
+                    fullWidth
+                    variant="outlined"
+                    value={paciente?.sexo ? paciente.sexo.charAt(0).toUpperCase() : ""}
+                    InputProps={{ readOnly: true }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        "&:hover fieldset": { borderColor: "#78c1c8" },
+                        "&.Mui-focused fieldset": { borderColor: "#006d77" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#03445e",
+                        fontFamily: "'Poppins', sans-serif",
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="Ocupación"
+                    fullWidth
+                    variant="outlined"
+                    value={paciente?.ocupacion || "No especificada"}
+                    InputProps={{ readOnly: true }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        "&:hover fieldset": { borderColor: "#78c1c8" },
+                        "&.Mui-focused fieldset": { borderColor: "#006d77" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#03445e",
+                        fontFamily: "'Poppins', sans-serif",
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="Teléfono"
+                    fullWidth
+                    variant="outlined"
+                    value={paciente?.telefono || ""}
+                    InputProps={{ readOnly: true }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        "&:hover fieldset": { borderColor: "#78c1c8" },
+                        "&.Mui-focused fieldset": { borderColor: "#006d77" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#03445e",
+                        fontFamily: "'Poppins', sans-serif",
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Email"
+                    fullWidth
+                    variant="outlined"
+                    value={paciente?.email || ""}
+                    InputProps={{ readOnly: true }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        "&:hover fieldset": { borderColor: "#78c1c8" },
+                        "&.Mui-focused fieldset": { borderColor: "#006d77" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#03445e",
+                        fontFamily: "'Poppins', sans-serif",
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Dirección"
+                    fullWidth
+                    variant="outlined"
+                    value={paciente?.direccion || "No disponible"}
+                    InputProps={{ readOnly: true }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        "&:hover fieldset": { borderColor: "#78c1c8" },
+                        "&.Mui-focused fieldset": { borderColor: "#006d77" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#03445e",
+                        fontFamily: "'Poppins', sans-serif",
+                      },
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+
+            <Box sx={{ display: "flex", justifyContent: "center", mb: "2rem" }}>
+              <img
+                src={DientesImage}
+                alt="Dientes"
+                style={{ width: "700px", borderRadius: "10px", boxShadow: "0 6px 24px rgba(0, 0, 0, 0.08)" }}
+              />
+            </Box>
+
+            <Box sx={{ marginBottom: "2rem" }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: "bold",
+                  color: "#006d77",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
+                Información Médica
+              </Typography>
+              <Divider sx={{ marginBottom: "1.5rem", borderColor: "#78c1c8" }} />
+              <TextField
+                label="Signos Vitales"
+                fullWidth
+                variant="outlined"
+                value={modoEdicion ? signosVitales : historialSeleccionado?.signos_vitales || ""}
+                onChange={(e) => setSignosVitales(e.target.value)}
+                InputProps={{ readOnly: !modoEdicion }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "12px",
+                    "&:hover fieldset": { borderColor: "#78c1c8" },
+                    "&.Mui-focused fieldset": { borderColor: "#006d77" },
+                  },
+                  "& .MuiInputLabel-root": {
+                    color: "#03445e",
+                    fontFamily: "'Poppins', sans-serif",
+                  },
+                }}
+              />
+            </Box>
+
+            <Box sx={{ marginBottom: "2rem" }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: "bold",
+                  color: "#006d77",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
+                Tratamiento Dental
+              </Typography>
+              <Divider sx={{ marginBottom: "1.5rem", borderColor: "#78c1c8" }} />
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel
+                      sx={{ color: "#03445e", fontFamily: "'Poppins', sans-serif" }}
                     >
-                        {snackbarMessage}
-                    </Alert>
-                </Box>
-            )}
+                      Bajo Tratamiento
+                    </InputLabel>
+                    <Select
+                      value={
+                        modoEdicion
+                          ? bajoTratamiento
+                          : historialSeleccionado?.bajo_tratamiento
+                          ? "Sí"
+                          : "No"
+                      }
+                      onChange={(e) => setBajoTratamiento(e.target.value)}
+                      label="Bajo Tratamiento"
+                      disabled={!modoEdicion}
+                      sx={{
+                        "& .MuiSelect-select": { fontFamily: "'Poppins', sans-serif" },
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: "12px",
+                          "&:hover fieldset": { borderColor: "#78c1c8" },
+                          "&.Mui-focused fieldset": { borderColor: "#006d77" },
+                        },
+                      }}
+                    >
+                      <MenuItem value="Sí" sx={{ fontFamily: "'Poppins', sans-serif" }}>
+                        Sí
+                      </MenuItem>
+                      <MenuItem value="No" sx={{ fontFamily: "'Poppins', sans-serif" }}>
+                        No
+                      </MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    label="Tipo de Tratamiento"
+                    fullWidth
+                    variant="outlined"
+                    value={modoEdicion ? tipoTratamiento : historialSeleccionado?.tipo_tratamiento || ""}
+                    onChange={(e) => setTipoTratamiento(e.target.value)}
+                    InputProps={{ readOnly: !modoEdicion }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        "&:hover fieldset": { borderColor: "#78c1c8" },
+                        "&.Mui-focused fieldset": { borderColor: "#006d77" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#03445e",
+                        fontFamily: "'Poppins', sans-serif",
+                      },
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Medicamentos Recetados"
+                    fullWidth
+                    variant="outlined"
+                    value={modoEdicion ? medicamentos : historialSeleccionado?.medicamentos_recetados || ""}
+                    onChange={(e) => setMedicamentos(e.target.value)}
+                    InputProps={{ readOnly: !modoEdicion }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "12px",
+                        "&:hover fieldset": { borderColor: "#78c1c8" },
+                        "&.Mui-focused fieldset": { borderColor: "#006d77" },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: "#03445e",
+                        fontFamily: "'Poppins', sans-serif",
+                      },
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
 
+            <Box sx={{ marginBottom: "2rem" }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: "bold",
+                  color: "#006d77",
+                  fontFamily: "'Poppins', sans-serif",
+                }}
+              >
+                Observaciones Médicas
+              </Typography>
+              <Divider sx={{ marginBottom: "1.5rem", borderColor: "#78c1c8" }} />
+              <TextField
+                label="Observaciones o notas del paciente"
+                multiline
+                rows={4}
+                variant="outlined"
+                fullWidth
+                value={modoEdicion ? comentario : historialSeleccionado?.observaciones_medicas || ""}
+                onChange={(e) => setComentario(e.target.value)}
+                InputProps={{ readOnly: !modoEdicion }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: "12px",
+                    "&:hover fieldset": { borderColor: "#78c1c8" },
+                    "&.Mui-focused fieldset": { borderColor: "#006d77" },
+                  },
+                  "& .MuiInputLabel-root": {
+                    color: "#03445e",
+                    fontFamily: "'Poppins', sans-serif",
+                  },
+                }}
+              />
+            </Box>
+          </>
+        )}
+      </DialogContent>
 
-        </Dialog>
-    );
+      <DialogActions
+        sx={{
+          justifyContent: "space-between",
+          padding: "1.5rem",
+          backgroundColor: "#f9fbfd", // Consistente con el fondo general
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)", // Sombra sutil
+        }}
+      >
+        <Button
+          onClick={handleClose}
+          variant="contained"
+          sx={{
+            background: "linear-gradient(90deg, #006d77 0%, #78c1c8 100%)",
+            color: "#e0f7fa",
+            "&:hover": {
+              background: "linear-gradient(90deg, #004d57 0%, #48cae4 100%)",
+            },
+            fontFamily: "'Poppins', sans-serif",
+          }}
+        >
+          Cerrar
+        </Button>
+        <Button
+          variant="contained"
+          color="warning"
+          onClick={limpiarCampos}
+          sx={{
+            background: "#ff9800",
+            "&:hover": { background: "#f57c00" },
+            fontFamily: "'Poppins', sans-serif",
+          }}
+        >
+          Agregar Otro Historial
+        </Button>
+        <Button
+          variant="contained"
+          color="success"
+          onClick={guardarHistorial}
+          disabled={!modoEdicion}
+          sx={{
+            background: "#4caf50",
+            "&:hover": { background: "#388e3c" },
+            fontFamily: "'Poppins', sans-serif",
+          }}
+        >
+          {tieneHistorial ? "Actualizar Historial" : "Registrar Nuevo"}
+        </Button>
+      </DialogActions>
+
+      {openSnackbar && (
+        <Box
+          sx={{
+            position: "fixed",
+            bottom: 20,
+            left: 20,
+            zIndex: 1000,
+            maxWidth: "350px",
+          }}
+        >
+          <Alert
+            severity={snackbarSeverity}
+            variant="filled"
+            sx={{
+              backgroundColor:
+                snackbarSeverity === "success"
+                  ? "#e8f5e9" // Consistente con TratamientosEnCurso
+                  : snackbarSeverity === "error"
+                  ? "#ffebee" // Consistente con TratamientosEnCurso
+                  : "#fff3e0",
+              color:
+                snackbarSeverity === "success"
+                  ? "#2e7d32"
+                  : snackbarSeverity === "error"
+                  ? "#c62828"
+                  : "#f57f17",
+              borderRadius: "10px",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)", // Consistente con TratamientosEnCurso
+              fontFamily: "'Poppins', sans-serif",
+            }}
+            onClose={() => setOpenSnackbar(false)}
+          >
+            {snackbarMessage}
+          </Alert>
+        </Box>
+      )}
+    </Dialog>
+  );
 };
 
 export default HistorialMedicoSincuenta;

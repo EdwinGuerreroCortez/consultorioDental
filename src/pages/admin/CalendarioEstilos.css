@@ -1,26 +1,26 @@
 /* Estilos generales */
 body {
     font-family: 'Roboto', sans-serif;
-    background-color: #f4f7fa;
+    background-color: #f4f7fa; /* Light gray background consistent with LayoutAdmin */
 }
 
 /* Estilos para el calendario */
 .custom-calendar .rbc-calendar {
     background-color: #fff;
-    border-radius: 16px;
+    border-radius: 16px; /* Matches LayoutAdmin and NavbarAdmin border-radius */
     padding: 10px;
 }
 
 .custom-calendar .rbc-header {
-    background-color: #0077b6;
-    color: white;
+    background-color: #006d77; /* Primary teal from NavbarAdmin AppBar */
+    color: #e0f7fa; /* Light cyan text from NavbarAdmin */
     font-weight: bold;
     border-radius: 8px;
     padding: 10px;
 }
 
 .custom-calendar .rbc-today {
-    background-color: #e6f0fa;
+    background-color: #d2f4ea; /* Light teal from NavbarAdmin for today's highlight */
 }
 
 .custom-calendar .rbc-event {
@@ -32,8 +32,8 @@ body {
 }
 
 .custom-calendar .rbc-btn-group button {
-    background-color: #0077b6;
-    color: white;
+    background-color: #0077b6; /* Secondary blue from your palette */
+    color: #e0f7fa; /* Light cyan text */
     border: none;
     border-radius: 8px;
     padding: 8px 16px;
@@ -43,51 +43,51 @@ body {
 }
 
 .custom-calendar .rbc-btn-group button:hover {
-    background-color: #005f8c;
+    background-color: #005f8c; /* Darker blue for hover, consistent with dialogs */
 }
 
 .custom-calendar .rbc-btn-group button.rbc-active {
-    background-color: #00b4d8;
+    background-color: #0096c7; /* Bright blue from NavbarAdmin toolbar */
 }
 
 /* Estilos para los modales */
 .MuiDialog-paper {
-    border-radius: 16px !important;
+    border-radius: 16px !important; /* Matches NavbarAdmin and LayoutAdmin */
     overflow: hidden;
 }
 
 /* Estilos para los botones */
 .MuiButton-root {
-    transition: all 0.3s ease;
+    transition: all 0.3s ease; /* Smooth transition from NavbarAdmin */
 }
 
 /* Estilos para los inputs */
 .MuiOutlinedInput-root {
-    border-radius: 8px !important;
-    background-color: #f4f7fa !important;
+    border-radius: 8px !important; /* Matches NavbarAdmin inputs */
+    background-color: #f4f7fa !important; /* Light gray from LayoutAdmin */
 }
 
 /* Estilos para la tipografía */
 .MuiTypography-root {
-    font-family: 'Roboto', sans-serif !important;
+    font-family: 'Roboto', sans-serif !important; /* Consistent typography */
 }
 
 /* Estilos responsivos */
 @media (max-width: 600px) {
     .custom-calendar .rbc-calendar {
-        height: 400px !important;
+        height: 400px !important; /* Adjust height for smaller screens */
     }
 
     .MuiDialog-paper {
         max-width: 100% !important;
-        margin: 16px !important;
+        margin: 16px !important; /* Consistent spacing */
     }
 
     .MuiTypography-h4 {
-        font-size: 1.5rem !important;
+        font-size: 1.5rem !important; /* Responsive title size */
     }
 
     .MuiTypography-h6 {
-        font-size: 1.2rem !important;
+        font-size: 1.2rem !important; /* Responsive subtitle size */
     }
 }

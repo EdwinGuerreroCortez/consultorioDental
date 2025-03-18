@@ -9,15 +9,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  List,
-  ListItem,
-  Divider,
   Box,
   Grid,
   Avatar,
-  Stack,
   Button,
-  IconButton,
   Table,
   TableBody,
   TableCell,
@@ -30,6 +25,8 @@ import {
   Select,
   MenuItem,
   TextField,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
 import {
   Person,
@@ -39,6 +36,8 @@ import {
   ArrowBack,
   ArrowForward,
   MonetizationOn,
+  AddCircleOutline,
+  Close,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { obtenerCitasOcupadas, obtenerHorasDisponibles } from "../../utils/citas";
@@ -74,12 +73,57 @@ export default function EvaluarCitasPendientes() {
   ];
   const [alerta, setAlerta] = useState({ mostrar: false, mensaje: "", tipo: "" });
 
+  const inputStyle = {
+    "& .MuiOutlinedInput-root": {
+      borderRadius: "12px",
+      backgroundColor: "#fff",
+      fontFamily: "'Poppins', sans-serif",
+      height: "56px",
+      transition: "all 0.3s ease-in-out",
+      "&:hover fieldset": { borderColor: "#78c1c8" },
+      "&.Mui-focused fieldset": { borderColor: "#006d77", borderWidth: "2px" },
+    },
+    "& .MuiInputLabel-root": {
+      fontFamily: "'Poppins', sans-serif",
+      color: "#03445e",
+      "&.Mui-focused": { color: "#006d77" },
+    },
+  };
+
+  const selectStyle = {
+    borderRadius: "12px",
+    backgroundColor: "#fff",
+    fontFamily: "'Poppins', sans-serif",
+    height: "56px",
+    "& .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#d2f4ea",
+    },
+    "&:hover .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#78c1c8",
+    },
+    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+      borderColor: "#006d77",
+      borderWidth: "2px",
+    },
+  };
+
+  const menuItemStyle = {
+    fontFamily: "'Poppins', sans-serif",
+    padding: "12px 20px",
+    borderBottom: "1px solid #e0f7fa",
+    transition: "all 0.3s ease-in-out",
+    "&:hover": {
+      backgroundColor: "#78c1c8",
+      color: "#fff",
+      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+    },
+  };
+
   useEffect(() => {
     if (alerta.mostrar) {
       const timer = setTimeout(() => {
         setAlerta({ mostrar: false, mensaje: "", tipo: "" });
       }, 3000);
-
       return () => clearTimeout(timer);
     }
   }, [alerta.mostrar]);
@@ -91,13 +135,15 @@ export default function EvaluarCitasPendientes() {
   const handleCloseAgendar = () => {
     setOpenAgendar(false);
   };
+
   const obtenerTokenCSRF = () => {
     const csrfToken = document.cookie
-        .split("; ")
-        .find(row => row.startsWith("XSRF-TOKEN="))
-        ?.split("=")[1];
-    return csrfToken || ""; // 🔥 Evitar valores undefined o null
-};
+      .split("; ")
+      .find((row) => row.startsWith("XSRF-TOKEN="))
+      ?.split("=")[1];
+    return csrfToken || "";
+  };
+
   const actualizarCita = async () => {
     const proximaCitaId = obtenerProximaCitaId();
     if (!proximaCitaId || !fechaSeleccionada || !horaSeleccionada) {
@@ -129,13 +175,12 @@ export default function EvaluarCitasPendientes() {
       const csrfToken = obtenerTokenCSRF();
       const response = await axios.put(`http://localhost:4000/api/citas/actualizar/${proximaCitaId}`, {
         fechaHora: fechaHoraUTC.toISOString(),
-      },
-      {
+      }, {
         headers: {
-            "X-XSRF-TOKEN": csrfToken // Enviar el token CSRF en los headers
+          "X-XSRF-TOKEN": csrfToken
         },
         withCredentials: true,
-    });
+      });
 
       console.log("✅ Cita actualizada con éxito:", response.data);
 
@@ -295,69 +340,57 @@ export default function EvaluarCitasPendientes() {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3, fontFamily: "'Poppins', sans-serif" }}>
       <Grid container spacing={3}>
         {tratamientos.map((tratamiento, index) => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={tratamiento.id}>
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.5,
-                ease: "easeOut",
-                delay: index * 0.1,
-              }}
-              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.5, ease: "easeOut", delay: index * 0.1 }}
+              whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
               style={{ cursor: "pointer" }}
             >
               <Card
                 sx={{
-                  borderRadius: 16,
-                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.08)",
+                  borderRadius: 12,
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
                   p: 2,
-                  background: "linear-gradient(135deg, #ffffff, #f7fbff)",
-                  border: "1px solid #b3e5fc",
+                  background: "#ffffff",
+                  border: "1px solid #e0f7fa",
                   transition: "transform 0.3s ease",
                   minHeight: 220,
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
-                  "&:hover": {
-                    boxShadow: "0 6px 15px rgba(179, 229, 252, 0.2)",
-                  },
+                  "&:hover": { boxShadow: "0 6px 16px rgba(0, 109, 119, 0.2)" },
                 }}
                 onClick={() => handleOpenDialog(tratamiento)}
               >
                 <CardContent>
                   <Box sx={{ mb: 2, textAlign: "center" }}>
                     <Avatar
-                      sx={{
-                        bgcolor: "#b3e5fc",
-                        width: 40,
-                        height: 40,
-                        mx: "auto",
-                        mb: 1,
-                      }}
+                      sx={{ bgcolor: "#e0f7fa", width: 40, height: 40, mx: "auto", mb: 1 }}
                     >
-                      <AssignmentTurnedIn sx={{ fontSize: 24, color: "#42a5f5" }} />
+                      <AssignmentTurnedIn sx={{ fontSize: 24, color: "#006d77" }} />
                     </Avatar>
                     <Typography
                       variant="subtitle1"
-                      sx={{ fontWeight: "bold", color: "#42a5f5", textTransform: "uppercase" }}
+                      sx={{ fontWeight: "bold", color: "#006d77", textTransform: "uppercase" }}
                     >
                       {determinarTipoCita(tratamiento)}
                     </Typography>
                   </Box>
 
                   <Box display="flex" alignItems="center" gap={2} mb={2}>
-                    <Avatar sx={{ bgcolor: "#e3f2fd", width: 40, height: 40 }}>
-                      <Person sx={{ fontSize: 24, color: "#42a5f5" }} />
+                    <Avatar sx={{ bgcolor: "#e0f7fa", width: 40, height: 40 }}>
+                      <Person sx={{ fontSize: 24, color: "#006d77" }} />
                     </Avatar>
                     <Box>
                       <Typography
                         variant="h6"
-                        sx={{ fontWeight: "bold", color: "#333", lineHeight: 1.2 }}
+                        sx={{ fontWeight: "bold", color: "#006d77", lineHeight: 1.2 }}
                       >
                         {`${(tratamiento.nombre || "")
                           .charAt(0)
@@ -367,7 +400,7 @@ export default function EvaluarCitasPendientes() {
                       </Typography>
                       <Typography
                         variant="body2"
-                        sx={{ color: "#666", fontStyle: "italic" }}
+                        sx={{ color: "#78909c", fontStyle: "italic" }}
                       >
                         {`${(tratamiento.apellido_paterno || "")
                           .charAt(0)
@@ -383,15 +416,15 @@ export default function EvaluarCitasPendientes() {
                         sx={{
                           display: "inline-flex",
                           alignItems: "center",
-                          bgcolor: "#e3f2fd",
+                          bgcolor: "#e0f7fa",
                           borderRadius: "50%",
                           px: 1.5,
                           py: 0.5,
                           mt: 0.5,
                         }}
                       >
-                        <CalendarToday sx={{ fontSize: 16, color: "#42a5f5", mr: 0.5 }} />
-                        <Typography variant="caption" sx={{ color: "#42a5f5" }}>
+                        <CalendarToday sx={{ fontSize: 16, color: "#006d77", mr: 0.5 }} />
+                        <Typography variant="caption" sx={{ color: "#006d77" }}>
                           {tratamiento.edad} años
                         </Typography>
                       </Box>
@@ -401,7 +434,7 @@ export default function EvaluarCitasPendientes() {
                   <Box sx={{ mt: 2 }}>
                     <Typography
                       variant="body1"
-                      sx={{ fontWeight: "bold", color: "#333", mb: 1 }}
+                      sx={{ fontWeight: "bold", color: "#006d77", mb: 1 }}
                     >
                       Progreso de citas
                     </Typography>
@@ -409,7 +442,7 @@ export default function EvaluarCitasPendientes() {
                       sx={{
                         display: "flex",
                         alignItems: "center",
-                        bgcolor: "#e0e0e0",
+                        bgcolor: "#e0f7fa",
                         borderRadius: 8,
                         overflow: "hidden",
                         height: 10,
@@ -417,7 +450,7 @@ export default function EvaluarCitasPendientes() {
                     >
                       <Box
                         sx={{
-                          bgcolor: "#b3e5fc",
+                          bgcolor: "#78c1c8",
                           height: "100%",
                           width: `${(tratamiento.citas_asistidas / tratamiento.citas_totales) * 100}%`,
                           transition: "width 0.3s ease",
@@ -426,7 +459,7 @@ export default function EvaluarCitasPendientes() {
                     </Box>
                     <Typography
                       variant="body2"
-                      sx={{ mt: 1, color: "#666", textAlign: "right" }}
+                      sx={{ mt: 1, color: "#78909c", textAlign: "right" }}
                     >
                       <strong>{tratamiento.citas_asistidas}</strong> de{" "}
                       {tratamiento.citas_totales}
@@ -445,92 +478,55 @@ export default function EvaluarCitasPendientes() {
           onClose={handleCloseDialog}
           fullWidth
           maxWidth="md"
-          sx={{
-            "& .MuiDialog-paper": { height: "650px", borderRadius: 4, boxShadow: 6 },
-          }}
+          sx={{ "& .MuiDialog-paper": { height: "650px", borderRadius: 12, boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)" } }}
         >
           <DialogTitle
             sx={{
               fontWeight: "bold",
               textAlign: "center",
-              backgroundColor: "#b3e5fc",
-              color: "white",
-              borderTopLeftRadius: 4,
-              borderTopRightRadius: 4,
+              backgroundColor: "#006d77",
+              color: "#ffffff",
+              borderTopLeftRadius: 12,
+              borderTopRightRadius: 12,
             }}
           >
             Citas de {selectedTratamiento.tratamiento}
           </DialogTitle>
 
           <DialogContent
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              height: "100%",
-              backgroundColor: "#f9f9f9",
-              p: 2,
-              pt: 4, // Aumentamos el padding superior para más espacio
-            }}
+            sx={{ display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%", p: 3, pt: 4, backgroundColor: "#fafafa" }}
           >
             <TableContainer
               component={Paper}
               sx={{
-                borderRadius: 2,
-                boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
-                border: "1px solid #e3f2fd",
-                mt: 2, // Añadimos margen superior para separar del DialogTitle
+                borderRadius: 12,
+                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
+                border: "1px solid #e0f7fa",
+                mt: 2,
               }}
             >
-              <Table>
+              <Table sx={{ minWidth: 650 }}>
                 <TableHead>
                   <TableRow
-                    sx={{
-                      background: "linear-gradient(135deg, #e3f2fd, #b3e5fc)",
-                      borderBottom: "2px solid #42a5f5",
-                    }}
+                    sx={{ backgroundColor: "#e0f7fa", borderBottom: "2px solid #78c1c8" }}
                   >
                     <TableCell
-                      sx={{
-                        fontWeight: "bold",
-                        textAlign: "center",
-                        color: "#42a5f5",
-                        fontSize: "1rem",
-                        py: 2,
-                      }}
+                      sx={{ fontWeight: "bold", textAlign: "center", color: "#006d77", fontSize: "1.1rem", py: 2.5 }}
                     >
                       #
                     </TableCell>
                     <TableCell
-                      sx={{
-                        fontWeight: "bold",
-                        textAlign: "center",
-                        color: "#42a5f5",
-                        fontSize: "1rem",
-                        py: 2,
-                      }}
+                      sx={{ fontWeight: "bold", textAlign: "center", color: "#006d77", fontSize: "1.1rem", py: 2.5 }}
                     >
                       Fecha
                     </TableCell>
                     <TableCell
-                      sx={{
-                        fontWeight: "bold",
-                        textAlign: "center",
-                        color: "#42a5f5",
-                        fontSize: "1rem",
-                        py: 2,
-                      }}
+                      sx={{ fontWeight: "bold", textAlign: "center", color: "#006d77", fontSize: "1.1rem", py: 2.5 }}
                     >
                       Estado Cita
                     </TableCell>
                     <TableCell
-                      sx={{
-                        fontWeight: "bold",
-                        textAlign: "center",
-                        color: "#42a5f5",
-                        fontSize: "1rem",
-                        py: 2,
-                      }}
+                      sx={{ fontWeight: "bold", textAlign: "center", color: "#006d77", fontSize: "1.1rem", py: 2.5 }}
                     >
                       Estado Pago
                     </TableCell>
@@ -542,35 +538,24 @@ export default function EvaluarCitasPendientes() {
                       <TableRow
                         key={index}
                         sx={{
-                          backgroundColor: index % 2 === 0 ? "#fafafa" : "#ffffff",
-                          "&:hover": { backgroundColor: "#e6f7ff" },
+                          backgroundColor: index % 2 === 0 ? "#ffffff" : "#f5f5f5",
+                          "&:hover": { backgroundColor: "#e0f7fa" },
                           transition: "background-color 0.3s ease",
-                          borderRadius: "8px",
-                          height: "60px",
+                          borderRadius: 8,
+                          height: "65px",
                         }}
                       >
                         <TableCell
-                          sx={{
-                            textAlign: "center",
-                            fontWeight: "bold",
-                            color: "#666",
-                            fontSize: "0.9rem",
-                            py: 1.5,
-                          }}
+                          sx={{ textAlign: "center", fontWeight: "medium", color: "#455a64", fontSize: "1rem", py: 2 }}
                         >
                           {index + 1 + currentPage * citasPorPagina}
                         </TableCell>
                         <TableCell
-                          sx={{
-                            textAlign: "center",
-                            fontSize: "0.9rem",
-                            color: "#333",
-                            py: 1.5,
-                          }}
+                          sx={{ textAlign: "center", fontSize: "1rem", color: "#455a64", py: 2 }}
                         >
                           {cita.fecha_hora ? convertirHoraLocal(cita.fecha_hora) : "Sin Asignar"}
                         </TableCell>
-                        <TableCell sx={{ textAlign: "center", py: 1.5 }}>
+                        <TableCell sx={{ textAlign: "center", py: 2 }}>
                           <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
                             {cita.estado === "pendiente" ? (
                               <Box
@@ -603,12 +588,11 @@ export default function EvaluarCitasPendientes() {
                             )}
                             <Typography
                               sx={{
-                                fontSize: "0.9rem",
-                                fontWeight: "bold",
+                                fontSize: "1rem",
+                                fontWeight: "medium",
                                 color: cita.estado === "pendiente" ? "#ff9800" : "#4caf50",
-                                bgcolor:
-                                  cita.estado === "pendiente" ? "#fff3e0" : "#e8f5e9",
-                                borderRadius: "12px",
+                                bgcolor: cita.estado === "pendiente" ? "#fff3e0" : "#e8f5e9",
+                                borderRadius: 12,
                                 px: 1.5,
                                 py: 0.5,
                               }}
@@ -617,7 +601,7 @@ export default function EvaluarCitasPendientes() {
                             </Typography>
                           </Box>
                         </TableCell>
-                        <TableCell sx={{ textAlign: "center", py: 1.5 }}>
+                        <TableCell sx={{ textAlign: "center", py: 2 }}>
                           <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
                             <Box
                               sx={{
@@ -631,19 +615,16 @@ export default function EvaluarCitasPendientes() {
                               }}
                             >
                               <MonetizationOn
-                                sx={{
-                                  fontSize: 18,
-                                  color: cita.pagada ? "#4caf50" : "#f44336",
-                                }}
+                                sx={{ fontSize: 18, color: cita.pagada ? "#4caf50" : "#f44336" }}
                               />
                             </Box>
                             <Typography
                               sx={{
-                                fontSize: "0.9rem",
-                                fontWeight: "bold",
+                                fontSize: "1rem",
+                                fontWeight: "medium",
                                 color: cita.pagada ? "#4caf50" : "#f44336",
                                 bgcolor: cita.pagada ? "#e8f5e9" : "#ffebee",
-                                borderRadius: "12px",
+                                borderRadius: 12,
                                 px: 1.5,
                                 py: 0.5,
                               }}
@@ -658,12 +639,7 @@ export default function EvaluarCitasPendientes() {
                     <TableRow>
                       <TableCell
                         colSpan={4}
-                        sx={{
-                          textAlign: "center",
-                          fontStyle: "italic",
-                          color: "text.secondary",
-                          py: 3,
-                        }}
+                        sx={{ textAlign: "center", fontStyle: "italic", color: "#78909c", py: 4 }}
                       >
                         No hay citas registradas.
                       </TableCell>
@@ -673,126 +649,137 @@ export default function EvaluarCitasPendientes() {
               </Table>
             </TableContainer>
 
-            <Box display="flex" justifyContent="center" sx={{ mt: 2 }}>
-              <Button
-                variant="contained"
-                disabled={!puedeAgendarCita}
-                onClick={() => {
-                  const proximaCitaId = obtenerProximaCitaId();
-                  if (proximaCitaId) {
-                    setOpenAgendar(true);
-                  }
-                }}
-                sx={{
-                  fontWeight: "bold",
-                  width: "250px",
-                  height: "45px",
-                  borderRadius: "8px",
-                  textTransform: "none",
-                  backgroundColor: "#b3e5fc",
-                  color: "#ffffff",
-                  "&:hover": {
-                    backgroundColor: "#42a5f5",
-                  },
-                }}
-              >
-                Agendar Próxima Cita
-              </Button>
-            </Box>
-
-            <Box display="flex" justifyContent="center" alignItems="center" sx={{ py: 2 }}>
-              <IconButton
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
-                disabled={currentPage === 0}
-                sx={{
-                  color: currentPage === 0 ? "gray" : "#b3e5fc",
-                  "&:hover": { backgroundColor: "#e3f2fd" },
-                }}
-              >
-                <ArrowBack />
-              </IconButton>
-              <Typography sx={{ mx: 2, fontWeight: "bold", fontSize: 14 }}>
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              gap={2}
+              sx={{ mt: 3, mb: 2 }}
+            >
+              <Tooltip title="Navegar a la página anterior">
+                <IconButton
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
+                  disabled={currentPage === 0}
+                  sx={{
+                    color: currentPage === 0 ? "#b0bec5" : "#006d77",
+                    "&:hover": { backgroundColor: "#e0f7fa" },
+                  }}
+                >
+                  <ArrowBack />
+                </IconButton>
+              </Tooltip>
+              <Typography sx={{ fontWeight: "bold", fontSize: 14, color: "#006d77" }}>
                 Página {currentPage + 1} de {totalPaginas}
               </Typography>
-              <IconButton
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPaginas - 1))}
-                disabled={currentPage === totalPaginas - 1}
-                sx={{
-                  color: currentPage === totalPaginas - 1 ? "gray" : "#b3e5fc",
-                  "&:hover": { backgroundColor: "#e3f2fd" },
-                }}
-              >
-                <ArrowForward />
-              </IconButton>
+              <Tooltip title="Navegar a la página siguiente">
+                <IconButton
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPaginas - 1))}
+                  disabled={currentPage === totalPaginas - 1}
+                  sx={{
+                    color: currentPage === totalPaginas - 1 ? "#b0bec5" : "#006d77",
+                    "&:hover": { backgroundColor: "#e0f7fa" },
+                  }}
+                >
+                  <ArrowForward />
+                </IconButton>
+              </Tooltip>
             </Box>
           </DialogContent>
 
-          <DialogActions sx={{ backgroundColor: "#f9f9f9", borderBottomLeftRadius: 4, borderBottomRightRadius: 4 }}>
-            <Button onClick={handleCloseDialog} variant="contained" color="error">
+          <DialogActions sx={{ backgroundColor: "#fafafa", borderBottomLeftRadius: 12, borderBottomRightRadius: 12, display: "flex", justifyContent: "center", gap: 2 }}>
+            <Button
+              onClick={() => {
+                const proximaCitaId = obtenerProximaCitaId();
+                if (proximaCitaId) {
+                  setOpenAgendar(true);
+                }
+              }}
+              disabled={!puedeAgendarCita}
+              variant="contained"
+              startIcon={<AddCircleOutline />}
+              sx={{
+                backgroundColor: puedeAgendarCita ? "#006d77" : "#b0bec5",
+                color: "#e0f7fa",
+                padding: "12px 40px",
+                borderRadius: "12px",
+                fontFamily: "'Poppins', sans-serif",
+                fontWeight: 600,
+                "&:hover": { backgroundColor: puedeAgendarCita ? "#78c1c8" : "#b0bec5", transform: "translateY(-2px)" },
+                transition: "all 0.3s ease-in-out",
+              }}
+            >
+              Agendar Próxima Cita
+            </Button>
+            <Button
+              onClick={handleCloseDialog}
+              variant="contained"
+              startIcon={<Close />}
+              sx={{
+                backgroundColor: "#f44336",
+                color: "#ffffff",
+                padding: "12px 40px",
+                borderRadius: "12px",
+                fontFamily: "'Poppins', sans-serif",
+                fontWeight: 600,
+                "&:hover": { backgroundColor: "#d32f2f", transform: "translateY(-2px)" },
+                transition: "all 0.3s ease-in-out",
+              }}
+            >
               Cerrar
             </Button>
           </DialogActions>
         </Dialog>
       )}
+
       <Dialog open={openAgendar} onClose={handleCloseAgendar} fullWidth maxWidth="sm">
         <DialogTitle
           sx={{
             fontWeight: "bold",
             textAlign: "center",
-            backgroundColor: "#b3e5fc",
-            color: "white",
-            borderTopLeftRadius: 4,
-            borderTopRightRadius: 4,
-            boxShadow: "0px 3px 10px rgba(0, 0, 0, 0.2)",
+            backgroundColor: "#006d77",
+            color: "#ffffff",
+            borderTopLeftRadius: 12,
+            borderTopRightRadius: 12,
+            boxShadow: "0px 3px 10px rgba(0, 0, 0, 0.1)",
           }}
         >
           Seleccionar Fecha y Hora
         </DialogTitle>
 
         <DialogContent
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            padding: "20px",
-            backgroundColor: "#f8fcff",
-          }}
+          sx={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "24px", backgroundColor: "#ffffff" }}
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            whileHover={{ scale: 1.02 }}
-            style={{
-              backgroundColor: "white",
-              padding: "20px",
-              borderRadius: "10px",
-              boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.1)",
-              width: "100%",
-            }}
+            style={{ padding: "24px", borderRadius: "12px", boxShadow: "0px 4px 15px rgba(0, 0, 0, 0.05)", width: "100%" }}
           >
-            <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
-              <DatePicker
-                label="Selecciona la Fecha"
-                value={fechaSeleccionada}
-                onChange={(newValue) => setFechaSeleccionada(newValue)}
-                minDate={obtenerUltimaFechaCita() || new Date()}
-                renderInput={(params) => <TextField {...params} fullWidth sx={{ mt: 1 }} />}
-                disablePast
-                shouldDisableDate={(date) => ![1, 2, 3, 6].includes(date.getDay())}
-              />
-            </LocalizationProvider>
+            <Box sx={{ mb: 3 }}>
+              <Typography sx={{ mb: 1, color: "#03445e", fontWeight: 600, fontFamily: "'Poppins', sans-serif" }}>
+                Fecha
+              </Typography>
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={es}>
+                <DatePicker
+                  label="Selecciona la Fecha"
+                  value={fechaSeleccionada}
+                  onChange={(newValue) => setFechaSeleccionada(newValue)}
+                  minDate={obtenerUltimaFechaCita() || new Date()}
+                  renderInput={(params) => <TextField {...params} fullWidth sx={inputStyle} />}
+                  disablePast
+                  shouldDisableDate={(date) => ![1, 2, 3, 6].includes(date.getDay())}
+                />
+              </LocalizationProvider>
+              <Typography
+                sx={{ mt: 1, color: "#d32f2f", fontFamily: "'Poppins', sans-serif" }}
+              >
+                Solo se pueden agendar citas en: Lunes, Martes, Miércoles y Sábado.
+              </Typography>
+            </Box>
 
-            <Typography
-              variant="body2"
-              sx={{ color: "#d32f2f", fontWeight: "bold", mt: 1, textAlign: "center" }}
-            >
-              Solo se pueden agendar citas en: Lunes, Martes, Miércoles y Sábado.
-            </Typography>
-
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <Typography variant="h6" sx={{ fontWeight: "bold", color: "#b3e5fc", textAlign: "center" }}>
-                Horario Disponible
+            <FormControl fullWidth>
+              <Typography sx={{ mb: 1, color: "#03445e", fontWeight: 600, fontFamily: "'Poppins', sans-serif" }}>
+                Hora
               </Typography>
               <Select
                 value={horaSeleccionada}
@@ -800,28 +787,34 @@ export default function EvaluarCitasPendientes() {
                 displayEmpty
                 startAdornment={
                   <InputAdornment position="start">
-                    <AccessTimeIcon sx={{ color: "#b3e5fc" }} />
+                    <AccessTimeIcon sx={{ color: "#006d77", fontSize: 20 }} />
                   </InputAdornment>
                 }
-                sx={{
-                  borderRadius: "10px",
-                  backgroundColor: "#e6f7ff",
-                  height: "50px",
-                  textAlign: "center",
-                }}
+                sx={selectStyle}
                 disabled={
                   !fechaSeleccionada ||
                   obtenerHorasDisponibles(fechaSeleccionada, citasOcupadas, disponibilidad).length === 0
                 }
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      borderRadius: "12px",
+                      boxShadow: "0 4px 16px rgba(0, 0, 0, 0.15)",
+                      backgroundColor: "#fff",
+                    },
+                  },
+                }}
               >
                 {obtenerHorasDisponibles(fechaSeleccionada, citasOcupadas, disponibilidad).length > 0 ? (
                   obtenerHorasDisponibles(fechaSeleccionada, citasOcupadas, disponibilidad).map((hora, index) => (
-                    <MenuItem key={index} value={hora}>
+                    <MenuItem key={index} value={hora} sx={menuItemStyle}>
                       {hora}
                     </MenuItem>
                   ))
                 ) : (
-                  <MenuItem disabled>No hay horarios disponibles</MenuItem>
+                  <MenuItem disabled sx={menuItemStyle}>
+                    No hay horarios disponibles
+                  </MenuItem>
                 )}
               </Select>
             </FormControl>
@@ -829,30 +822,24 @@ export default function EvaluarCitasPendientes() {
         </DialogContent>
 
         <DialogActions
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            padding: "20px",
-            backgroundColor: "#f8fcff",
-            borderBottomLeftRadius: 4,
-            borderBottomRightRadius: 4,
-          }}
+          sx={{ display: "flex", justifyContent: "center", padding: "24px", backgroundColor: "#ffffff", borderBottomLeftRadius: 12, borderBottomRightRadius: 12 }}
         >
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               onClick={handleCloseAgendar}
               variant="outlined"
               sx={{
-                color: "#b3e5fc",
-                borderColor: "#b3e5fc",
+                color: "#006d77",
+                borderColor: "#78c1c8",
                 fontWeight: "bold",
                 textTransform: "none",
-                height: "45px",
+                height: "48px",
                 width: "120px",
-                "&:hover": {
-                  backgroundColor: "#e6f7ff",
-                  borderColor: "#42a5f5",
-                },
+                padding: "12px 40px",
+                borderRadius: "12px",
+                fontFamily: "'Poppins', sans-serif",
+                "&:hover": { backgroundColor: "#e0f7fa", borderColor: "#006d77" },
+                transition: "all 0.3s ease-in-out",
               }}
             >
               Cancelar
@@ -865,15 +852,16 @@ export default function EvaluarCitasPendientes() {
               onClick={actualizarCita}
               sx={{
                 fontWeight: "bold",
-                height: "45px",
+                height: "48px",
                 width: "150px",
-                borderRadius: "8px",
+                borderRadius: "12px",
                 textTransform: "none",
-                backgroundColor: "#b3e5fc",
+                backgroundColor: "#78c1c8",
                 color: "#ffffff",
-                "&:hover": {
-                  backgroundColor: "#42a5f5",
-                },
+                padding: "12px 40px",
+                fontFamily: "'Poppins', sans-serif",
+                "&:hover": { backgroundColor: "#006d77", transform: "translateY(-2px)" },
+                transition: "all 0.3s ease-in-out",
               }}
             >
               Confirmar Cita
@@ -881,38 +869,18 @@ export default function EvaluarCitasPendientes() {
           </motion.div>
         </DialogActions>
       </Dialog>
+
       {alerta.mostrar && (
-        <Box
-          sx={{
-            position: "fixed",
-            bottom: 20,
-            left: 20,
-            zIndex: 2000,
-            width: "auto",
-            maxWidth: "400px",
-          }}
-        >
+        <Box sx={{ position: "fixed", bottom: 20, left: 20, zIndex: 2000, width: "auto", maxWidth: "400px" }}>
           <Alert
             severity={alerta.tipo}
             variant="filled"
             sx={{
               width: "100%",
               backgroundColor:
-                alerta.tipo === "success"
-                  ? "#DFF6DD"
-                  : alerta.tipo === "error"
-                  ? "#F8D7DA"
-                  : alerta.tipo === "warning"
-                  ? "#FFF3CD"
-                  : "#D1ECF1",
+                alerta.tipo === "success" ? "#e8f5e9" : alerta.tipo === "error" ? "#ffebee" : alerta.tipo === "warning" ? "#fff3e0" : "#e0f7fa",
               color:
-                alerta.tipo === "success"
-                  ? "#1E4620"
-                  : alerta.tipo === "error"
-                  ? "#721C24"
-                  : alerta.tipo === "warning"
-                  ? "#856404"
-                  : "#0C5460",
+                alerta.tipo === "success" ? "#4caf50" : alerta.tipo === "error" ? "#f44336" : alerta.tipo === "warning" ? "#ff9800" : "#006d77",
             }}
             onClose={() => setAlerta({ mostrar: false, mensaje: "", tipo: "" })}
           >
