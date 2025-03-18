@@ -1,95 +1,93 @@
-/* 🌟 Diseño llamativo y profesional para un consultorio dental */
-
-/* Fondo general del calendario */
-.rbc-calendar {
-    background: #F9FBFD; /* Blanco perla */
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
-    border: 2px solid #00A8E8; /* Azul caribe */
+/* Estilos generales */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f7fa;
 }
 
-/* Botones de navegación */
-.rbc-toolbar button {
-    background: #00A8E8 !important; /* Azul caribe */
-    color: white !important;
-    font-weight: 600 !important;
-    border-radius: 8px !important;
-    padding: 8px 16px !important;
-    transition: all 0.3s ease-in-out;
-    border: 1px solid transparent;
+/* Estilos para el calendario */
+.custom-calendar .rbc-calendar {
+    background-color: #fff;
+    border-radius: 16px;
+    padding: 10px;
 }
 
-.rbc-toolbar button:hover {
-    background: #0077B6 !important; /* Azul profundo */
-    border: 1px solid #00C49A !important; /* Verde esmeralda */
-}
-
-/* Texto del encabezado */
-.rbc-toolbar-label {
-    font-size: 20px !important;
+.custom-calendar .rbc-header {
+    background-color: #0077b6;
+    color: white;
     font-weight: bold;
-    color: #0077B6 !important; /* Azul profundo */
-    text-transform: uppercase;
+    border-radius: 8px;
+    padding: 10px;
 }
 
-/* Celdas del calendario */
-.rbc-month-view {
-    border-radius: 10px;
-    border: 2px solid #0077B6;
-    background: white;
+.custom-calendar .rbc-today {
+    background-color: #e6f0fa;
 }
 
-/* Encabezados de días */
-.rbc-header {
-    background: #00A8E8 !important;
-    color: white !important;
-    font-size: 16px !important;
-    font-weight: 600 !important;
-    padding: 14px !important;
-    text-align: center;
-    border-bottom: 2px solid white !important;
-}
-
-/* Días del calendario */
-.rbc-day-bg {
-    border: 1px solid #00A8E8 !important; /* Azul caribe */
-    background: #F9FBFD !important;
-    transition: all 0.3s;
-}
-
-/* Día seleccionado */
-.rbc-day-bg.rbc-today {
-    background: #B3E5FC !important; /* Azul celeste suave */
-    border: 2px solid #0077B6 !important;
-}
-
-/* Eventos */
-.rbc-event {
-    font-size: 14px !important;
-    font-weight: 600;
-    border-radius: 8px !important;
-    padding: 6px !important;
-    text-align: center;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s;
-}
-
-/* Eventos "Pagados" en verde esmeralda */
-.rbc-event.paid {
-    background: #00C49A !important;
-    color: white !important;
-}
-
-/* Eventos "Pendientes" en naranja vibrante */
-.rbc-event.pending {
-    background: #FFA62B !important;
-    color: white !important;
+.custom-calendar .rbc-event {
+    border-radius: 8px;
+    padding: 5px;
+    font-size: 14px;
     font-weight: bold;
+    text-align: center;
 }
 
-/* Semana, día y agenda */
-.rbc-time-view {
-    border-radius: 10px;
-    border: 1px solid #0077B6;
+.custom-calendar .rbc-btn-group button {
+    background-color: #0077b6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.custom-calendar .rbc-btn-group button:hover {
+    background-color: #005f8c;
+}
+
+.custom-calendar .rbc-btn-group button.rbc-active {
+    background-color: #00b4d8;
+}
+
+/* Estilos para los modales */
+.MuiDialog-paper {
+    border-radius: 16px !important;
+    overflow: hidden;
+}
+
+/* Estilos para los botones */
+.MuiButton-root {
+    transition: all 0.3s ease;
+}
+
+/* Estilos para los inputs */
+.MuiOutlinedInput-root {
+    border-radius: 8px !important;
+    background-color: #f4f7fa !important;
+}
+
+/* Estilos para la tipografía */
+.MuiTypography-root {
+    font-family: 'Roboto', sans-serif !important;
+}
+
+/* Estilos responsivos */
+@media (max-width: 600px) {
+    .custom-calendar .rbc-calendar {
+        height: 400px !important;
+    }
+
+    .MuiDialog-paper {
+        max-width: 100% !important;
+        margin: 16px !important;
+    }
+
+    .MuiTypography-h4 {
+        font-size: 1.5rem !important;
+    }
+
+    .MuiTypography-h6 {
+        font-size: 1.2rem !important;
+    }
 }

@@ -2,66 +2,68 @@ import React, { useEffect, useState } from "react";
 import { verificarAutenticacion } from "../../utils/auth";
 import {
   Card, CardContent, Typography, Grid, Avatar, CircularProgress,
-  Alert, Box, Divider, Chip, Paper, Container, IconButton, Dialog,
-  DialogActions, DialogContent, DialogTitle, TextField, Button, InputAdornment
+  Alert, Box, Divider, Chip, Container, IconButton, Dialog,
+  DialogActions, DialogContent, DialogTitle, TextField, Button, InputAdornment, LinearProgress
 } from "@mui/material";
 import { motion } from "framer-motion";
 import {
-  Person, Phone, Mail, CalendarToday, Wc, Badge, Lock, Visibility, VisibilityOff
+  Person, Phone, Mail, CalendarToday, Wc, Lock, Visibility, VisibilityOff, LocalHospital
 } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
 import { validatePassword, evaluatePasswordStrength } from "../../utils/validations";
 
-// Create motion components using motion.create()
+// Motion components
 const MotionCard = motion.create(Card);
 const MotionAvatar = motion.create(Avatar);
-const MotionPaper = motion.create(Paper);
 
-// Estilos con Glassmorphism + Neumorphism
-const ProfileCard = styled(MotionCard)(({ theme }) => ({
-  maxWidth: 850,
-  margin: "4rem auto",
+// Custom Styled Components
+const DentalProfileCard = styled(MotionCard)(({ theme }) => ({
+  maxWidth: 1200, // Increased from 1000 to 1200 for a wider card
+  margin: "2rem auto", // Reduced from 4rem to 2rem to move it higher
   borderRadius: "20px",
   padding: "2.5rem",
-  backdropFilter: "blur(12px)",
-  background: "rgba(255, 255, 255, 0.15)",
-  boxShadow: "0px 15px 30px rgba(0,0,0,0.15)",
-  border: "1px solid rgba(255, 255, 255, 0.2)",
-  transition: "all 0.3s ease-in-out",
+  background: "linear-gradient(135deg, #ffffff 0%, #f0faff 100%)",
+  boxShadow: "0 10px 30px rgba(0, 122, 255, 0.1)",
+  border: "2px solid #cce7ff",
+  transition: "transform 0.3s ease, box-shadow 0.3s ease",
   "&:hover": {
-    boxShadow: "0px 20px 40px rgba(0,0,0,0.2)",
-    transform: "scale(1.02)",
+    transform: "translateY(-8px)",
+    boxShadow: "0 15px 40px rgba(0, 122, 255, 0.2)",
+  },
+  [theme.breakpoints.down("sm")]: {
+    margin: "1rem",
+    padding: "1.5rem",
   },
 }));
 
-const ProfileAvatar = styled(MotionAvatar)(({ theme }) => ({
-  width: 140,
-  height: 140,
-  background: "linear-gradient(135deg, #FF6B6B, #5562EA)",
-  border: "5px solid white",
-  boxShadow: "0px 5px 15px rgba(0,0,0,0.2)",
-  cursor: "pointer",
-  transition: "all 0.3s ease-in-out",
-  "&:hover": {
-    transform: "scale(1.1)",
-  },
+const DentalAvatar = styled(MotionAvatar)(({ theme }) => ({
+  width: 130,
+  height: 130,
+  background: "linear-gradient(45deg, #007AFF 10%, #00D4FF 90%)",
+  border: "5px solid #ffffff",
+  boxShadow: "0 5px 15px rgba(0, 122, 255, 0.3)",
 }));
 
-const InfoItem = styled(MotionPaper)(({ theme }) => ({
+const InfoTile = styled(motion(Box))(({ theme }) => ({
   display: "flex",
   alignItems: "center",
-  gap: theme.spacing(1.5),
+  gap: theme.spacing(2),
   padding: theme.spacing(2),
   borderRadius: "12px",
-  background: "rgba(255, 255, 255, 0.8)",
-  backdropFilter: "blur(5px)",
-  boxShadow: "0px 5px 15px rgba(0,0,0,0.1)",
-  transition: "all 0.3s ease-in-out",
+  background: "#ffffff",
+  boxShadow: "0 3px 10px rgba(0, 0, 0, 0.05)",
+  transition: "all 0.3s ease",
   "&:hover": {
-    background: "rgba(255, 255, 255, 1)",
-    transform: "scale(1.05)",
-    boxShadow: "0px 8px 20px rgba(0,0,0,0.2)",
+    background: "#f0faff",
+    transform: "translateY(-3px)",
+    boxShadow: "0 5px 15px rgba(0, 0, 0, 0.1)",
   },
+}));
+
+const StyledDivider = styled(Divider)(({ theme }) => ({
+  margin: "2.5rem 0",
+  borderColor: "#cce7ff",
+  borderWidth: 1,
 }));
 
 const Perfil = () => {
@@ -79,11 +81,9 @@ const Perfil = () => {
     const { name, value } = e.target;
     setPasswords((prev) => ({ ...prev, [name]: value }));
 
-    // Validaciones
     if (name === "nueva") {
       const passwordError = validatePassword(value);
       setErrors((prev) => ({ ...prev, nueva: passwordError }));
-
       const strength = evaluatePasswordStrength(value);
       setPasswordStrength(strength);
     }
@@ -101,8 +101,7 @@ const Perfil = () => {
       .split("; ")
       .find((row) => row.startsWith("XSRF-TOKEN="))
       ?.split("=")[1];
-
-    return csrfToken || ""; // Evita valores undefined
+    return csrfToken || "";
   };
 
   const handleSubmit = async () => {
@@ -120,11 +119,11 @@ const Perfil = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-XSRF-TOKEN": csrfToken, // 🔹 Enviar el token CSRF en los headers
+          "X-XSRF-TOKEN": csrfToken,
         },
-        credentials: "include", // 🔹 Importante para enviar cookies CSRF
+        credentials: "include",
         body: JSON.stringify({
-          actualPassword: passwords.actual, // 🔹 Asegurar que coincide con el backend
+          actualPassword: passwords.actual,
           nuevaPassword: passwords.nueva,
         }),
       });
@@ -132,7 +131,7 @@ const Perfil = () => {
       const result = await response.json();
       if (!response.ok) throw new Error(result.mensaje || "Error al cambiar la contraseña");
 
-      setMensaje("Contraseña actualizada correctamente");
+      setMensaje("Contraseña actualizada con éxito");
       setPasswords({ actual: "", nueva: "", repetir: "" });
       setPasswordStrength({ score: 0, level: "", suggestions: "" });
       setErrors({});
@@ -146,14 +145,10 @@ const Perfil = () => {
     const cargarPerfil = async () => {
       try {
         const usuario = await verificarAutenticacion();
-        if (!usuario || !usuario.id) {
-          throw new Error("No se encontró el usuario autenticado");
-        }
+        if (!usuario || !usuario.id) throw new Error("No se encontró el usuario autenticado");
 
         const response = await fetch(`http://localhost:4000/api/usuarios/perfil/${usuario.id}`);
-        if (!response.ok) {
-          throw new Error("Error al obtener el perfil");
-        }
+        if (!response.ok) throw new Error("Error al obtener el perfil");
         const data = await response.json();
         setPerfil(data);
       } catch (error) {
@@ -163,68 +158,67 @@ const Perfil = () => {
         setLoading(false);
       }
     };
-
     cargarPerfil();
   }, []);
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 5 }}>
-        <CircularProgress size={60} thickness={4} />
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <CircularProgress size={60} sx={{ color: "#007AFF" }} />
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Alert
-        severity="error"
-        sx={{
-          mt: 3,
-          maxWidth: 600,
-          mx: "auto",
-          borderRadius: 2,
-          boxShadow: 1,
-        }}
-      >
-        {error}
-      </Alert>
+      <Container maxWidth="sm">
+        <Alert severity="error" sx={{ mt: 4, borderRadius: 2, boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)" }}>
+          {error}
+        </Alert>
+      </Container>
     );
   }
 
   return (
-    <Container>
-      <ProfileCard initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <CardContent sx={{ p: 4, textAlign: "center" }}>
-          <ProfileAvatar animate={{ rotate: 360 }} transition={{ duration: 1 }} whileHover={{ scale: 1.1 }}>
-            <Person sx={{ fontSize: 70, color: "white" }} />
-          </ProfileAvatar>
+    <Container sx={{ py: 4 }}>
+      <DentalProfileCard
+        initial={{ opacity: 0, y: 50, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut", type: "spring", stiffness: 100 }}
+        whileHover={{ scale: 1.02 }}
+      >
+        <CardContent sx={{ textAlign: "center" }}>
+          <DentalAvatar
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ duration: 0.7, ease: "backOut", delay: 0.2 }}
+            whileHover={{ rotate: 10, scale: 1.15 }}
+          >
+            <LocalHospital sx={{ fontSize: 60, color: "#ffffff" }} />
+          </DentalAvatar>
           <Typography
             variant="h4"
             fontWeight="bold"
-            color="text.primary"
-            sx={{ mt: 2 }}
+            color="#007AFF"
+            sx={{ mt: 2, fontFamily: "'Poppins', sans-serif" }}
           >
             {perfil.nombre} {perfil.apellido_paterno} {perfil.apellido_materno}
           </Typography>
           <Chip
-            icon={<Badge />}
-            label="Perfil de usuario"
+            label="Paciente Dental"
             color="primary"
-            variant="filled"
-            sx={{ mt: 2 }}
+            sx={{ mt: 1, bgcolor: "#007AFF", color: "#fff", fontWeight: "medium" }}
           />
-
         </CardContent>
 
-        <Divider sx={{ my: 3 }} />
+        <StyledDivider />
 
         <Grid container spacing={2}>
           {[
-            { icon: <Phone sx={{ color: "#5562EA" }} />, label: "Teléfono", value: perfil.telefono },
-            { icon: <Mail sx={{ color: "#FF6B6B" }} />, label: "Email", value: perfil.email },
+            { icon: <Phone sx={{ color: "#007AFF" }} />, label: "Teléfono", value: perfil.telefono },
+            { icon: <Mail sx={{ color: "#00D4FF" }} />, label: "Email", value: perfil.email },
             {
-              icon: <CalendarToday sx={{ color: "#56CCF2" }} />,
+              icon: <CalendarToday sx={{ color: "#007AFF" }} />,
               label: "Fecha de Nacimiento",
               value: new Date(perfil.fecha_nacimiento).toLocaleDateString("es-ES", {
                 day: "numeric",
@@ -232,39 +226,51 @@ const Perfil = () => {
                 year: "numeric",
               }),
             },
-            { icon: <Wc sx={{ color: "#27AE60" }} />, label: "Sexo", value: perfil.sexo },
-            { icon: <Lock sx={{ color: "#5562EA" }} />,  value: "Cambiar Contraseña", onClick:() => setOpen(true) },
-
+            { icon: <Wc sx={{ color: "#00D4FF" }} />, label: "Sexo", value: perfil.sexo },
+            { icon: <Lock sx={{ color: "#007AFF" }} />, value: "Cambiar Contraseña", onClick: () => setOpen(true) },
           ].map((item, index) => (
-            <Grid item xs={12} md={6} key={index}>
-              <InfoItem whileHover={{ scale: 1.05 }} transition={{ duration: 0.3 }} elevation={3}         onClick={item.onClick} // Aquí se abre el formulario solo cuando se haga clic en Teléfono
+            <Grid item xs={12} sm={6} md={4} key={index}> {/* Adjusted grid for wider layout */}
+              <InfoTile
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ scale: 1.05, rotate: 1 }}
+                onClick={item.onClick}
               >
                 {item.icon}
                 <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
+                  <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: "medium" }}>
                     {item.label}
                   </Typography>
-                  <Typography variant="body1" fontWeight="medium">
+                  <Typography variant="body1" color="#333" sx={{ fontWeight: "500" }}>
                     {item.value}
                   </Typography>
                 </Box>
-              </InfoItem>
+              </InfoTile>
             </Grid>
           ))}
         </Grid>
-      </ProfileCard>
+      </DentalProfileCard>
 
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Cambiar Contraseña</DialogTitle>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        PaperProps={{ sx: { borderRadius: "15px", p: 2, bgcolor: "#f0faff" } }}
+      >
+        <DialogTitle sx={{ fontWeight: "bold", color: "#007AFF" }}>Cambiar Contraseña</DialogTitle>
         <DialogContent>
-          {mensaje && <Alert severity="info" sx={{ mb: 2 }}>{mensaje}</Alert>}
+          {mensaje && (
+            <Alert severity={mensaje.includes("éxito") ? "success" : "error"} sx={{ mb: 2, borderRadius: 2 }}>
+              {mensaje}
+            </Alert>
+          )}
 
           <TextField
             label="Contraseña Actual"
             type={showPassword.actual ? "text" : "password"}
             name="actual"
             fullWidth
-            margin="dense"
+            margin="normal"
             value={passwords.actual}
             onChange={handleChange}
             InputProps={{
@@ -276,6 +282,7 @@ const Perfil = () => {
                 </InputAdornment>
               ),
             }}
+            sx={{ bgcolor: "#ffffff", borderRadius: 2 }}
           />
 
           <TextField
@@ -283,7 +290,7 @@ const Perfil = () => {
             type={showPassword.nueva ? "text" : "password"}
             name="nueva"
             fullWidth
-            margin="dense"
+            margin="normal"
             value={passwords.nueva}
             onChange={handleChange}
             error={!!errors.nueva}
@@ -297,6 +304,7 @@ const Perfil = () => {
                 </InputAdornment>
               ),
             }}
+            sx={{ bgcolor: "#ffffff", borderRadius: 2 }}
           />
 
           <TextField
@@ -304,7 +312,7 @@ const Perfil = () => {
             type={showPassword.repetir ? "text" : "password"}
             name="repetir"
             fullWidth
-            margin="dense"
+            margin="normal"
             value={passwords.repetir}
             onChange={handleChange}
             error={!!errors.repetir}
@@ -318,42 +326,43 @@ const Perfil = () => {
                 </InputAdornment>
               ),
             }}
+            sx={{ bgcolor: "#ffffff", borderRadius: 2 }}
           />
 
-          {/* Medidor de fortaleza de contraseña */}
           <Box sx={{ mt: 2 }}>
-            <Typography
-              variant="body2"
-              color={passwordStrength.score < 2 ? "error" : passwordStrength.score < 4 ? "warning" : "success"}
-              sx={{ fontWeight: "bold" }}
-            >
-              Fortaleza: {passwordStrength.level}
+            <Typography variant="body2" color="#007AFF" sx={{ fontWeight: "medium" }}>
+              Fortaleza de la contraseña: {passwordStrength.level}
             </Typography>
-
-            <Box sx={{ display: "flex", gap: 0.5, mt: 1 }}>
-              {[0, 1, 2, 3, 4].map((i) => (
-                <Box
-                  key={i}
-                  sx={{
-                    height: "8px",
-                    flex: 1,
-                    borderRadius: 1,
-                    backgroundColor: i <= passwordStrength.score ? "#4caf50" : "#e0e0e0",
-                  }}
-                ></Box>
-              ))}
-            </Box>
-
+            <LinearProgress
+              variant="determinate"
+              value={(passwordStrength.score / 4) * 100}
+              sx={{
+                mt: 1,
+                height: 8,
+                borderRadius: 4,
+                bgcolor: "#e0e0e0",
+                "& .MuiLinearProgress-bar": {
+                  bgcolor: passwordStrength.score < 2 ? "#ff4d4f" : passwordStrength.score < 4 ? "#ffeb3b" : "#4caf50",
+                },
+              }}
+            />
             <Typography variant="caption" color="textSecondary" sx={{ mt: 1 }}>
               {passwordStrength.suggestions}
             </Typography>
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)} color="secondary">
+          <Button
+            onClick={() => setOpen(false)}
+            sx={{ color: "#007AFF", fontWeight: "medium" }}
+          >
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} color="primary" variant="contained">
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
+            sx={{ bgcolor: "#007AFF", borderRadius: 2, "&:hover": { bgcolor: "#0056b3" } }}
+          >
             Actualizar
           </Button>
         </DialogActions>

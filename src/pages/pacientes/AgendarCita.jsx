@@ -48,54 +48,54 @@ const ActiveTreatmentWarning = ({ onBack }) => (
             <Box
                 sx={{
                     width: "100%",
-                    maxWidth: "600px",
+                    maxWidth: "800px",
                     textAlign: "center",
                     backgroundColor: "#FFEBEE",
-                    padding: { xs: "16px", md: "20px" },
-                    borderRadius: "12px",
-                    boxShadow: "0 8px 25px rgba(211, 47, 47, 0.2)",
-                    border: "1px solid #D32F2F",
+                    padding: { xs: "20px", md: "30px" },
+                    borderRadius: "16px",
+                    boxShadow: "0 10px 30px rgba(211, 47, 47, 0.25)",
+                    border: "2px solid #D32F2F",
                     margin: "0 auto",
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    transition: "all 0.3s ease-in-out",
+                    transition: "all 0.4s ease-in-out",
                     "&:hover": {
-                        boxShadow: "0 10px 30px rgba(211, 47, 47, 0.3)",
+                        boxShadow: "0 12px 40px rgba(211, 47, 47, 0.35)",
                         transform: "scale(1.02)",
                     },
                 }}
             >
                 <motion.div
-                    animate={{ rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] }}
-                    transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                    animate={{ rotate: [0, -10, 10, 0], scale: [1, 1.15, 1] }}
+                    transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
                 >
                     <ErrorOutlineOutlinedIcon
                         sx={{
-                            fontSize: { xs: "40px", md: "50px" },
+                            fontSize: { xs: "50px", md: "60px" },
                             color: "#D32F2F",
-                            marginBottom: "8px",
-                            filter: "drop-shadow(0px 0px 8px rgba(211, 47, 47, 0.4))",
+                            marginBottom: "12px",
+                            filter: "drop-shadow(0px 2px 10px rgba(211, 47, 47, 0.5))",
                         }}
                     />
                 </motion.div>
                 <Typography
-                    variant="h6"
+                    variant="h5"
                     sx={{
                         fontWeight: "bold",
-                        fontSize: { xs: "1rem", md: "1.25rem" },
+                        fontSize: { xs: "1.25rem", md: "1.5rem" },
                         color: "#D32F2F",
-                        textShadow: "0px 0px 4px rgba(211, 47, 47, 0.2)",
+                        textShadow: "1px 1px 5px rgba(211, 47, 47, 0.3)",
                         fontFamily: "'Poppins', sans-serif",
                     }}
                 >
                     No puedes agendar una cita
                 </Typography>
                 <Typography
-                    variant="body2"
+                    variant="body1"
                     sx={{
-                        fontSize: { xs: "0.85rem", md: "0.9rem" },
-                        marginTop: "8px",
+                        fontSize: { xs: "0.9rem", md: "1rem" },
+                        marginTop: "12px",
                         color: "#B71C1C",
                         fontWeight: "500",
                         fontFamily: "'Poppins', sans-serif",
@@ -108,17 +108,18 @@ const ActiveTreatmentWarning = ({ onBack }) => (
                     onClick={onBack}
                     startIcon={<ArrowBack />}
                     sx={{
-                        marginTop: "16px",
-                        borderRadius: "10px",
-                        padding: { xs: "8px 16px", md: "10px 20px" },
+                        marginTop: "20px",
+                        borderRadius: "12px",
+                        padding: { xs: "10px 20px", md: "12px 24px" },
                         textTransform: "none",
-                        fontSize: { xs: "0.85rem", md: "0.9rem" },
+                        fontSize: { xs: "0.9rem", md: "1rem" },
                         color: "#D32F2F",
                         borderColor: "#D32F2F",
                         fontFamily: "'Poppins', sans-serif",
                         "&:hover": {
                             borderColor: "#B71C1C",
-                            backgroundColor: "rgba(211, 47, 47, 0.04)",
+                            backgroundColor: "rgba(211, 47, 47, 0.05)",
+                            boxShadow: "0 4px 15px rgba(211, 47, 47, 0.2)",
                         },
                     }}
                 >
@@ -136,59 +137,65 @@ const ActionButtons = ({ onBack, onSubmit, disabled }) => (
             display: "flex",
             flexDirection: { xs: "column", sm: "row" },
             justifyContent: "space-between",
-            marginTop: { xs: "12px", md: "30px" },
-            gap: { xs: "12px", sm: "16px" },
+            marginTop: { xs: "20px", md: "40px" },
+            gap: { xs: "16px", sm: "20px" },
         }}
     >
-        <Button
-            variant="outlined"
-            onClick={onBack}
-            startIcon={<ArrowBack />}
-            sx={{
-                borderRadius: "10px",
-                padding: { xs: "8px 16px", md: "10px 20px" },
-                textTransform: "none",
-                fontSize: { xs: "0.85rem", md: "0.9rem" },
-                color: "#003087",
-                borderColor: "#003087",
-                fontFamily: "'Poppins', sans-serif",
-                "&:hover": {
-                    borderColor: "#0057b7",
-                    backgroundColor: "rgba(0, 87, 183, 0.04)",
-                },
-                width: { xs: "100%", sm: "auto" },
-            }}
-        >
-            Atrás
-        </Button>
-        <Button
-            variant="contained"
-            onClick={onSubmit}
-            startIcon={<CheckCircle />}
-            disabled={disabled}
-            sx={{
-                background: "linear-gradient(135deg, #003087 0%, #0057b7 100%)",
-                borderRadius: "10px",
-                padding: { xs: "8px 16px", md: "10px 20px" },
-                textTransform: "none",
-                fontSize: { xs: "0.85rem", md: "0.9rem" },
-                fontFamily: "'Poppins', sans-serif",
-                fontWeight: 600,
-                transition: "all 0.3s ease",
-                "&:hover": {
-                    background: "linear-gradient(135deg, #0057b7 0%, #003087 100%)",
-                    boxShadow: "0 4px 15px rgba(0, 87, 183, 0.4)",
-                    transform: "translateY(-2px)",
-                },
-                "&:disabled": {
-                    background: "linear-gradient(135deg, #b0bec5 0%, #cfd8dc 100%)",
-                    cursor: "not-allowed",
-                },
-                width: { xs: "100%", sm: "auto" },
-            }}
-        >
-            Confirmar Cita
-        </Button>
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+                variant="outlined"
+                onClick={onBack}
+                startIcon={<ArrowBack />}
+                sx={{
+                    borderRadius: "12px",
+                    padding: { xs: "10px 20px", md: "12px 28px" },
+                    textTransform: "none",
+                    fontSize: { xs: "0.9rem", md: "1rem" },
+                    color: "#003087",
+                    borderColor: "#003087",
+                    fontFamily: "'Poppins', sans-serif",
+                    fontWeight: "600",
+                    "&:hover": {
+                        borderColor: "#0057b7",
+                        backgroundColor: "rgba(0, 87, 183, 0.05)",
+                        boxShadow: "0 4px 15px rgba(0, 87, 183, 0.2)",
+                    },
+                    width: { xs: "100%", sm: "auto" },
+                }}
+            >
+                Atrás
+            </Button>
+        </motion.div>
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+                variant="contained"
+                onClick={onSubmit}
+                startIcon={<CheckCircle />}
+                disabled={disabled}
+                sx={{
+                    background: "linear-gradient(135deg, #003087 0%, #0057b7 100%)",
+                    borderRadius: "12px",
+                    padding: { xs: "10px 20px", md: "12px 28px" },
+                    textTransform: "none",
+                    fontSize: { xs: "0.9rem", md: "1rem" },
+                    fontFamily: "'Poppins', sans-serif",
+                    fontWeight: "600",
+                    transition: "all 0.4s ease",
+                    "&:hover": {
+                        background: "linear-gradient(135deg, #0057b7 0%, #003087 100%)",
+                        boxShadow: "0 6px 20px rgba(0, 87, 183, 0.5)",
+                        transform: "translateY(-2px)",
+                    },
+                    "&:disabled": {
+                        background: "linear-gradient(135deg, #b0bec5 0%, #cfd8dc 100%)",
+                        cursor: "not-allowed",
+                    },
+                    width: { xs: "100%", sm: "auto" },
+                }}
+            >
+                Confirmar Cita
+            </Button>
+        </motion.div>
     </Box>
 );
 
@@ -210,13 +217,11 @@ const AgendarCita = () => {
 
     const ultimaFechaConsultada = useRef(null);
 
-    // Instancia de axios con configuración base
     const axiosInstance = useMemo(() => axios.create({
         baseURL: 'http://localhost:4000/api',
         withCredentials: true,
     }), []);
 
-    // Verificar autenticación al montar el componente
     useEffect(() => {
         const obtenerUsuario = async () => {
             try {
@@ -241,7 +246,6 @@ const AgendarCita = () => {
         obtenerUsuario();
     }, []);
 
-    // Cargar datos cuando usuarioId esté disponible
     useEffect(() => {
         if (usuarioId) {
             verificarTratamientoActivo();
@@ -249,7 +253,6 @@ const AgendarCita = () => {
         }
     }, [usuarioId]);
 
-    // Obtener citas ocupadas cuando cambia la fecha seleccionada
     useEffect(() => {
         if (fechaSeleccionada && ultimaFechaConsultada.current !== fechaSeleccionada) {
             obtenerCitasOcupadas();
@@ -257,7 +260,6 @@ const AgendarCita = () => {
         }
     }, [fechaSeleccionada]);
 
-    // Función para obtener citas ocupadas
     const obtenerCitasOcupadas = useCallback(async () => {
         try {
             setIsLoading(true);
@@ -286,7 +288,6 @@ const AgendarCita = () => {
         }
     }, [axiosInstance]);
 
-    // Verificar si el usuario tiene un tratamiento activo
     const verificarTratamientoActivo = useCallback(async () => {
         if (!usuarioId) return;
         try {
@@ -312,7 +313,6 @@ const AgendarCita = () => {
         }
     }, [axiosInstance, usuarioId]);
 
-    // Obtener tratamientos disponibles
     const obtenerTratamientos = useCallback(async () => {
         if (!usuarioId) return;
         try {
@@ -330,7 +330,6 @@ const AgendarCita = () => {
         }
     }, [axiosInstance, usuarioId]);
 
-    // Obtener horas disponibles
     const obtenerHorasDisponibles = useMemo(() => {
         if (!fechaSeleccionada) return disponibilidad;
         const fechaFormateada = fechaSeleccionada ? new Date(fechaSeleccionada).toISOString().split('T')[0] : null;
@@ -350,7 +349,6 @@ const AgendarCita = () => {
         return disponibilidad.filter(hora => !horasOcupadas.includes(hora));
     }, [fechaSeleccionada, citasOcupadas, disponibilidad]);
 
-    // Obtener token CSRF
     const obtenerTokenCSRF = useCallback(() => {
         const csrfToken = document.cookie
             .split("; ")
@@ -359,7 +357,6 @@ const AgendarCita = () => {
         return csrfToken || "";
     }, []);
 
-    // Manejar el envío del formulario
     const handleAgendarCita = useCallback(async () => {
         if (!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada) {
             setAlerta({
@@ -429,40 +426,52 @@ const AgendarCita = () => {
         obtenerTokenCSRF,
     ]);
 
-    // Manejar el botón "Atrás"
     const handleBack = useCallback(() => {
         console.log("Regresar a la página anterior");
     }, []);
 
-    // Estilos para los menús desplegables
     const menuProps = {
         PaperProps: {
             sx: {
-                borderRadius: "8px",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                backgroundColor: "rgba(255, 255, 255, 0.95)",
-                backdropFilter: "blur(5px)",
-                maxHeight: "250px",
-                "& .MuiMenu-list": {
-                    padding: "6px",
+                borderRadius: "12px",
+                boxShadow: "0 6px 20px rgba(0, 87, 183, 0.15)",
+                backgroundColor: "rgba(255, 255, 255, 0.98)",
+                backdropFilter: "blur(8px)",
+                maxHeight: "300px",
+                "& .MuiMenuItem-root": {
+                    fontFamily: "'Poppins', sans-serif",
+                    fontSize: { xs: "0.9rem", md: "1rem" },
+                    padding: "12px 20px",
+                    borderRadius: "8px",
+                    margin: "4px 8px",
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                        backgroundColor: "rgba(0, 87, 183, 0.1)",
+                        transform: "translateX(5px)",
+                    },
+                    "&.Mui-selected": {
+                        backgroundColor: "rgba(0, 87, 183, 0.2)",
+                        color: "#003087",
+                        fontWeight: "600",
+                    },
                 },
             },
         },
     };
 
-    // Estilos para los campos de formulario
     const inputStyles = {
         "& .MuiOutlinedInput-root": {
-            "& fieldset": { borderColor: "rgba(0, 87, 183, 0.5)" },
+            "& fieldset": { borderColor: "rgba(0, 87, 183, 0.6)" },
             "&:hover fieldset": { borderColor: "#0057b7" },
-            "&.Mui-focused fieldset": { borderColor: "#003087" },
-            backgroundColor: "rgba(255, 255, 255, 0.9)",
-            borderRadius: "8px",
-            transition: "all 0.3s ease",
+            "&.Mui-focused fieldset": { borderColor: "#003087", borderWidth: "2px" },
+            backgroundColor: "rgba(255, 255, 255, 0.95)",
+            borderRadius: "12px",
+            transition: "all 0.4s ease",
+            boxShadow: "0 2px 10px rgba(0, 87, 183, 0.1)",
         },
         "& .MuiInputBase-input": {
-            fontSize: { xs: "0.9rem", md: "1rem" },
-            padding: { xs: "10px 16px", md: "12px 20px" },
+            fontSize: { xs: "0.95rem", md: "1.05rem" },
+            padding: { xs: "12px 20px", md: "14px 24px" },
         },
         fontFamily: "'Poppins', sans-serif",
     };
@@ -472,233 +481,264 @@ const AgendarCita = () => {
             sx={{
                 display: "flex",
                 justifyContent: "center",
-                minHeight: "auto", // Eliminado minHeight: "100vh" para mover el formulario más arriba
-                background: "linear-gradient(135deg, #e6f7ff 0%, #ffffff 100%)",
-                padding: { xs: "8px", md: "16px" }, // Reducido el padding superior
+                minHeight: "auto",
+                background: "linear-gradient(135deg, #e6f7ff 0%, #f5fbff 100%)",
+                padding: { xs: "12px", md: "24px" },
+                width: "100%",
             }}
         >
-            <Box sx={{ width: "100%", maxWidth: "1400px" }}>
-                {isLoading && (
-                    <Box
-                        sx={{
-                            position: "fixed",
-                            top: 0,
-                            left: 0,
-                            width: "100%",
-                            height: "100%",
-                            backgroundColor: "rgba(0, 0, 0, 0.3)",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            zIndex: 9999,
-                        }}
-                    >
-                        <CircularProgress sx={{ color: "#003087" }} size={30} />
-                    </Box>
-                )}
-
-                {tratamientoActivo ? (
-                    <ActiveTreatmentWarning onBack={handleBack} />
-                ) : (
-                    <Paper
-                        elevation={6}
-                        sx={{
-                            padding: { xs: "12px", sm: "20px", md: "40px" },
-                            width: "100%",
-                            maxWidth: "100%",
-                            borderRadius: "16px",
-                            backgroundColor: "rgba(255, 255, 255, 0.9)",
-                            backdropFilter: "blur(10px)",
-                            boxShadow: "0 6px 24px rgba(31, 38, 135, 0.15)",
-                            border: "1px solid rgba(255, 255, 255, 0.18)",
-                            marginTop: { xs: "16px", md: "24px" }, // Añadido margen superior para separar del borde
-                        }}
-                    >
-                        <Typography
-                            variant="h5"
+            <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                style={{ width: "100%", maxWidth: "1600px" }}
+            >
+                <Box sx={{ width: "100%" }}>
+                    {isLoading && (
+                        <Box
                             sx={{
-                                color: "#003087",
-                                textAlign: "center",
-                                fontWeight: "700",
-                                marginBottom: { xs: "12px", md: "24px" },
-                                fontFamily: "'Poppins', sans-serif",
-                                textShadow: "1px 1px 2px rgba(0, 0, 0, 0.1)",
-                                fontSize: { xs: "1.25rem", sm: "1.5rem", md: "1.75rem" },
+                                position: "fixed",
+                                top: 0,
+                                left: 0,
+                                width: "100%",
+                                height: "100%",
+                                backgroundColor: "rgba(0, 0, 0, 0.4)",
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                zIndex: 9999,
                             }}
                         >
-                            Agendar Cita Dental
-                        </Typography>
-
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: "12px", md: "24px" } }}>
-                            {/* Selección de Servicio */}
-                            <FormControl fullWidth>
-                                <Typography
-                                    variant="subtitle2"
-                                    sx={{
-                                        fontWeight: "medium",
-                                        color: "#003087",
-                                        mb: 0.5,
-                                        fontFamily: "'Poppins', sans-serif",
-                                        fontSize: { xs: "0.85rem", md: "0.9rem" },
-                                    }}
-                                >
-                                    Selecciona un servicio
-                                </Typography>
-                                <Select
-                                    value={servicioSeleccionado}
-                                    onChange={(e) => setServicioSeleccionado(e.target.value)}
-                                    displayEmpty
-                                    sx={inputStyles}
-                                    startAdornment={
-                                        <InputAdornment position="start">
-                                            <MedicalServicesOutlinedIcon sx={{ color: "#003087", fontSize: { xs: 20, md: 24 } }} />
-                                        </InputAdornment>
-                                    }
-                                    MenuProps={menuProps}
-                                    aria-label="Selecciona un servicio"
-                                >
-                                    <MenuItem disabled value="">
-                                        Selecciona un servicio
-                                    </MenuItem>
-                                    {servicios.map((servicio) => (
-                                        <MenuItem key={servicio.id} value={servicio.nombre}>
-                                            {servicio.nombre} -{' '}
-                                            {servicio.requiere_evaluacion ? (
-                                                <em style={{ color: "#d32f2f", fontStyle: "italic", fontSize: "0.85rem" }}>
-                                                    Requiere valoración
-                                                </em>
-                                            ) : (
-                                                <span style={{ fontWeight: "bold", fontSize: "0.85rem" }}>${servicio.precio} MXN</span>
-                                            )}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                            {/* Selección de Fecha */}
-                            <Box sx={{ alignSelf: "flex-start", width: "100%", maxWidth: { xs: "100%", md: "400px" } }}>
-                                <Typography
-                                    variant="subtitle2"
-                                    sx={{
-                                        fontWeight: "medium",
-                                        color: "#003087",
-                                        mb: 0.5,
-                                        fontFamily: "'Poppins', sans-serif",
-                                        fontSize: { xs: "0.85rem", md: "0.9rem" },
-                                    }}
-                                >
-                                    Fecha de la cita
-                                </Typography>
-                                <Typography
-                                    variant="caption"
-                                    sx={{
-                                        color: "#d32f2f",
-                                        fontWeight: "bold",
-                                        mb: 1,
-                                        fontFamily: "'Poppins', sans-serif",
-                                        fontSize: { xs: "0.75rem", md: "0.85rem" },
-                                        display: "block", // Asegura que el texto ocupe toda la línea
-                                    }}
-                                >
-                                    Solo se pueden agendar citas en: Lunes, Martes, Miércoles y Sábado.
-                                </Typography>
-                                <LocalizationProvider dateAdapter={AdapterDateFns} locale={es}>
-                                    <DatePicker
-                                        value={fechaSeleccionada}
-                                        onChange={(newValue) => setFechaSeleccionada(newValue)}
-                                        renderInput={(params) => (
-                                            <TextField
-                                                {...params}
-                                                fullWidth
-                                                sx={inputStyles}
-                                                InputProps={{
-                                                    startAdornment: (
-                                                        <InputAdornment position="start">
-                                                            <CalendarMonthOutlinedIcon sx={{ color: "#003087", fontSize: { xs: 20, md: 24 } }} />
-                                                        </InputAdornment>
-                                                    ),
-                                                }}
-                                                aria-label="Selecciona la fecha de la cita"
-                                            />
-                                        )}
-                                        disablePast
-                                        maxDate={new Date(new Date().setDate(new Date().getDate() + 30))}
-                                        inputFormat="dd/MM/yyyy"
-                                        shouldDisableDate={(date) => ![1, 2, 3, 6].includes(date.getDay())}
-                                    />
-                                </LocalizationProvider>
-                            </Box>
-
-                            {/* Selección de Hora */}
-                            <FormControl fullWidth>
-                                <Typography
-                                    variant="subtitle2"
-                                    sx={{
-                                        fontWeight: "medium",
-                                        color: "#003087",
-                                        mb: 0.5,
-                                        fontFamily: "'Poppins', sans-serif",
-                                        fontSize: { xs: "0.85rem", md: "0.9rem" },
-                                    }}
-                                >
-                                    Hora de la cita
-                                </Typography>
-                                <Select
-                                    value={horaSeleccionada}
-                                    onChange={(e) => setHoraSeleccionada(e.target.value)}
-                                    displayEmpty
-                                    disabled={!fechaSeleccionada || obtenerHorasDisponibles.length === 0}
-                                    sx={inputStyles}
-                                    startAdornment={
-                                        <InputAdornment position="start">
-                                            <AccessTimeIcon sx={{ color: "#003087", fontSize: { xs: 20, md: 24 } }} />
-                                        </InputAdornment>
-                                    }
-                                    MenuProps={menuProps}
-                                    aria-label="Selecciona la hora de la cita"
-                                >
-                                    {obtenerHorasDisponibles.length > 0 ? (
-                                        obtenerHorasDisponibles.map((hora, index) => (
-                                            <MenuItem key={index} value={hora}>
-                                                {hora}
-                                            </MenuItem>
-                                        ))
-                                    ) : (
-                                        <MenuItem disabled>No hay horarios disponibles</MenuItem>
-                                    )}
-                                </Select>
-                            </FormControl>
-
-                            {/* Botones de Acción */}
-                            <ActionButtons
-                                onBack={handleBack}
-                                onSubmit={handleAgendarCita}
-                                disabled={!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada || isLoading}
-                            />
+                            <CircularProgress sx={{ color: "#003087" }} size={40} />
                         </Box>
-                    </Paper>
-                )}
+                    )}
 
-                {/* Snackbar para alertas */}
-                <Snackbar
-                    open={alerta.mostrar}
-                    onClose={() => setAlerta({ mostrar: false, mensaje: '', tipo: '' })}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-                    autoHideDuration={5000}
-                >
-                    <Alert
-                        severity={alerta.tipo}
+                    {tratamientoActivo ? (
+                        <ActiveTreatmentWarning onBack={handleBack} />
+                    ) : (
+                        <Paper
+                            elevation={8}
+                            sx={{
+                                padding: { xs: "20px", sm: "30px", md: "50px" },
+                                width: "100%",
+                                borderRadius: "20px",
+                                backgroundColor: "rgba(255, 255, 255, 0.92)",
+                                backdropFilter: "blur(12px)",
+                                boxShadow: "0 8px 30px rgba(31, 38, 135, 0.2)",
+                                border: "1px solid rgba(255, 255, 255, 0.2)",
+                                marginTop: { xs: "20px", md: "30px" },
+                            }}
+                        >
+                            <Typography
+                                variant="h4"
+                                sx={{
+                                    color: "#003087",
+                                    textAlign: "center",
+                                    fontWeight: "700",
+                                    marginBottom: { xs: "20px", md: "30px" },
+                                    fontFamily: "'Poppins', sans-serif",
+                                    textShadow: "2px 2px 4px rgba(0, 0, 0, 0.15)",
+                                    fontSize: { xs: "1.5rem", sm: "2rem", md: "2.25rem" },
+                                }}
+                            >
+                                Agendar Cita Dental
+                            </Typography>
+
+                            <Box sx={{ display: "flex", flexDirection: "column", gap: { xs: "20px", md: "30px" } }}>
+                                {/* Selección de Servicio */}
+                                <motion.div
+                                    initial={{ opacity: 0, x: -50 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.2, duration: 0.6 }}
+                                >
+                                    <FormControl fullWidth>
+                                        <Typography
+                                            variant="subtitle1"
+                                            sx={{
+                                                fontWeight: "medium",
+                                                color: "#003087",
+                                                mb: 1,
+                                                fontFamily: "'Poppins', sans-serif",
+                                                fontSize: { xs: "0.9rem", md: "1rem" },
+                                                fontWeight: "bold" 
+                                            }}
+                                        >
+                                            Selecciona un servicio
+                                        </Typography>
+                                        <Select
+                                            value={servicioSeleccionado}
+                                            onChange={(e) => setServicioSeleccionado(e.target.value)}
+                                            displayEmpty
+                                            sx={inputStyles}
+                                            startAdornment={
+                                                <InputAdornment position="start">
+                                                    <MedicalServicesOutlinedIcon sx={{ color: "#003087", fontSize: { xs: 24, md: 28 } }} />
+                                                </InputAdornment>
+                                            }
+                                            MenuProps={menuProps}
+                                            aria-label="Selecciona un servicio"
+                                        >
+                                            <MenuItem disabled value="">
+                                                Selecciona un servicio
+                                            </MenuItem>
+                                            {servicios.map((servicio) => (
+                                                <MenuItem key={servicio.id} value={servicio.nombre}>
+                                                    <Box sx={{ display: "flex", justifyContent: "space-between", width: "100%" }}>
+                                                        <Typography sx={{ fontWeight: "500" }}>{servicio.nombre}</Typography>
+                                                        {servicio.requiere_evaluacion ? (
+                                                            <Typography sx={{ color: "#d32f2f", fontStyle: "italic", fontSize: "0.9rem" }}>
+                                                                Requiere valoración
+                                                            </Typography>
+                                                        ) : (
+                                                            <Typography sx={{ fontWeight: "bold", fontSize: "0.9rem" }}>
+                                                                ${servicio.precio} MXN
+                                                            </Typography>
+                                                        )}
+                                                    </Box>
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </motion.div>
+
+                                {/* Selección de Fecha */}
+                                <motion.div
+                                    initial={{ opacity: 0, x: -50 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.4, duration: 0.6 }}
+                                >
+                                    <Box sx={{ alignSelf: "flex-start", width: "100%", maxWidth: { xs: "100%", md: "450px" } }}>
+                                        <Typography
+                                            variant="subtitle1"
+                                            sx={{
+                                                fontWeight: "medium",
+                                                color: "#003087",
+                                                mb: 1,
+                                                fontFamily: "'Poppins', sans-serif",
+                                                fontWeight: "bold" ,
+                                            }}
+                                        >
+                                            Fecha de la cita
+                                        </Typography>
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                color: "#d32f2f",
+                                                fontWeight: "bold",
+                                                mb: 1.5,
+                                                fontFamily: "'Poppins', sans-serif",
+                                                fontSize: { xs: "0.8rem", md: "0.9rem" },
+                                                display: "block",
+                                            }}
+                                        >
+                                            Solo se pueden agendar citas en: Lunes, Martes, Miércoles y Sábado.
+                                        </Typography>
+                                        <LocalizationProvider dateAdapter={AdapterDateFns} locale={es}>
+                                            <DatePicker
+                                                value={fechaSeleccionada}
+                                                onChange={(newValue) => setFechaSeleccionada(newValue)}
+                                                renderInput={(params) => (
+                                                    <TextField
+                                                        {...params}
+                                                        fullWidth
+                                                        sx={inputStyles}
+                                                        InputProps={{
+                                                            startAdornment: (
+                                                                <InputAdornment position="start">
+                                                                    <CalendarMonthOutlinedIcon sx={{ color: "#003087", fontSize: { xs: 24, md: 28 } }} />
+                                                                </InputAdornment>
+                                                            ),
+                                                        }}
+                                                        aria-label="Selecciona la fecha de la cita"
+                                                    />
+                                                )}
+                                                disablePast
+                                                maxDate={new Date(new Date().setDate(new Date().getDate() + 30))}
+                                                inputFormat="dd/MM/yyyy"
+                                                shouldDisableDate={(date) => ![1, 2, 3, 6].includes(date.getDay())}
+                                            />
+                                        </LocalizationProvider>
+                                    </Box>
+                                </motion.div>
+
+                                {/* Selección de Hora */}
+                                <motion.div
+                                    initial={{ opacity: 0, x: -50 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.6, duration: 0.6 }}
+                                >
+                                    <FormControl fullWidth>
+                                        <Typography
+                                            variant="subtitle1"
+                                            sx={{
+                                                fontWeight: "medium",
+                                                color: "#003087",
+                                                mb: 1,
+                                                fontFamily: "'Poppins', sans-serif",
+                                                fontWeight: "bold" ,
+                                            }}
+                                        >
+                                            Hora de la cita
+                                        </Typography>
+                                        <Select
+                                            value={horaSeleccionada}
+                                            onChange={(e) => setHoraSeleccionada(e.target.value)}
+                                            displayEmpty
+                                            disabled={!fechaSeleccionada || obtenerHorasDisponibles.length === 0}
+                                            sx={inputStyles}
+                                            startAdornment={
+                                                <InputAdornment position="start">
+                                                    <AccessTimeIcon sx={{ color: "#003087", fontSize: { xs: 24, md: 28 } }} />
+                                                </InputAdornment>
+                                            }
+                                            MenuProps={menuProps}
+                                            aria-label="Selecciona la hora de la cita"
+                                        >
+                                            {obtenerHorasDisponibles.length > 0 ? (
+                                                obtenerHorasDisponibles.map((hora, index) => (
+                                                    <MenuItem key={index} value={hora}>
+                                                        {hora}
+                                                    </MenuItem>
+                                                ))
+                                            ) : (
+                                                <MenuItem disabled>No hay horarios disponibles</MenuItem>
+                                            )}
+                                        </Select>
+                                    </FormControl>
+                                </motion.div>
+
+                                {/* Botones de Acción */}
+                                <ActionButtons
+                                    onBack={handleBack}
+                                    onSubmit={handleAgendarCita}
+                                    disabled={!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada || isLoading}
+                                />
+                            </Box>
+                        </Paper>
+                    )}
+
+                    <Snackbar
+                        open={alerta.mostrar}
                         onClose={() => setAlerta({ mostrar: false, mensaje: '', tipo: '' })}
-                        sx={{
-                            borderRadius: "10px",
-                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-                            fontFamily: "'Poppins', sans-serif",
-                            fontSize: { xs: "0.85rem", md: "0.9rem" },
-                        }}
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                        autoHideDuration={5000}
                     >
-                        {alerta.mensaje}
-                    </Alert>
-                </Snackbar>
-            </Box>
+                        <Alert
+                            severity={alerta.tipo}
+                            onClose={() => setAlerta({ mostrar: false, mensaje: '', tipo: '' })}
+                            sx={{
+                                borderRadius: "12px",
+                                boxShadow: "0 6px 15px rgba(0, 0, 0, 0.15)",
+                                fontFamily: "'Poppins', sans-serif",
+                                fontSize: { xs: "0.9rem", md: "1rem" },
+                                padding: "12px 20px",
+                            }}
+                        >
+                            {alerta.mensaje}
+                        </Alert>
+                    </Snackbar>
+                </Box>
+            </motion.div>
         </Box>
     );
 };
