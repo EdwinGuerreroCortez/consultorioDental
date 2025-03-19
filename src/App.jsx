@@ -70,7 +70,7 @@ const App = () => {
       <Router>
         <Loader>
           <Routes>
-{/**************************************************** Rutas públicas *******************************************************/}
+            {/**************************************************** Rutas públicas *******************************************************/}
             <Route
               path="/"
               element={
@@ -106,7 +106,7 @@ const App = () => {
             <Route
               path="/login"
               element={
-                  <Login />
+                <Login />
               }
             />
             <Route
@@ -150,7 +150,7 @@ const App = () => {
               }
             />
 
-{/**************************************************** Rutas paciente*******************************************************/}
+            {/**************************************************** Rutas paciente*******************************************************/}
             <Route
               path="/paciente"
               element={
@@ -228,13 +228,13 @@ const App = () => {
               element={
                 <RutaProtegida tiposPermitidos={['paciente']}>
                   <LayoutPaciente>
-                    <HistorialTratamientoPaciente/>
+                    <HistorialTratamientoPaciente />
                   </LayoutPaciente>
                 </RutaProtegida>
               }
             />
 
-{/**************************************************** Rutas admin*******************************************************/}
+            {/**************************************************** Rutas admin*******************************************************/}
             <Route
               path="/admin"
               element={
@@ -273,7 +273,7 @@ const App = () => {
               element={
                 <RutaProtegida tiposPermitidos={['admin']}>
 
-                  <LayoutAdmin>
+                  <LayoutAdmin title={"Ver Citas Programadas"}>
                     <ProximasCitas />
                   </LayoutAdmin>
                 </RutaProtegida>
@@ -295,7 +295,7 @@ const App = () => {
               element={
                 <RutaProtegida tiposPermitidos={['admin']}>
 
-                  <LayoutAdmin>
+                  <LayoutAdmin title={"Procesos Pendientes De Valoración"}>
                     <TratamientosPendientes />
                   </LayoutAdmin>
                 </RutaProtegida>
@@ -306,7 +306,7 @@ const App = () => {
               element={
                 <RutaProtegida tiposPermitidos={['admin']}>
 
-                  <LayoutAdmin>
+                  <LayoutAdmin >
                     <TratamientosPendientes />
                   </LayoutAdmin>
                 </RutaProtegida>
@@ -317,7 +317,7 @@ const App = () => {
               element={
                 <RutaProtegida tiposPermitidos={['admin']}>
 
-                  <LayoutAdmin title="Gestión de Citas Médicas">
+                  <LayoutAdmin title="Registrar Nuevas Citas      ">
                     <AgendarCitaAdmin />
                   </LayoutAdmin>
                 </RutaProtegida>
@@ -361,7 +361,7 @@ const App = () => {
               element={
                 <RutaProtegida tiposPermitidos={['admin']}>
 
-                  <LayoutAdmin title={"Lista de Pacientes"}>
+                  <LayoutAdmin title={"Lista de Pacientes Sin Cuenta"}>
                     <ListaPacientesSinCuenta />
                   </LayoutAdmin>
                 </RutaProtegida>
@@ -372,7 +372,7 @@ const App = () => {
               element={
                 <RutaProtegida tiposPermitidos={['admin']}>
 
-                  <LayoutAdmin title={"Lista de Pacientes"}>
+                  <LayoutAdmin title={"Registrar Pacientes"}>
                     <CrearPacienteSinCuenta />
                   </LayoutAdmin>
                 </RutaProtegida>

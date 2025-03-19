@@ -17,21 +17,55 @@ import { motion } from "framer-motion";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
+import {
+  validateName,
+  validatePhoneNumber,
+  validateEmail,
+} from "../../utils/validations";
 
-// Esquema de validación con Yup
+// Esquema de validación con Yup (sin cambios)
 const validationSchema = Yup.object({
-  nombre: Yup.string().required("El nombre es obligatorio"),
-  apellido_paterno: Yup.string().required("El apellido paterno es obligatorio"),
-  apellido_materno: Yup.string().required("El apellido materno es obligatorio"),
+  nombre: Yup.string()
+    .required("El nombre es obligatorio")
+    .test("name-validation", "", (value) => !validateName(value)),
+  apellido_paterno: Yup.string()
+    .required("El apellido paterno es obligatorio")
+    .test("name-validation", "", (value) => !validateName(value)),
+  apellido_materno: Yup.string()
+    .required("El apellido materno es obligatorio")
+    .test("name-validation", "", (value) => !validateName(value)),
   telefono: Yup.string()
-    .matches(/^\d{10}$/, "Debe ser un número de 10 dígitos")
-    .required("El teléfono es obligatorio"),
-  fecha_nacimiento: Yup.date().required("La fecha de nacimiento es obligatoria"),
+    .required("El teléfono es obligatorio")
+    .test("phone-validation", "", (value) => !validatePhoneNumber(value)),
+  fecha_nacimiento: Yup.date()
+    .required("La fecha de nacimiento es obligatoria")
+    .test("age-validation", "La edad debe estar entre 0 y 100 años", (value) => {
+      if (!value) return false;
+      const today = new Date();
+      const birthDate = new Date(value);
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      const dayDiff = today.getDate() - birthDate.getDate();
+      let adjustedAge = age;
+      if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+        adjustedAge = age - 1;
+      }
+      return adjustedAge > 0 && adjustedAge < 100;
+    }),
   sexo: Yup.string()
     .oneOf(["M", "F"], "Debe seleccionar 'M' o 'F'")
     .required("El sexo es obligatorio"),
-  email: Yup.string().email("Correo inválido").required("El correo es obligatorio"),
+  email: Yup.string()
+    .required("El correo es obligatorio")
+    .test("email-validation", "", (value) => !validateEmail(value)),
 });
+
+// Paleta de colores
+const primaryColor = "#006d77";
+const secondaryColor = "#78c1c8";
+const accentColor = "#e8f4f8";
+const bgGradient = "linear-gradient(135deg, #e8f4f8 0%, #ffffff 100%)";
+const textColor = "#1a3c40";
 
 const CrearPacienteSinCuenta = () => {
   const [mensaje, setMensaje] = useState(null);
@@ -55,11 +89,12 @@ const CrearPacienteSinCuenta = () => {
       email: "",
     },
     validationSchema: validationSchema,
+    validateOnChange: true,
+    validateOnBlur: true,
     onSubmit: async (values, { resetForm }) => {
       setLoading(true);
       try {
         const csrfToken = obtenerTokenCSRF();
-
         const response = await axios.post(
           "http://localhost:4000/api/pacientes-sin-plataforma/registrar",
           values,
@@ -73,249 +108,315 @@ const CrearPacienteSinCuenta = () => {
         );
         setMensaje({ tipo: "success", texto: response.data.mensaje });
         resetForm();
+        setTimeout(() => setMensaje(null), 3000);
       } catch (error) {
         setMensaje({
           tipo: "error",
           texto: error.response?.data?.mensaje || "Error al registrar paciente",
         });
+        setTimeout(() => setMensaje(null), 3000);
       } finally {
         setLoading(false);
       }
     },
   });
 
+  const inputStyle = {
+    "& .MuiOutlinedInput-root": {
+      transition: "all 0.3s ease-in-out",
+      "&:hover fieldset": { borderColor: secondaryColor },
+      "&.Mui-focused fieldset": { borderColor: primaryColor, borderWidth: "2px" },
+      borderRadius: "16px",
+      backgroundColor: "#fff",
+      boxShadow: "0 2px 8px rgba(0, 109, 119, 0.05)",
+      height: "60px",
+    },
+    "& .MuiInputLabel-root": {
+      color: textColor,
+      fontFamily: "'Poppins', sans-serif",
+      fontWeight: 500,
+      "&.Mui-focused": { color: primaryColor },
+    },
+    "& .MuiInputBase-input": {
+      fontFamily: "'Poppins', sans-serif",
+      color: textColor,
+      fontSize: "1rem",
+    },
+  };
+
+  const fieldVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.1, duration: 0.5, ease: "easeOut" },
+    }),
+  };
+
+  const buttonVariants = {
+    hover: { scale: 1.05 },
+    tap: { scale: 0.95 },
+  };
+
+  const alertVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+    exit: { opacity: 0, y: 50, transition: { duration: 0.5, ease: "easeIn" } },
+  };
+
+  const getErrorMessage = (fieldName) => {
+    const value = formik.values[fieldName];
+    if (!value) return formik.touched[fieldName] && formik.errors[fieldName];
+    switch (fieldName) {
+      case "nombre":
+      case "apellido_paterno":
+      case "apellido_materno":
+        return validateName(value);
+      case "telefono":
+        return validatePhoneNumber(value);
+      case "email":
+        return validateEmail(value);
+      case "fecha_nacimiento":
+        return formik.touched[fieldName] && formik.errors[fieldName];
+      default:
+        return formik.touched[fieldName] && formik.errors[fieldName];
+    }
+  };
+
   return (
     <Container
       component={motion.div}
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -50 }}
-      transition={{ duration: 0.5 }}
-      maxWidth="md"
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.7, ease: "easeOut" }}
+      maxWidth="lg" // Cambiado de "md" a "lg" para un formulario más ancho
       sx={{
-        mt: 5,
-        p: 4,
-        bgcolor: "#ffffff",
-        borderRadius: 2,
-        boxShadow: "0 6px 24px rgba(0, 0, 0, 0.08)", // Consistente con TratamientosEnCurso
-        border: "1px solid #78c1c8", // Consistente con TratamientosEnCurso
+        mt: 6,
+        p: 5,
+        background: bgGradient,
+        borderRadius: "24px",
+        boxShadow: "0 10px 40px rgba(0, 109, 119, 0.1)",
+        border: `1px solid ${accentColor}`,
         fontFamily: "'Poppins', sans-serif",
+        transition: "all 0.3s ease-in-out",
+        "&:hover": { boxShadow: "0 15px 50px rgba(0, 109, 119, 0.15)" },
       }}
     >
       <Typography
         variant="h5"
         align="center"
-        gutterBottom
-        sx={{ color: "#006d77", fontWeight: "bold", mb: 3 }}
+        component={motion.div}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        sx={{
+          fontWeight: 700,
+          color: primaryColor,
+          mb: 5,
+          letterSpacing: "2px",
+          textTransform: "uppercase",
+          fontSize: "1.75rem",
+          fontFamily: "'Poppins', sans-serif",
+          textShadow: "0 2px 4px rgba(0, 109, 119, 0.1)",
+        }}
       >
         Registrar Paciente sin Cuenta
       </Typography>
 
-      {mensaje && (
-        <Alert severity={mensaje.tipo} sx={{ mb: 3, borderRadius: "10px" }}>
-          {mensaje.texto}
-        </Alert>
-      )}
-
       <form onSubmit={formik.handleSubmit}>
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Nombre"
-              margin="normal"
-              {...formik.getFieldProps("nombre")}
-              error={formik.touched.nombre && Boolean(formik.errors.nombre)}
-              helperText={formik.touched.nombre && formik.errors.nombre}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "12px",
-                  "&:hover fieldset": { borderColor: "#78c1c8" },
-                  "&.Mui-focused fieldset": { borderColor: "#006d77" },
-                },
-                "& .MuiInputLabel-root": {
-                  color: "#03445e",
-                  fontFamily: "'Poppins', sans-serif",
-                },
-                "& .MuiInputBase-input": { fontFamily: "'Poppins', sans-serif" },
-              }}
-            />
+            <motion.div custom={0} initial="hidden" animate="visible" variants={fieldVariants}>
+              <TextField
+                fullWidth
+                label="Nombre"
+                {...formik.getFieldProps("nombre")}
+                error={Boolean(getErrorMessage("nombre"))}
+                helperText={getErrorMessage("nombre")}
+                sx={inputStyle}
+              />
+            </motion.div>
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Apellido Paterno"
-              margin="normal"
-              {...formik.getFieldProps("apellido_paterno")}
-              error={formik.touched.apellido_paterno && Boolean(formik.errors.apellido_paterno)}
-              helperText={formik.touched.apellido_paterno && formik.errors.apellido_paterno}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "12px",
-                  "&:hover fieldset": { borderColor: "#78c1c8" },
-                  "&.Mui-focused fieldset": { borderColor: "#006d77" },
-                },
-                "& .MuiInputLabel-root": {
-                  color: "#03445e",
-                  fontFamily: "'Poppins', sans-serif",
-                },
-                "& .MuiInputBase-input": { fontFamily: "'Poppins', sans-serif" },
-              }}
-            />
+            <motion.div custom={1} initial="hidden" animate="visible" variants={fieldVariants}>
+              <TextField
+                fullWidth
+                label="Apellido Paterno"
+                {...formik.getFieldProps("apellido_paterno")}
+                error={Boolean(getErrorMessage("apellido_paterno"))}
+                helperText={getErrorMessage("apellido_paterno")}
+                sx={inputStyle}
+              />
+            </motion.div>
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Apellido Materno"
-              margin="normal"
-              {...formik.getFieldProps("apellido_materno")}
-              error={formik.touched.apellido_materno && Boolean(formik.errors.apellido_materno)}
-              helperText={formik.touched.apellido_materno && formik.errors.apellido_materno}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "12px",
-                  "&:hover fieldset": { borderColor: "#78c1c8" },
-                  "&.Mui-focused fieldset": { borderColor: "#006d77" },
-                },
-                "& .MuiInputLabel-root": {
-                  color: "#03445e",
-                  fontFamily: "'Poppins', sans-serif",
-                },
-                "& .MuiInputBase-input": { fontFamily: "'Poppins', sans-serif" },
-              }}
-            />
+            <motion.div custom={2} initial="hidden" animate="visible" variants={fieldVariants}>
+              <TextField
+                fullWidth
+                label="Apellido Materno"
+                {...formik.getFieldProps("apellido_materno")}
+                error={Boolean(getErrorMessage("apellido_materno"))}
+                helperText={getErrorMessage("apellido_materno")}
+                sx={inputStyle}
+              />
+            </motion.div>
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Teléfono"
-              margin="normal"
-              {...formik.getFieldProps("telefono")}
-              error={formik.touched.telefono && Boolean(formik.errors.telefono)}
-              helperText={formik.touched.telefono && formik.errors.telefono}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "12px",
-                  "&:hover fieldset": { borderColor: "#78c1c8" },
-                  "&.Mui-focused fieldset": { borderColor: "#006d77" },
-                },
-                "& .MuiInputLabel-root": {
-                  color: "#03445e",
-                  fontFamily: "'Poppins', sans-serif",
-                },
-                "& .MuiInputBase-input": { fontFamily: "'Poppins', sans-serif" },
-              }}
-            />
+            <motion.div custom={3} initial="hidden" animate="visible" variants={fieldVariants}>
+              <TextField
+                fullWidth
+                label="Teléfono"
+                {...formik.getFieldProps("telefono")}
+                error={Boolean(getErrorMessage("telefono"))}
+                helperText={getErrorMessage("telefono")}
+                sx={inputStyle}
+              />
+            </motion.div>
           </Grid>
           <Grid item xs={12} md={6}>
-            <TextField
-              fullWidth
-              label="Fecha de Nacimiento"
-              type="date"
-              margin="normal"
-              InputLabelProps={{ shrink: true }}
-              {...formik.getFieldProps("fecha_nacimiento")}
-              error={formik.touched.fecha_nacimiento && Boolean(formik.errors.fecha_nacimiento)}
-              helperText={formik.touched.fecha_nacimiento && formik.errors.fecha_nacimiento}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "12px",
-                  "&:hover fieldset": { borderColor: "#78c1c8" },
-                  "&.Mui-focused fieldset": { borderColor: "#006d77" },
-                },
-                "& .MuiInputLabel-root": {
-                  color: "#03445e",
-                  fontFamily: "'Poppins', sans-serif",
-                },
-                "& .MuiInputBase-input": { fontFamily: "'Poppins', sans-serif" },
-              }}
-            />
+            <motion.div custom={4} initial="hidden" animate="visible" variants={fieldVariants}>
+              <TextField
+                fullWidth
+                label="Fecha de Nacimiento"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                {...formik.getFieldProps("fecha_nacimiento")}
+                error={Boolean(getErrorMessage("fecha_nacimiento"))}
+                helperText={getErrorMessage("fecha_nacimiento")}
+                sx={inputStyle}
+              />
+            </motion.div>
           </Grid>
           <Grid item xs={12} md={6}>
-            <FormControl fullWidth variant="outlined" margin="normal">
-              <InputLabel
-                sx={{
-                  color: "#03445e",
-                  fontFamily: "'Poppins', sans-serif",
-                  "&.Mui-focused": { color: "#006d77" },
-                }}
-              >
-                Sexo
-              </InputLabel>
-              <Select
-                value={formik.values.sexo}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                name="sexo"
-                error={formik.touched.sexo && Boolean(formik.errors.sexo)}
-                sx={{
-                  "& .MuiSelect-select": { fontFamily: "'Poppins', sans-serif" },
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "12px",
-                    "&:hover fieldset": { borderColor: "#78c1c8" },
-                    "&.Mui-focused fieldset": { borderColor: "#006d77" },
-                  },
-                }}
-              >
-                <MenuItem value="M" sx={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Masculino (M)
-                </MenuItem>
-                <MenuItem value="F" sx={{ fontFamily: "'Poppins', sans-serif" }}>
-                  Femenino (F)
-                </MenuItem>
-              </Select>
-              {formik.touched.sexo && formik.errors.sexo && (
-                <Typography color="error" variant="caption" sx={{ fontFamily: "'Poppins', sans-serif" }}>
-                  {formik.errors.sexo}
-                </Typography>
-              )}
-            </FormControl>
+            <motion.div custom={5} initial="hidden" animate="visible" variants={fieldVariants}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ fontFamily: "'Poppins', sans-serif", color: textColor }}>
+                  Sexo
+                </InputLabel>
+                <Select
+                  value={formik.values.sexo}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  name="sexo"
+                  error={formik.touched.sexo && Boolean(formik.errors.sexo)}
+                  sx={{
+                    ...inputStyle,
+                    "& .MuiSelect-select": { padding: "16px" },
+                  }}
+                >
+                  <MenuItem value="M" sx={{ fontFamily: "'Poppins', sans-serif" }}>
+                    Masculino (M)
+                  </MenuItem>
+                  <MenuItem value="F" sx={{ fontFamily: "'Poppins', sans-serif" }}>
+                    Femenino (F)
+                  </MenuItem>
+                </Select>
+                {formik.touched.sexo && formik.errors.sexo && (
+                  <Typography
+                    color="error"
+                    variant="caption"
+                    sx={{ fontFamily: "'Poppins', sans-serif", mt: 1 }}
+                  >
+                    {formik.errors.sexo}
+                  </Typography>
+                )}
+              </FormControl>
+            </motion.div>
           </Grid>
           <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Correo Electrónico"
-              type="email"
-              margin="normal"
-              {...formik.getFieldProps("email")}
-              error={formik.touched.email && Boolean(formik.errors.email)}
-              helperText={formik.touched.email && formik.errors.email}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "12px",
-                  "&:hover fieldset": { borderColor: "#78c1c8" },
-                  "&.Mui-focused fieldset": { borderColor: "#006d77" },
-                },
-                "& .MuiInputLabel-root": {
-                  color: "#03445e",
-                  fontFamily: "'Poppins', sans-serif",
-                },
-                "& .MuiInputBase-input": { fontFamily: "'Poppins', sans-serif" },
-              }}
-            />
+            <motion.div custom={6} initial="hidden" animate="visible" variants={fieldVariants}>
+              <TextField
+                fullWidth
+                label="Correo Electrónico"
+                type="email"
+                {...formik.getFieldProps("email")}
+                error={Boolean(getErrorMessage("email"))}
+                helperText={getErrorMessage("email")}
+                sx={inputStyle}
+              />
+            </motion.div>
           </Grid>
         </Grid>
 
-        <Box mt={4} textAlign="center">
+        <motion.div
+          variants={buttonVariants}
+          whileHover="hover"
+          whileTap="tap"
+          style={{ display: "flex", justifyContent: "center", marginTop: "2.5rem" }}
+        >
           <Button
             type="submit"
             variant="contained"
             sx={{
-              background: "linear-gradient(90deg, #006d77 0%, #78c1c8 100%)", // Consistente con TratamientosEnCurso
-              color: "#e0f7fa",
-              width: "100%",
-              py: 1.5,
-              "&:hover": {
-                background: "linear-gradient(90deg, #004d57 0%, #48cae4 100%)",
-              },
+              backgroundColor: primaryColor,
+              color: "#ffffff",
+              fontWeight: 600,
+              padding: "14px 50px",
+              borderRadius: "16px",
               fontFamily: "'Poppins', sans-serif",
+              fontSize: "1.1rem",
+              textTransform: "none",
+              boxShadow: "0 4px 15px rgba(0, 109, 119, 0.2)",
+              transition: "all 0.3s ease-in-out",
+              "&:hover": {
+                backgroundColor: secondaryColor,
+                boxShadow: "0 6px 20px rgba(0, 109, 119, 0.3)",
+                transform: "scale(1.05)",
+              },
+              "&:active": {
+                transform: "scale(0.95)",
+              },
+              "&:disabled": {
+                backgroundColor: "#b0bec5",
+                color: "#78909c",
+                boxShadow: "none",
+              },
             }}
             disabled={loading}
           >
-            {loading ? <CircularProgress size={24} sx={{ color: "#e0f7fa" }} /> : "Registrar Paciente"}
+            {loading ? (
+              <CircularProgress size={26} sx={{ color: "#ffffff" }} />
+            ) : (
+              "Registrar Paciente"
+            )}
           </Button>
-        </Box>
+        </motion.div>
       </form>
+
+      {mensaje && (
+        <Box sx={{ position: "fixed", bottom: 30, left: 30, zIndex: 2000 }}>
+          <motion.div
+            variants={alertVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <Alert
+              severity={mensaje.tipo}
+              variant="filled"
+              sx={{
+                minWidth: "300px",
+                backgroundColor:
+                  mensaje.tipo === "success"
+                    ? "#C8E6C9"
+                    : mensaje.tipo === "error"
+                    ? "#FFCDD2"
+                    : mensaje.tipo === "warning"
+                    ? "#FFE082"
+                    : "#B3E5FC",
+                color: textColor,
+                fontFamily: "'Poppins', sans-serif",
+                borderRadius: "12px",
+                boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
+                padding: "10px 20px",
+              }}
+              onClose={() => setMensaje(null)}
+            >
+              {mensaje.texto}
+            </Alert>
+          </motion.div>
+        </Box>
+      )}
     </Container>
   );
 };
