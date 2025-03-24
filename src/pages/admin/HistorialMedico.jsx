@@ -16,7 +16,7 @@ import {
   MenuItem,
   Alert,
 } from "@mui/material";
-import DientesImage from "../../assets/images/Dientes.jpg"; // Imagen de dientes
+import DientesImage from "../../assets/images/Dientes.jpg";
 
 const HistorialMedico = ({ open, handleClose, paciente }) => {
   const [signosVitales, setSignosVitales] = useState("");
@@ -31,9 +31,8 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
+  const [csrfToken, setCsrfToken] = useState(null);
 
-  // Obtener el token CSRF al montar el componente
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
@@ -41,7 +40,7 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
           credentials: "include",
         });
         const data = await response.json();
-        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+        setCsrfToken(data.csrfToken);
       } catch (error) {
         console.error("Error obteniendo el token CSRF:", error);
         setSnackbarMessage("Error al obtener el token CSRF");
@@ -54,7 +53,7 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
   }, []);
 
   const obtenerHistorial = async () => {
-    if (!csrfToken) return; // Esperar a que el token esté disponible
+    if (!csrfToken) return;
 
     try {
       const response = await fetch(`https://backenddent.onrender.com/api/historial/usuario/${paciente.id}`, {
@@ -87,7 +86,6 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
       }
 
       const historialOrdenado = data.sort((a, b) => new Date(b.fecha_registro) - new Date(a.fecha_registro));
-
       setHistoriales(historialOrdenado);
       setHistorialSeleccionado(historialOrdenado[0]);
       setTieneHistorial(true);
@@ -110,31 +108,57 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
       return;
     }
 
-    const fechaActual = new Date().toLocaleString("es-MX", { timeZone: "America/Mexico_City" });
-
-    const historialData = {
-      usuario_id: paciente.id,
-      signos_vitales: signosVitales,
-      bajo_tratamiento: bajoTratamiento === "Sí" ? 1 : 0,
-      tipo_tratamiento: tipoTratamiento,
-      medicamentos_recetados: medicamentos,
-      observaciones_medicas: comentario,
-      fecha_registro: fechaActual,
-    };
-
     try {
+      // Paso 1: Obtener la fecha y hora actual en Huejutla de Reyes
+      const fechaActual = new Date();
+      console.log("Fecha actual del sistema (sin ajustar):", fechaActual.toISOString());
+
+      // Paso 2: Ajustar a la zona horaria de "America/Mexico_City"
+      const fechaLocalString = fechaActual.toLocaleString("en-US", { timeZone: "America/Mexico_City" });
+      const fechaLocal = new Date(fechaLocalString);
+      console.log("Fecha ajustada a America/Mexico_City:", fechaLocal.toISOString());
+      console.log("Fecha ajustada en formato legible (America/Mexico_City):", fechaLocal.toLocaleString("es-MX"));
+
+      // Paso 3: Formatear la fecha en formato "YYYY-MM-DD HH:mm:ss" (hora local, sin zona horaria)
+      const year = fechaLocal.getFullYear();
+      const month = (fechaLocal.getMonth() + 1).toString().padStart(2, "0");
+      const day = fechaLocal.getDate().toString().padStart(2, "0");
+      const hours = fechaLocal.getHours().toString().padStart(2, "0");
+      const minutes = fechaLocal.getMinutes().toString().padStart(2, "0");
+      const seconds = fechaLocal.getSeconds().toString().padStart(2, "0");
+      const fechaFormateadaLocal = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      console.log("Fecha formateada para enviar (hora local, formato YYYY-MM-DD HH:mm:ss):", fechaFormateadaLocal);
+
+      // Paso 4: Preparar los datos para enviar
+      const historialData = {
+        usuario_id: paciente.id,
+        signos_vitales: signosVitales,
+        bajo_tratamiento: bajoTratamiento === "Sí" ? 1 : 0,
+        tipo_tratamiento: tipoTratamiento,
+        medicamentos_recetados: medicamentos,
+        observaciones_medicas: comentario,
+        fecha_registro: fechaFormateadaLocal,
+      };
+      console.log("Datos completos que se envían al servidor:", historialData);
+
+      // Paso 5: Enviar la solicitud al servidor
       const response = await fetch(`https://backenddent.onrender.com/api/historial/usuario/${paciente.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-XSRF-TOKEN": csrfToken, // Usar el token del estado
+          "X-XSRF-TOKEN": csrfToken,
         },
         credentials: "include",
         body: JSON.stringify(historialData),
       });
 
+      // Paso 6: Verificar la respuesta del servidor
+      console.log("Estado de la respuesta del servidor:", response.status);
+      const responseData = await response.json();
+      console.log("Respuesta completa del servidor:", responseData);
+
       if (!response.ok) {
-        throw new Error("⚠️ Error al guardar el historial");
+        throw new Error(`⚠️ Error al guardar el historial: ${responseData.message || response.statusText}`);
       }
 
       console.log("✅ Historial guardado correctamente");
@@ -147,7 +171,7 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
       setModoEdicion(false);
     } catch (error) {
       console.error("Error al guardar historial médico:", error);
-      setSnackbarMessage("Error al guardar historial médico");
+      setSnackbarMessage(`Error al guardar historial médico: ${error.message}`);
       setSnackbarSeverity("error");
       setOpenSnackbar(true);
     }
@@ -166,6 +190,32 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
     const historialSeleccionado = historiales.find((h) => h.id === event.target.value);
     setHistorialSeleccionado(historialSeleccionado);
   };
+
+  const formatearFecha = (fechaISO) => {
+    if (!fechaISO) return "Sin fecha";
+
+    // La fecha viene en formato "2025-03-23T21:40:39.000Z", pero sabemos que en realidad
+    // representa la hora local de Huejutla (America/Mexico_City), no UTC.
+    // Convertimos la fecha a una cadena y eliminamos el sufijo ".000Z" para tratarla como hora local.
+    const fechaStr = fechaISO.replace(".000Z", "");
+    const fecha = new Date(fechaStr);
+
+    const dia = fecha.getDate();
+    const mes = [
+        "enero", "febrero", "marzo", "abril", "mayo", "junio",
+        "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ][fecha.getMonth()];
+    const anio = fecha.getFullYear();
+    let hora = fecha.getHours();
+    const minutos = fecha.getMinutes().toString().padStart(2, "0");
+    const ampm = hora >= 12 ? "PM" : "AM";
+    hora = hora % 12 || 12;
+
+    return `${dia} de ${mes} del ${anio} a las ${hora}:${minutos} ${ampm}`;
+  };
+
+  // Simplificación del valor para el Select de "Bajo Tratamiento"
+  const valorBajoTratamiento = modoEdicion ? bajoTratamiento : (historialSeleccionado?.bajo_tratamiento ? "Sí" : "No");
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
@@ -229,7 +279,7 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                         value={historial.id}
                         sx={{ fontFamily: "'Poppins', sans-serif" }}
                       >
-                        {new Date(historial.fecha_registro).toLocaleString("es-MX")}
+                        {formatearFecha(historial.fecha_registro)}
                       </MenuItem>
                     ))}
                   </Select>
@@ -335,23 +385,6 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                 </Grid>
                 <Grid item xs={12} md={6}>
                   <TextField
-                    label="Ocupación"
-                    fullWidth
-                    variant="outlined"
-                    value={paciente?.ocupacion || "No especificada"}
-                    InputProps={{ readOnly: true }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "12px",
-                        "&:hover fieldset": { borderColor: "#78c1c8" },
-                        "&.Mui-focused fieldset": { borderColor: "#006d77" },
-                      },
-                      "& .MuiInputLabel-root": { color: "#03445e", fontFamily: "'Poppins', sans-serif" },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
                     label="Teléfono"
                     fullWidth
                     variant="outlined"
@@ -373,23 +406,6 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                     fullWidth
                     variant="outlined"
                     value={paciente?.email || ""}
-                    InputProps={{ readOnly: true }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "12px",
-                        "&:hover fieldset": { borderColor: "#78c1c8" },
-                        "&.Mui-focused fieldset": { borderColor: "#006d77" },
-                      },
-                      "& .MuiInputLabel-root": { color: "#03445e", fontFamily: "'Poppins', sans-serif" },
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Dirección"
-                    fullWidth
-                    variant="outlined"
-                    value={paciente?.direccion || "No disponible"}
                     InputProps={{ readOnly: true }}
                     sx={{
                       "& .MuiOutlinedInput-root": {
@@ -453,7 +469,7 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                       Bajo Tratamiento
                     </InputLabel>
                     <Select
-                      value={modoEdicion ? bajoTratamiento : historialSeleccionado?.bajo_tratamiento ? "Sí" : "No"}
+                      value={valorBajoTratamiento}
                       onChange={(e) => setBajoTratamiento(e.target.value)}
                       label="Bajo Tratamiento"
                       disabled={!modoEdicion}

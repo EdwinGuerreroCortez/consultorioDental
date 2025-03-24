@@ -23,7 +23,7 @@ import {
   validateEmail,
 } from "../../utils/validations";
 
-// Esquema de validación con Yup (sin cambios)
+// Esquema de validación con Yup
 const validationSchema = Yup.object({
   nombre: Yup.string()
     .required("El nombre es obligatorio")
@@ -56,8 +56,11 @@ const validationSchema = Yup.object({
     .oneOf(["M", "F"], "Debe seleccionar 'M' o 'F'")
     .required("El sexo es obligatorio"),
   email: Yup.string()
-    .required("El correo es obligatorio")
-    .test("email-validation", "", (value) => !validateEmail(value)),
+    .nullable()
+    .test("email-validation", "El correo no es válido", (value) => {
+      if (!value) return true;
+      return !validateEmail(value);
+    }),
 });
 
 // Paleta de colores
@@ -70,9 +73,8 @@ const textColor = "#1a3c40";
 const CrearPacienteSinCuenta = () => {
   const [mensaje, setMensaje] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
+  const [csrfToken, setCsrfToken] = useState(null);
 
-  // Obtener el token CSRF al cargar el componente
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
@@ -80,7 +82,7 @@ const CrearPacienteSinCuenta = () => {
           credentials: "include",
         });
         const data = await response.json();
-        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+        setCsrfToken(data.csrfToken);
       } catch (error) {
         console.error("Error obteniendo el token CSRF:", error);
         setMensaje({ tipo: "error", texto: "Error al obtener el token CSRF" });
@@ -106,24 +108,53 @@ const CrearPacienteSinCuenta = () => {
     onSubmit: async (values, { resetForm }) => {
       setLoading(true);
       try {
+        const fechaActual = new Date();
+        console.log("Fecha actual del sistema (sin ajustar):", fechaActual.toISOString());
+
+        const fechaLocalString = fechaActual.toLocaleString("en-US", { timeZone: "America/Mexico_City" });
+        const fechaLocal = new Date(fechaLocalString);
+        console.log("Fecha ajustada a America/Mexico_City:", fechaLocal.toISOString());
+        console.log("Fecha ajustada en formato legible (America/Mexico_City):", fechaLocal.toLocaleString("es-MX"));
+
+        const year = fechaLocal.getFullYear();
+        const month = (fechaLocal.getMonth() + 1).toString().padStart(2, "0");
+        const day = fechaLocal.getDate().toString().padStart(2, "0");
+        const hours = fechaLocal.getHours().toString().padStart(2, "0");
+        const minutes = fechaLocal.getMinutes().toString().padStart(2, "0");
+        const seconds = fechaLocal.getSeconds().toString().padStart(2, "0");
+        const fechaFormateadaLocal = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        console.log("Fecha formateada para enviar (hora local, formato YYYY-MM-DD HH:mm:ss):", fechaFormateadaLocal);
+
+        const datosPaciente = {
+          ...values,
+          fecha_registro: fechaFormateadaLocal,
+        };
+        console.log("Datos completos que se envían al servidor:", datosPaciente);
+
         const response = await axios.post(
           "https://backenddent.onrender.com/api/pacientes-sin-plataforma/registrar",
-          values,
+          datosPaciente,
           {
             headers: {
-              "X-XSRF-TOKEN": csrfToken, // Usar el token del estado
+              "X-XSRF-TOKEN": csrfToken,
               "Content-Type": "application/json",
             },
             withCredentials: true,
           }
         );
+
+        console.log("Estado de la respuesta del servidor:", response.status);
+        console.log("Respuesta completa del servidor:", response.data);
+
         setMensaje({ tipo: "success", texto: response.data.mensaje });
         resetForm();
         setTimeout(() => setMensaje(null), 3000);
       } catch (error) {
+        console.error("Error al registrar paciente:", error);
+        const errorMessage = error.response?.data?.mensaje || "Error al registrar paciente";
         setMensaje({
           tipo: "error",
-          texto: error.response?.data?.mensaje || "Error al registrar paciente",
+          texto: errorMessage,
         });
         setTimeout(() => setMensaje(null), 3000);
       } finally {
@@ -338,7 +369,7 @@ const CrearPacienteSinCuenta = () => {
             <motion.div custom={6} initial="hidden" animate="visible" variants={fieldVariants}>
               <TextField
                 fullWidth
-                label="Correo Electrónico"
+                label="Correo Electrónico (Opcional)"
                 type="email"
                 {...formik.getFieldProps("email")}
                 error={Boolean(getErrorMessage("email"))}

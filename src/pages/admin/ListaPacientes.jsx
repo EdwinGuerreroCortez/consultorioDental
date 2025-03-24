@@ -26,8 +26,8 @@ const ListaPacientes = () => {
   const [pacientes, setPacientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1); // Cambiado a 1 para coincidir con Pagination
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [page, setPage] = useState(1); // Paginación comienza en 1
+  const [rowsPerPage] = useState(5); // 5 pacientes por página
   const [estadoCuentas, setEstadoCuentas] = useState({});
   const [showSearch, setShowSearch] = useState(false);
   const [openHistorial, setOpenHistorial] = useState(false);
@@ -62,6 +62,7 @@ const ListaPacientes = () => {
     }));
   };
 
+  // Filtrar pacientes según el término de búsqueda
   const filteredPacientes = pacientes.filter(
     (paciente) =>
       paciente.nombre.toLowerCase().includes(search.toLowerCase()) ||
@@ -70,7 +71,19 @@ const ListaPacientes = () => {
       paciente.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleChangePage = (event, newPage) => setPage(newPage);
+  // Calcular el número total de páginas basado en los pacientes filtrados
+  const totalPages = Math.ceil(filteredPacientes.length / rowsPerPage);
+
+  // Asegurarse de que la página actual no exceda el número total de páginas
+  useEffect(() => {
+    if (page > totalPages && totalPages > 0) {
+      setPage(totalPages);
+    }
+  }, [filteredPacientes, page, totalPages]);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
 
   const handleOpenHistorial = (paciente) => {
     if (!paciente || !paciente.id) {
@@ -90,7 +103,7 @@ const ListaPacientes = () => {
 
   const cellStyle = {
     textAlign: "center",
-    color: "#03445e", // Consistente con TratamientosEnCurso
+    color: "#03445e",
     fontFamily: "'Poppins', sans-serif",
     fontSize: "1rem",
     py: "20px",
@@ -109,13 +122,26 @@ const ListaPacientes = () => {
         maxWidth: "1400px",
         mx: "auto",
         fontFamily: "'Poppins', sans-serif",
-        backgroundColor: "#f9fbfd", // Consistente con TratamientosEnCurso
+        backgroundColor: "#f9fbfd",
       }}
     >
-      {/* Contenedor del buscador en la esquina superior derecha */}
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
+      {/* Contenedor del buscador en la esquina superior izquierda */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "flex-start",
+          alignItems: "center",
+          mb: 4, // Margen inferior para separar del formulario
+          width: "100%",
+          maxWidth: "1400px",
+          backgroundColor: "#ffffff",
+          borderRadius: "12px",
+          boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+          p: 2, // Padding para que se vea más separado
+        }}
+      >
         <IconButton onClick={() => setShowSearch(!showSearch)}>
-          <SearchIcon sx={{ color: "#006d77", fontSize: 30 }} /> {/* Consistente con TratamientosEnCurso */}
+          <SearchIcon sx={{ color: "#006d77", fontSize: 30 }} />
         </IconButton>
         {showSearch && (
           <motion.div
@@ -135,13 +161,13 @@ const ListaPacientes = () => {
                 "& .MuiOutlinedInput-root": {
                   borderRadius: "12px",
                   backgroundColor: "#fff",
-                  "&:hover fieldset": { borderColor: "#78c1c8" }, // Consistente con TratamientosEnCurso
-                  "&.Mui-focused fieldset": { borderColor: "#006d77" }, // Consistente con TratamientosEnCurso
+                  "&:hover fieldset": { borderColor: "#78c1c8" },
+                  "&.Mui-focused fieldset": { borderColor: "#006d77" },
                 },
                 "& .MuiInputLabel-root": {
                   fontFamily: "'Poppins', sans-serif",
                   color: "#03445e",
-                  "&.Mui-focused": { color: "#006d77" }, // Consistente con TratamientosEnCurso
+                  "&.Mui-focused": { color: "#006d77" },
                 },
               }}
             />
@@ -161,14 +187,14 @@ const ListaPacientes = () => {
               backgroundColor: "#ffffff",
               borderRadius: "16px",
               boxShadow: "0 6px 24px rgba(0, 0, 0, 0.08)",
-              border: "1px solid #78c1c8", // Consistente con TratamientosEnCurso
+              border: "1px solid #78c1c8",
             }}
           >
             <CircularProgress
               size={80}
               thickness={4}
               sx={{
-                color: "#006d77", // Consistente con TratamientosEnCurso
+                color: "#006d77",
                 "& .MuiCircularProgress-circle": { strokeLinecap: "round" },
               }}
             />
@@ -182,13 +208,13 @@ const ListaPacientes = () => {
                 boxShadow: "0 6px 24px rgba(0, 0, 0, 0.08)",
                 overflow: "hidden",
                 background: "#ffffff",
-                border: "1px solid #78c1c8", // Consistente con TratamientosEnCurso
+                border: "1px solid #78c1c8",
               }}
             >
               <Table>
                 <TableHead
                   sx={{
-                    background: "linear-gradient(90deg, #006d77 0%, #78c1c8 100%)", // Consistente con TratamientosEnCurso
+                    background: "linear-gradient(90deg, #006d77 0%, #78c1c8 100%)",
                   }}
                 >
                   <TableRow>
@@ -224,9 +250,9 @@ const ListaPacientes = () => {
                           key={index}
                           sx={{
                             "&:hover": {
-                              backgroundColor: "#e0f7fa", // Consistente con TratamientosEnCurso
+                              backgroundColor: "#e0f7fa",
                               transition: "background-color 0.2s",
-                              boxShadow: "inset 0 2px 10px rgba(0, 0, 0, 0.05)", // Consistente con TratamientosEnCurso
+                              boxShadow: "inset 0 2px 10px rgba(0, 0, 0, 0.05)",
                             },
                             borderBottom: "1px solid #eef3f7",
                           }}
@@ -246,7 +272,7 @@ const ListaPacientes = () => {
                           <TableCell sx={{ ...cellStyle, display: "flex", justifyContent: "center", gap: 2 }}>
                             <Tooltip title="Historial Médico" arrow>
                               <IconButton onClick={() => handleOpenHistorial(paciente)}>
-                                <HistoryIcon sx={{ color: "#006d77", fontSize: 28 }} /> {/* Consistente con TratamientosEnCurso */}
+                                <HistoryIcon sx={{ color: "#006d77", fontSize: 28 }} />
                               </IconButton>
                             </Tooltip>
                             <Tooltip
@@ -276,7 +302,7 @@ const ListaPacientes = () => {
             </TableContainer>
             <Box sx={{ display: "flex", justifyContent: "center", mt: "2rem", mb: "4rem" }}>
               <Pagination
-                count={Math.ceil(filteredPacientes.length / rowsPerPage)}
+                count={totalPages}
                 page={page}
                 onChange={handleChangePage}
                 color="primary"
@@ -289,19 +315,19 @@ const ListaPacientes = () => {
                     borderRadius: "10px",
                     backgroundColor: "#ffffff",
                     boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-                    color: "#006d77", // Consistente con TratamientosEnCurso
+                    color: "#006d77",
                     fontFamily: "'Poppins', sans-serif",
                     "&:hover": {
-                      backgroundColor: "#78c1c8", // Consistente con TratamientosEnCurso
+                      backgroundColor: "#78c1c8",
                       color: "#ffffff",
                       transition: "all 0.3s ease",
                     },
                   },
                   "& .Mui-selected": {
-                    backgroundColor: "#006d77", // Consistente con TratamientosEnCurso
-                    color: "#e0f7fa", // Consistente con TratamientosEnCurso
+                    backgroundColor: "#006d77",
+                    color: "#e0f7fa",
                     "&:hover": {
-                      backgroundColor: "#004d57", // Consistente con TratamientosEnCurso
+                      backgroundColor: "#004d57",
                       transition: "all 0.3s ease",
                     },
                   },
