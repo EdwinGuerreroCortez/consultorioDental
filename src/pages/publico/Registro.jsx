@@ -25,8 +25,8 @@ import {
   Lock,
   ArrowBack,
   ArrowForward,
-  CheckCircle,
-} from "@mui/icons-material"; // Importamos los íconos necesarios
+  CheckCircle, // Corregido de CheckCircleIllustration a CheckCircle
+} from "@mui/icons-material";
 import axios from "axios";
 import "./bubbles.css";
 import {
@@ -62,9 +62,27 @@ const Registro = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
+  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
   const navigate = useNavigate();
 
   const steps = ["Datos Personales", "Cuenta", "Verificación"];
+
+  // Obtener el token CSRF al montar el componente
+  useEffect(() => {
+    const obtenerTokenCSRF = async () => {
+      try {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+      } catch (error) {
+        console.error("Error obteniendo el token CSRF:", error);
+        setAlert({ open: true, message: "Error al obtener el token CSRF", severity: "error" });
+      }
+    };
+    obtenerTokenCSRF();
+  }, []);
 
   useEffect(() => {
     const generatedBubbles = Array.from({ length: 20 }).map(() => ({
@@ -76,14 +94,6 @@ const Registro = () => {
     setBubbles(generatedBubbles);
   }, []);
 
-  const obtenerTokenCSRF = () => {
-    const csrfToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1];
-    return csrfToken || "";
-  };
-
   const handleNext = async () => {
     if (!validateStep()) {
       setAlert({
@@ -94,16 +104,20 @@ const Registro = () => {
       return;
     }
 
+    if (!csrfToken) {
+      setAlert({ open: true, message: "Error: Token CSRF no disponible", severity: "error" });
+      return;
+    }
+
     if (step === steps.length - 1) {
       try {
-        const csrfToken = obtenerTokenCSRF();
         console.log("Datos enviados a la verificación:", {
           email: formData.correo,
           codigo: formData.codigoVerificacion,
         });
 
         const response = await axios.post(
-          "http://localhost:4000/api/usuarios/verificar",
+          "https://backenddent.onrender.com/api/usuarios/verificar",
           {
             email: formData.correo,
             codigo: formData.codigoVerificacion,
@@ -129,10 +143,8 @@ const Registro = () => {
       }
     } else if (step === 1) {
       try {
-        const csrfToken = obtenerTokenCSRF();
-
         await axios.post(
-          "http://localhost:4000/api/usuarios/registrar",
+          "https://backenddent.onrender.com/api/usuarios/registrar",
           {
             nombre: formData.nombre,
             apellido_paterno: formData.apellidoPaterno,
@@ -300,9 +312,9 @@ const Registro = () => {
         <Paper
           elevation={6}
           sx={{
-            padding: { xs: "16px", sm: "24px", md: "50px" }, // Responsive padding
-            width: "100%", // Full width on all screens
-            maxWidth: "100%", // Ensure it doesn't exceed viewport
+            padding: { xs: "16px", sm: "24px", md: "50px" },
+            width: "100%",
+            maxWidth: "100%",
             borderRadius: "20px",
             backgroundColor: "rgba(255, 255, 255, 0.85)",
             backdropFilter: "blur(10px)",
@@ -316,10 +328,10 @@ const Registro = () => {
               color: "#003087",
               textAlign: "center",
               fontWeight: "700",
-              marginBottom: { xs: "16px", md: "30px" }, // Responsive margin
+              marginBottom: { xs: "16px", md: "30px" },
               fontFamily: "'Poppins', sans-serif",
               textShadow: "1px 1px 2px rgba(0, 0, 0, 0.1)",
-              fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" }, // Responsive font size
+              fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" },
             }}
           >
             Registro - {steps[step]}
@@ -329,9 +341,9 @@ const Registro = () => {
             activeStep={step}
             alternativeLabel
             sx={{
-              marginBottom: { xs: "16px", md: "40px" }, // Responsive margin
+              marginBottom: { xs: "16px", md: "40px" },
               "& .MuiStepLabel-label": {
-                fontSize: { xs: "0.9rem", sm: "1.1rem", md: "1.2rem" }, // Responsive font size
+                fontSize: { xs: "0.9rem", sm: "1.1rem", md: "1.2rem" },
               },
             }}
           >
@@ -358,7 +370,7 @@ const Registro = () => {
                 <Box
                   sx={{
                     display: "flex",
-                    flexDirection: { xs: "column", sm: "row" }, // Stack on mobile, row on larger screens
+                    flexDirection: { xs: "column", sm: "row" },
                     gap: { xs: "16px", md: "30px" },
                   }}
                 >
@@ -845,7 +857,7 @@ const Registro = () => {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <CheckCircleIllustration sx={{ color: "#003087" }} />
+                      <CheckCircle sx={{ color: "#003087" }} /> {/* Corregido aquí */}
                     </InputAdornment>
                   ),
                 }}

@@ -214,13 +214,31 @@ const AgendarCita = () => {
     const [citasOcupadas, setCitasOcupadas] = useState([]);
     const [alerta, setAlerta] = useState({ mostrar: false, mensaje: '', tipo: '' });
     const [isLoading, setIsLoading] = useState(false);
+    const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
 
     const ultimaFechaConsultada = useRef(null);
 
     const axiosInstance = useMemo(() => axios.create({
-        baseURL: 'http://localhost:4000/api',
+        baseURL: 'https://backenddent.onrender.com/api',
         withCredentials: true,
     }), []);
+
+    // Obtener el token CSRF al montar el componente
+    useEffect(() => {
+        const obtenerTokenCSRF = async () => {
+            try {
+                const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+                    credentials: "include",
+                });
+                const data = await response.json();
+                setCsrfToken(data.csrfToken); // Guardar el token en el estado
+            } catch (error) {
+                console.error("Error obteniendo el token CSRF:", error);
+                setAlerta({ mostrar: true, mensaje: "Error al obtener el token CSRF", tipo: "error" });
+            }
+        };
+        obtenerTokenCSRF();
+    }, []);
 
     useEffect(() => {
         const obtenerUsuario = async () => {
@@ -247,23 +265,27 @@ const AgendarCita = () => {
     }, []);
 
     useEffect(() => {
-        if (usuarioId) {
+        if (usuarioId && csrfToken) {
             verificarTratamientoActivo();
             obtenerTratamientos();
         }
-    }, [usuarioId]);
+    }, [usuarioId, csrfToken]);
 
     useEffect(() => {
-        if (fechaSeleccionada && ultimaFechaConsultada.current !== fechaSeleccionada) {
+        if (fechaSeleccionada && ultimaFechaConsultada.current !== fechaSeleccionada && csrfToken) {
             obtenerCitasOcupadas();
             ultimaFechaConsultada.current = fechaSeleccionada;
         }
-    }, [fechaSeleccionada]);
+    }, [fechaSeleccionada, csrfToken]);
 
     const obtenerCitasOcupadas = useCallback(async () => {
+        if (!csrfToken) return; // Esperar a que el token esté disponible
+
         try {
             setIsLoading(true);
-            const response = await axiosInstance.get('/citas/activas');
+            const response = await axiosInstance.get('/citas/activas', {
+                headers: { "X-XSRF-TOKEN": csrfToken },
+            });
             const citas = response.data || [];
             const citasConZonaHoraria = citas.map(cita => {
                 const fechaUTC = new Date(cita.fecha_hora);
@@ -286,13 +308,16 @@ const AgendarCita = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [axiosInstance]);
+    }, [axiosInstance, csrfToken]);
 
     const verificarTratamientoActivo = useCallback(async () => {
-        if (!usuarioId) return;
+        if (!usuarioId || !csrfToken) return;
+
         try {
             setIsLoading(true);
-            const response = await axiosInstance.get(`/tratamientos-pacientes/verificar/${usuarioId}`);
+            const response = await axiosInstance.get(`/tratamientos-pacientes/verificar/${usuarioId}`, {
+                headers: { "X-XSRF-TOKEN": csrfToken },
+            });
             setTratamientoActivo(response.data.tieneTratamientoActivo);
             if (response.data.tieneTratamientoActivo) {
                 setAlerta({
@@ -311,13 +336,16 @@ const AgendarCita = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [axiosInstance, usuarioId]);
+    }, [axiosInstance, usuarioId, csrfToken]);
 
     const obtenerTratamientos = useCallback(async () => {
-        if (!usuarioId) return;
+        if (!usuarioId || !csrfToken) return;
+
         try {
             setIsLoading(true);
-            const response = await axiosInstance.get('/tratamientos');
+            const response = await axiosInstance.get('/tratamientos', {
+                headers: { "X-XSRF-TOKEN": csrfToken },
+            });
             setServicios(response.data.filter(tratamiento => tratamiento.estado === 1));
         } catch (error) {
             setAlerta({
@@ -328,7 +356,7 @@ const AgendarCita = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [axiosInstance, usuarioId]);
+    }, [axiosInstance, usuarioId, csrfToken]);
 
     const obtenerHorasDisponibles = useMemo(() => {
         if (!fechaSeleccionada) return disponibilidad;
@@ -349,15 +377,9 @@ const AgendarCita = () => {
         return disponibilidad.filter(hora => !horasOcupadas.includes(hora));
     }, [fechaSeleccionada, citasOcupadas, disponibilidad]);
 
-    const obtenerTokenCSRF = useCallback(() => {
-        const csrfToken = document.cookie
-            .split("; ")
-            .find(row => row.startsWith("XSRF-TOKEN="))
-            ?.split("=")[1];
-        return csrfToken || "";
-    }, []);
-
     const handleAgendarCita = useCallback(async () => {
+        if (!csrfToken) return; // Esperar a que el token esté disponible
+
         if (!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada) {
             setAlerta({
                 mostrar: true,
@@ -369,7 +391,6 @@ const AgendarCita = () => {
 
         try {
             setIsLoading(true);
-            const csrfToken = obtenerTokenCSRF();
             const tratamientoSeleccionado = servicios.find(s => s.nombre === servicioSeleccionado);
             const estadoTratamiento = tratamientoSeleccionado.requiere_evaluacion ? 'pendiente' : 'en progreso';
             const fechaISO = new Date(fechaSeleccionada).toISOString().split('T')[0];
@@ -423,7 +444,7 @@ const AgendarCita = () => {
         usuarioId,
         servicios,
         axiosInstance,
-        obtenerTokenCSRF,
+        csrfToken,
     ]);
 
     const handleBack = useCallback(() => {
@@ -555,12 +576,11 @@ const AgendarCita = () => {
                                         <Typography
                                             variant="subtitle1"
                                             sx={{
-                                                fontWeight: "medium",
                                                 color: "#003087",
                                                 mb: 1,
                                                 fontFamily: "'Poppins', sans-serif",
                                                 fontSize: { xs: "0.9rem", md: "1rem" },
-                                                fontWeight: "bold" 
+                                                fontWeight: "bold"
                                             }}
                                         >
                                             Selecciona un servicio
@@ -611,11 +631,10 @@ const AgendarCita = () => {
                                         <Typography
                                             variant="subtitle1"
                                             sx={{
-                                                fontWeight: "medium",
                                                 color: "#003087",
                                                 mb: 1,
                                                 fontFamily: "'Poppins', sans-serif",
-                                                fontWeight: "bold" ,
+                                                fontWeight: "bold",
                                             }}
                                         >
                                             Fecha de la cita
@@ -671,11 +690,10 @@ const AgendarCita = () => {
                                         <Typography
                                             variant="subtitle1"
                                             sx={{
-                                                fontWeight: "medium",
                                                 color: "#003087",
                                                 mb: 1,
                                                 fontFamily: "'Poppins', sans-serif",
-                                                fontWeight: "bold" ,
+                                                fontWeight: "bold",
                                             }}
                                         >
                                             Hora de la cita

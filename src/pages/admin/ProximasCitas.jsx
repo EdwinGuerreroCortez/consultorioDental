@@ -117,10 +117,35 @@ const ProximasCitas = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
+
+  // Obtener el token CSRF al montar el componente
+  useEffect(() => {
+    const obtenerTokenCSRF = async () => {
+      try {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+      } catch (error) {
+        console.error("Error obteniendo el token CSRF:", error);
+        setSnackbarMessage("Error al obtener el token CSRF");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+      }
+    };
+    obtenerTokenCSRF();
+  }, []);
 
   const fetchCitas = async () => {
+    if (!csrfToken) return; // Esperar a que el token esté disponible
+
     try {
-      const response = await axios.get("http://localhost:4000/api/citas/proximas");
+      const response = await axios.get("https://backenddent.onrender.com/api/citas/proximas", {
+        headers: { "X-XSRF-TOKEN": csrfToken },
+        withCredentials: true,
+      });
       const citasFiltradas = response.data.filter(
         (cita) => !(cita.estado_cita === "completada" && cita.estado_pago === "Pagado")
       );
@@ -135,7 +160,7 @@ const ProximasCitas = () => {
       }));
 
       setCitas(citasFormateadas);
-      const citasOcupadasData = await obtenerCitasOcupadas();
+      const citasOcupadasData = await obtenerCitasOcupadas(); // Asegúrate de que esta función también use el token si es necesario
       setCitasOcupadas(citasOcupadasData);
     } catch (error) {
       console.error("Error al obtener las próximas citas", error);
@@ -145,8 +170,10 @@ const ProximasCitas = () => {
   };
 
   useEffect(() => {
-    fetchCitas();
-  }, []);
+    if (csrfToken) {
+      fetchCitas();
+    }
+  }, [csrfToken]);
 
   useEffect(() => {
     if (nuevaFecha) {
@@ -159,6 +186,8 @@ const ProximasCitas = () => {
   };
 
   const handleConfirmReagendar = async () => {
+    if (!csrfToken) return; // Esperar a que el token esté disponible
+
     if (!nuevaFecha || !nuevaHora) {
       setSnackbarMessage("Por favor, selecciona una fecha y hora.");
       setSnackbarSeverity("warning");
@@ -180,9 +209,8 @@ const ProximasCitas = () => {
     const nuevaFechaHora = `${fechaFormateada}T${horaFormateada}`;
 
     try {
-      const csrfToken = obtenerTokenCSRF();
       await axios.put(
-        `http://localhost:4000/api/citas/actualizar-fecha-hora/${selectedCita.cita_id}`,
+        `https://backenddent.onrender.com/api/citas/actualizar-fecha-hora/${selectedCita.cita_id}`,
         { fechaHora: nuevaFechaHora },
         {
           headers: { "X-XSRF-TOKEN": csrfToken },
@@ -203,19 +231,13 @@ const ProximasCitas = () => {
     }
   };
 
-  const obtenerTokenCSRF = () => {
-    const csrfToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1];
-    return csrfToken || "";
-  };
-
   const handleMarkAsCompleted = () => {
     setIsConfirming(true);
   };
 
   const handleConfirmCompletion = async () => {
+    if (!csrfToken) return; // Esperar a que el token esté disponible
+
     if (!comentario.trim()) {
       setSnackbarMessage("Por favor, ingresa un comentario.");
       setSnackbarSeverity("warning");
@@ -224,9 +246,8 @@ const ProximasCitas = () => {
     }
 
     try {
-      const csrfToken = obtenerTokenCSRF();
       await axios.put(
-        `http://localhost:4000/api/citas/completar/${selectedCita.cita_id}`,
+        `https://backenddent.onrender.com/api/citas/completar/${selectedCita.cita_id}`,
         { comentario },
         {
           headers: { "X-XSRF-TOKEN": csrfToken },

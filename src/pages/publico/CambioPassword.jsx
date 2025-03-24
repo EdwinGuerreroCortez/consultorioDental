@@ -55,12 +55,30 @@ const CambioPassword = () => {
   const [alert, setAlert] = useState({ open: false, message: "", severity: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
   const navigate = useNavigate();
   const location = useLocation();
 
   // Get token from URL
   const queryParams = new URLSearchParams(location.search);
   const token = queryParams.get("token");
+
+  // Obtener el token CSRF al montar el componente
+  useEffect(() => {
+    const obtenerTokenCSRF = async () => {
+      try {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+      } catch (error) {
+        console.error("Error obteniendo el token CSRF:", error);
+        setAlert({ open: true, message: "Error al obtener el token CSRF", severity: "error" });
+      }
+    };
+    obtenerTokenCSRF();
+  }, []);
 
   useEffect(() => {
     if (!token) {
@@ -94,16 +112,13 @@ const CambioPassword = () => {
     }
   };
 
-  const obtenerTokenCSRF = () => {
-    const csrfToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1];
-    return csrfToken || "";
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!csrfToken) {
+      setAlert({ open: true, message: "Error: Token CSRF no disponible", severity: "error" });
+      return;
+    }
 
     if (errors.password || errors.confirmPassword || password !== confirmPassword || !token) {
       setErrors((prevErrors) => ({
@@ -113,10 +128,9 @@ const CambioPassword = () => {
       return;
     }
 
-    const csrfToken = obtenerTokenCSRF();
     try {
       await axios.post(
-        "http://localhost:4000/api/usuarios/cambiar-password",
+        "https://backenddent.onrender.com/api/usuarios/cambiar-password",
         { token, nuevaPassword: password },
         {
           headers: {

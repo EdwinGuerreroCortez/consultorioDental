@@ -37,7 +37,7 @@ const ListaPacientes = () => {
     const fetchPacientes = async () => {
       setLoading(true);
       try {
-        const response = await fetch("http://localhost:4000/api/pacientes-sin-plataforma");
+        const response = await fetch("https://backenddent.onrender.com/api/pacientes-sin-plataforma");
         const data = await response.json();
         setPacientes(data);
 

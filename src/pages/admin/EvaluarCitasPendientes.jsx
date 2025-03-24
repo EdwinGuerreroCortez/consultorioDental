@@ -59,6 +59,7 @@ export default function EvaluarCitasPendientes() {
   const [horaSeleccionada, setHoraSeleccionada] = useState("");
   const [citasOcupadas, setCitasOcupadas] = useState([]);
   const [citasPorTratamiento, setCitasPorTratamiento] = useState({});
+  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
 
   const disponibilidad = [
     "09:00 AM",
@@ -72,6 +73,27 @@ export default function EvaluarCitasPendientes() {
     "06:00 PM",
   ];
   const [alerta, setAlerta] = useState({ mostrar: false, mensaje: "", tipo: "" });
+
+  // Obtener el token CSRF al cargar el componente
+  useEffect(() => {
+    const obtenerTokenCSRF = async () => {
+      try {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+      } catch (error) {
+        console.error("Error obteniendo el token CSRF:", error);
+        setAlerta({
+          mostrar: true,
+          mensaje: "Error al obtener el token CSRF",
+          tipo: "error",
+        });
+      }
+    };
+    obtenerTokenCSRF();
+  }, []);
 
   const inputStyle = {
     "& .MuiOutlinedInput-root": {
@@ -136,14 +158,6 @@ export default function EvaluarCitasPendientes() {
     setOpenAgendar(false);
   };
 
-  const obtenerTokenCSRF = () => {
-    const csrfToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1];
-    return csrfToken || "";
-  };
-
   const actualizarCita = async () => {
     const proximaCitaId = obtenerProximaCitaId();
     if (!proximaCitaId || !fechaSeleccionada || !horaSeleccionada) {
@@ -172,15 +186,18 @@ export default function EvaluarCitasPendientes() {
     console.log("🕒 Nueva fecha y hora en UTC:", fechaHoraUTC.toISOString());
 
     try {
-      const csrfToken = obtenerTokenCSRF();
-      const response = await axios.put(`http://localhost:4000/api/citas/actualizar/${proximaCitaId}`, {
-        fechaHora: fechaHoraUTC.toISOString(),
-      }, {
-        headers: {
-          "X-XSRF-TOKEN": csrfToken
+      const response = await axios.put(
+        `https://backenddent.onrender.com/api/citas/actualizar/${proximaCitaId}`,
+        {
+          fechaHora: fechaHoraUTC.toISOString(),
         },
-        withCredentials: true,
-      });
+        {
+          headers: {
+            "X-XSRF-TOKEN": csrfToken, // Usar el token del estado
+          },
+          withCredentials: true,
+        }
+      );
 
       console.log("✅ Cita actualizada con éxito:", response.data);
 
@@ -240,13 +257,26 @@ export default function EvaluarCitasPendientes() {
   useEffect(() => {
     const obtenerDatos = async () => {
       try {
-        const { data: tratamientos } = await axios.get("http://localhost:4000/api/tratamientos-pacientes/en-progreso");
+        const { data: tratamientos } = await axios.get(
+          "https://backenddent.onrender.com/api/tratamientos-pacientes/en-progreso",
+          {
+            headers: {
+              "X-XSRF-TOKEN": csrfToken, // Usar el token del estado
+            },
+            withCredentials: true,
+          }
+        );
 
         if (tratamientos.length === 0) return;
 
         const peticionesCitas = tratamientos.map((tratamiento) =>
           axios
-            .get(`http://localhost:4000/api/citas/tratamiento/${tratamiento.id}`)
+            .get(`https://backenddent.onrender.com/api/citas/tratamiento/${tratamiento.id}`, {
+              headers: {
+                "X-XSRF-TOKEN": csrfToken, // Usar el token del estado
+              },
+              withCredentials: true,
+            })
             .then((response) => ({ id: tratamiento.id, citas: response.data }))
             .catch((error) => {
               console.error(`Error al obtener citas para el tratamiento ${tratamiento.id}`, error);
@@ -280,14 +310,37 @@ export default function EvaluarCitasPendientes() {
       }
     };
 
-    obtenerDatos();
-  }, []);
+    if (csrfToken) {
+      obtenerDatos();
+    }
+  }, [csrfToken]);
 
-  const convertirHoraLocal = (fechaISO) => {
-    if (!fechaISO) return "Sin asignar";
-    const fecha = new Date(fechaISO);
-    return fecha.toLocaleString("es-MX", { timeZone: "America/Mexico_City" });
-  };
+const convertirHoraLocal = (fechaISO) => {
+  if (!fechaISO) return "Sin asignar";
+
+  // Extraer la fecha y hora directamente del string ISO
+  const [fechaParte, horaParte] = fechaISO.split("T");
+  const [anio, mes, dia] = fechaParte.split("-");
+  const [hora, minutos] = horaParte.split(":"); // Ignoramos segundos y "Z"
+
+  // Convertir la hora a formato 12 horas con AM/PM
+  let horaNum = parseInt(hora, 10);
+  const esPM = horaNum >= 12;
+  const hora12 = horaNum % 12 || 12; // Si es 0, mostrar 12 (medianoche o mediodía)
+  const ampm = esPM ? "PM" : "AM";
+
+  // Meses en español
+  const meses = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+  ];
+  const mesTexto = meses[parseInt(mes, 10) - 1];
+
+  // Formatear la fecha y hora
+  return `${parseInt(dia, 10)} de ${mesTexto} del ${anio} a las ${hora12}:${minutos} ${ampm}`;
+};
+  
+  
 
   const handleOpenDialog = (tratamiento) => {
     setSelectedTratamiento(tratamiento);

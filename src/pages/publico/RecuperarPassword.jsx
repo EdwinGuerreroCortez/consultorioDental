@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -40,18 +40,33 @@ const RecuperarPassword = () => {
   const [email, setEmail] = useState("");
   const [alert, setAlert] = useState({ type: "", message: "" });
   const [error, setError] = useState("");
+  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
   const navigate = useNavigate();
 
-  const obtenerTokenCSRF = () => {
-    const csrfToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1];
-    return csrfToken || "";
-  };
+  // Obtener el token CSRF al montar el componente
+  useEffect(() => {
+    const obtenerTokenCSRF = async () => {
+      try {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+      } catch (error) {
+        console.error("Error obteniendo el token CSRF:", error);
+        setAlert({ type: "error", message: "Error al obtener el token CSRF" });
+      }
+    };
+    obtenerTokenCSRF();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!csrfToken) {
+      setAlert({ type: "error", message: "Error: Token CSRF no disponible" });
+      return;
+    }
 
     if (!email.trim()) {
       setError("El correo no puede estar vacío.");
@@ -65,9 +80,8 @@ const RecuperarPassword = () => {
     }
 
     try {
-      const csrfToken = obtenerTokenCSRF();
       await axios.post(
-        "http://localhost:4000/api/usuarios/recuperar-password",
+        "https://backenddent.onrender.com/api/usuarios/recuperar-password",
         { email },
         {
           headers: {

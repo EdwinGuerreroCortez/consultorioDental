@@ -18,8 +18,8 @@ const MotionAvatar = motion.create(Avatar);
 
 // Custom Styled Components
 const DentalProfileCard = styled(MotionCard)(({ theme }) => ({
-  maxWidth: 1200, // Increased from 1000 to 1200 for a wider card
-  margin: "2rem auto", // Reduced from 4rem to 2rem to move it higher
+  maxWidth: 1200,
+  margin: "2rem auto",
   borderRadius: "20px",
   padding: "2.5rem",
   background: "linear-gradient(135deg, #ffffff 0%, #f0faff 100%)",
@@ -76,6 +76,24 @@ const Perfil = () => {
   const [passwordStrength, setPasswordStrength] = useState({ score: 0, level: "", suggestions: "" });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState({ actual: false, nueva: false, repetir: false });
+  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
+
+  // Obtener el token CSRF al montar el componente
+  useEffect(() => {
+    const obtenerTokenCSRF = async () => {
+      try {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+      } catch (error) {
+        console.error("Error obteniendo el token CSRF:", error);
+        setError("Error al obtener el token CSRF");
+      }
+    };
+    obtenerTokenCSRF();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -96,15 +114,12 @@ const Perfil = () => {
     }
   };
 
-  const obtenerTokenCSRF = () => {
-    const csrfToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1];
-    return csrfToken || "";
-  };
-
   const handleSubmit = async () => {
+    if (!csrfToken) {
+      setMensaje("Error: Token CSRF no disponible");
+      return;
+    }
+
     if (errors.nueva || errors.repetir || passwords.nueva !== passwords.repetir) {
       setErrors((prev) => ({
         ...prev,
@@ -114,8 +129,7 @@ const Perfil = () => {
     }
 
     try {
-      const csrfToken = obtenerTokenCSRF();
-      const response = await fetch(`http://localhost:4000/api/usuarios/cambiar-password/${perfil.id}`, {
+      const response = await fetch(`https://backenddent.onrender.com/api/usuarios/cambiar-password/${perfil.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -143,11 +157,18 @@ const Perfil = () => {
 
   useEffect(() => {
     const cargarPerfil = async () => {
+      if (!csrfToken) return; // Esperar a que el token esté disponible
+
       try {
         const usuario = await verificarAutenticacion();
         if (!usuario || !usuario.id) throw new Error("No se encontró el usuario autenticado");
 
-        const response = await fetch(`http://localhost:4000/api/usuarios/perfil/${usuario.id}`);
+        const response = await fetch(`https://backenddent.onrender.com/api/usuarios/perfil/${usuario.id}`, {
+          headers: {
+            "X-XSRF-TOKEN": csrfToken,
+          },
+          credentials: "include",
+        });
         if (!response.ok) throw new Error("Error al obtener el perfil");
         const data = await response.json();
         setPerfil(data);
@@ -158,8 +179,10 @@ const Perfil = () => {
         setLoading(false);
       }
     };
-    cargarPerfil();
-  }, []);
+    if (csrfToken) {
+      cargarPerfil();
+    }
+  }, [csrfToken]);
 
   if (loading) {
     return (
@@ -229,7 +252,7 @@ const Perfil = () => {
             { icon: <Wc sx={{ color: "#00D4FF" }} />, label: "Sexo", value: perfil.sexo },
             { icon: <Lock sx={{ color: "#007AFF" }} />, value: "Cambiar Contraseña", onClick: () => setOpen(true) },
           ].map((item, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}> {/* Adjusted grid for wider layout */}
+            <Grid item xs={12} sm={6} md={4} key={index}>
               <InfoTile
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}

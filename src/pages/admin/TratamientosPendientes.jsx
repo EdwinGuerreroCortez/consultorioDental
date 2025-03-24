@@ -34,31 +34,56 @@ const TratamientosPendientes = () => {
   const [tratamientoSeleccionado, setTratamientoSeleccionado] = useState(null);
   const [numCitas, setNumCitas] = useState("");
   const [precio, setPrecio] = useState("");
+  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
   const elementosPorPagina = 10;
 
+  // Obtener el token CSRF al montar el componente
   useEffect(() => {
-    obtenerTratamientos(true);
+    const obtenerTokenCSRF = async () => {
+      try {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+      } catch (error) {
+        console.error("Error obteniendo el token CSRF:", error);
+        setAlerta({ open: true, message: "Error al obtener el token CSRF", severity: "error" });
+      }
+    };
+    obtenerTokenCSRF();
   }, []);
 
   useEffect(() => {
+    if (csrfToken) {
+      obtenerTratamientos(true);
+    }
+  }, [csrfToken]);
+
+  useEffect(() => {
+    if (!csrfToken) return; // Esperar a que el token esté disponible
+
     const intervalo = setInterval(() => {
       obtenerTratamientos(false);
     }, 3000);
     return () => clearInterval(intervalo);
-  }, []);
+  }, [csrfToken]);
 
-  const obtenerTratamientos = (isFirstLoad = false) => {
-    axios
-      .get("http://localhost:4000/api/tratamientos-pacientes/pendientes")
-      .then((response) => {
-        setTratamientos(response.data);
-        if (isFirstLoad) setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error al obtener tratamientos pendientes:", error);
-        setAlerta({ open: true, message: "Error al cargar los tratamientos pendientes", severity: "error" });
-        if (isFirstLoad) setLoading(false);
+  const obtenerTratamientos = async (isFirstLoad = false) => {
+    if (!csrfToken) return; // Esperar a que el token esté disponible
+
+    try {
+      const response = await axios.get("https://backenddent.onrender.com/api/tratamientos-pacientes/pendientes", {
+        headers: { "X-XSRF-TOKEN": csrfToken },
+        withCredentials: true,
       });
+      setTratamientos(response.data);
+      if (isFirstLoad) setLoading(false);
+    } catch (error) {
+      console.error("Error al obtener tratamientos pendientes:", error);
+      setAlerta({ open: true, message: "Error al cargar los tratamientos pendientes", severity: "error" });
+      if (isFirstLoad) setLoading(false);
+    }
   };
 
   const handleChangePagina = (event, value) => {
@@ -76,24 +101,17 @@ const TratamientosPendientes = () => {
     setPrecio("");
   };
 
-  const obtenerTokenCSRF = () => {
-    const csrfToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1];
-    return csrfToken || "";
-  };
-
   const handleGuardar = async () => {
+    if (!csrfToken) return; // Esperar a que el token esté disponible
+
     if (!numCitas || !precio || isNaN(numCitas) || isNaN(precio) || numCitas <= 0 || precio <= 0) {
       setAlerta({ open: true, message: "Por favor ingresa valores válidos.", severity: "warning" });
       return;
     }
 
     try {
-      const csrfToken = obtenerTokenCSRF();
       const response = await axios.post(
-        "http://localhost:4000/api/tratamientos-pacientes/crear-nuevas-citas-pagos",
+        "https://backenddent.onrender.com/api/tratamientos-pacientes/crear-nuevas-citas-pagos",
         {
           tratamientoPacienteId: tratamientoSeleccionado.id,
           citasTotales: parseInt(numCitas, 10),
@@ -431,7 +449,7 @@ const TratamientosPendientes = () => {
         open={alerta.open}
         autoHideDuration={4000}
         onClose={() => setAlerta({ ...alerta, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }} // Cambiado a abajo-izquierda
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
       >
         <Alert
           onClose={() => setAlerta({ ...alerta, open: false })}

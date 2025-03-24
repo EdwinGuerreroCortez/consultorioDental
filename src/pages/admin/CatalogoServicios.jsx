@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   TextField,
@@ -47,6 +47,24 @@ const CrearServicioOdontologia = () => {
   const [errores, setErrores] = useState({});
   const [alerta, setAlerta] = useState({ open: false, message: "", severity: "error" });
   const [imagenPrevia, setImagenPrevia] = useState(null);
+  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
+
+  // Obtener el token CSRF al cargar el componente
+  useEffect(() => {
+    const obtenerTokenCSRF = async () => {
+      try {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+      } catch (error) {
+        console.error("Error obteniendo el token CSRF:", error);
+        setAlerta({ open: true, message: "Error al obtener el token CSRF", severity: "error" });
+      }
+    };
+    obtenerTokenCSRF();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -125,13 +143,6 @@ const CrearServicioOdontologia = () => {
     });
   };
 
-  const obtenerTokenCSRF = () => {
-    return document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1];
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -178,11 +189,11 @@ const CrearServicioOdontologia = () => {
         formulario.tipo_citas === "citas_requeridas" ? formulario.citas_requeridas : ""
       );
       formData.append("imagen", formulario.imagen);
-      const csrfToken = obtenerTokenCSRF();
-      const response = await fetch("http://localhost:4000/api/tratamientos/crear", {
+
+      const response = await fetch("https://backenddent.onrender.com/api/tratamientos/crear", {
         method: "POST",
         body: formData,
-        headers: { "X-XSRF-TOKEN": csrfToken },
+        headers: { "X-XSRF-TOKEN": csrfToken }, // Usar el token del estado
         credentials: "include",
       });
 
@@ -190,7 +201,12 @@ const CrearServicioOdontologia = () => {
         setAlerta({ open: true, message: "Servicio registrado con éxito", severity: "success" });
         setImagenPrevia(null);
       } else {
-        setAlerta({ open: true, message: "Error al registrar el servicio", severity: "error" });
+        const errorData = await response.json();
+        setAlerta({
+          open: true,
+          message: errorData.message || "Error al registrar el servicio",
+          severity: "error",
+        });
       }
     } catch (error) {
       console.error("Error en la solicitud:", error);

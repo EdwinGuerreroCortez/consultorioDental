@@ -46,11 +46,28 @@ const NavbarPaciente = () => {
   const [searchResults, setSearchResults] = useState([]);
   const searchBoxRef = useRef(null);
   const [alertaExito, setAlertaExito] = useState(false);
+  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
 
   // Temporizadores para retrasar el cierre de submenús
   const [servicesTimeout, setServicesTimeout] = useState(null);
   const [treatmentsTimeout, setTreatmentsTimeout] = useState(null);
   const [paymentsTimeout, setPaymentsTimeout] = useState(null);
+
+  // Obtener el token CSRF al montar el componente
+  useEffect(() => {
+    const obtenerTokenCSRF = async () => {
+      try {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+      } catch (error) {
+        console.error("Error obteniendo el token CSRF:", error);
+      }
+    };
+    obtenerTokenCSRF();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -67,12 +84,15 @@ const NavbarPaciente = () => {
     setSearchTerm(term);
     if (term.length > 0) {
       try {
-        const response = await fetch(`http://localhost:4000/api/tratamientos/buscar?search=${term}`);
+        const response = await fetch(`https://backenddent.onrender.com/api/tratamientos/buscar?search=${term}`, {
+          credentials: "include",
+        });
         const results = await response.json();
         const filteredResults = results.filter((result) => new RegExp(term, "i").test(result.nombre));
-        setSearchResults(results);
+        setSearchResults(filteredResults); // Usar filteredResults para reflejar el filtrado local
       } catch (error) {
         console.error("Error en la búsqueda:", error);
+        setSearchResults([]);
       }
     } else {
       setSearchResults([]);
@@ -80,12 +100,13 @@ const NavbarPaciente = () => {
   };
 
   const cerrarSesion = async () => {
+    if (!csrfToken) {
+      console.error("Token CSRF no disponible");
+      return;
+    }
+
     try {
-      const csrfToken = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("XSRF-TOKEN="))
-        ?.split("=")[1];
-      const response = await fetch("http://localhost:4000/api/usuarios/logout", {
+      const response = await fetch("https://backenddent.onrender.com/api/usuarios/logout", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -181,11 +202,11 @@ const NavbarPaciente = () => {
     position: "absolute",
     top: "100%",
     left: 0,
-    background: "linear-gradient(135deg, #ffffff 0%, #e6f0fa 100%)", // Gradiente más claro y definido
-    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.2)", // Sombra más pronunciada
+    background: "linear-gradient(135deg, #ffffff 0%, #e6f0fa 100%)",
+    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.2)",
     borderRadius: "12px",
-    border: "1px solid #0077b6", // Borde más visible
-    width: "260px", // Un poco más ancho para mejor legibilidad
+    border: "1px solid #0077b6",
+    width: "260px",
     padding: "8px 0",
     zIndex: 20,
     transform: "translateY(5px)",
@@ -198,7 +219,7 @@ const NavbarPaciente = () => {
         sx={{
           height: "80px",
           background: "linear-gradient(90deg, #003366, #0077b6)",
-          position: "static", // Cambiado de "fixed" a "static" para que se desplace con el scroll
+          position: "static",
           width: "100%",
           zIndex: 10,
           boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
@@ -386,7 +407,7 @@ const NavbarPaciente = () => {
                             "& .MuiListItemText-primary": {
                               fontSize: "1rem",
                               fontWeight: "bold",
-                              color: "#1a237e", // Color más oscuro para mejor contraste
+                              color: "#1a237e",
                             },
                           }}
                         />
@@ -893,7 +914,7 @@ const NavbarPaciente = () => {
             </Collapse>
 
             <ListItem disablePadding>
-              <ListItemButton href="/catalogo-servicios" onClick={toggleDrawer(false)}>
+              <ListItemButton href="/paciente/catalogo-servicios" onClick={toggleDrawer(false)}>
                 <ListAltIcon sx={{ marginRight: "10px", color: "#01579b" }} />
                 <ListItemText
                   primary="Servicios"

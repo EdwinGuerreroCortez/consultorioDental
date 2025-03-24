@@ -39,7 +39,6 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LockIcon from "@mui/icons-material/Lock";
-import SettingsApplicationsIcon from "@mui/icons-material/SettingsApplications";
 
 import logo from "../../../assets/images/logo.png";
 
@@ -55,7 +54,8 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
   const [anchorElNotifications, setAnchorElNotifications] = useState(null);
   const [anchorElProfile, setAnchorElProfile] = useState(null);
   const [notificacionesCitas, setNotificacionesCitas] = useState([]);
-  const [loading, setLoading] = useState(false); // Estado para indicador de carga
+  const [loading, setLoading] = useState(false);
+  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
 
   // Datos estáticos para notificaciones y perfil
   const notifications = [
@@ -71,6 +71,25 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
     role: "Administrador",
   };
 
+  // Obtener el token CSRF al montar el componente
+  useEffect(() => {
+    const obtenerTokenCSRF = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+      } catch (error) {
+        console.error("Error obteniendo el token CSRF:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    obtenerTokenCSRF();
+  }, []);
+
   useEffect(() => {
     menuItems.forEach((item, index) => {
       if (item.submenu) {
@@ -83,29 +102,15 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
   }, [location.pathname]);
 
   useEffect(() => {
-    const obtenerTokenCSRF = async () => {
-      try {
-        setLoading(true);
-        await fetch("http://localhost:4000/api/get-csrf-token", {
-          credentials: "include",
-        });
-      } catch (error) {
-        console.error("Error obteniendo el token CSRF:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    obtenerTokenCSRF();
-  }, []);
-
-  useEffect(() => {
     obtenerNotificacionesCitas();
   }, []);
 
   const obtenerNotificacionesCitas = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:4000/api/citas/notificaciones");
+      const response = await fetch("https://backenddent.onrender.com/api/citas/notificaciones", {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Error al obtener notificaciones");
       const data = await response.json();
       setNotificacionesCitas(data.notificaciones);
@@ -134,14 +139,14 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
   };
 
   const cerrarSesion = async () => {
+    if (!csrfToken) {
+      console.error("Token CSRF no disponible");
+      return;
+    }
+
     try {
       setLoading(true);
-      const csrfToken = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("XSRF-TOKEN="))
-        ?.split("=")[1];
-
-      const response = await fetch("http://localhost:4000/api/usuarios/logout", {
+      const response = await fetch("https://backenddent.onrender.com/api/usuarios/logout", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -184,7 +189,6 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
   };
 
   const markNotificationAsRead = (index) => {
-    // Simulación de marcar notificación como leída (puedes integrar lógica real aquí)
     setNotificacionesCitas((prev) =>
       prev.map((notif, i) => (i === index ? { ...notif, read: true } : notif))
     );
@@ -268,9 +272,9 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
         sx={{
           width: drawerOpen ? `calc(100% - ${drawerWidth}px)` : `calc(100% - ${drawerCollapsedWidth}px)`,
           ml: drawerOpen ? `${drawerWidth}px` : `${drawerCollapsedWidth}px`,
-          background: "#006d77", // Color original
+          background: "#006d77",
           boxShadow: "0 6px 12px rgba(0, 0, 0, 0.15)",
-          transition: "all 0.2s ease-in-out", // Animación original
+          transition: "all 0.2s ease-in-out",
         }}
       >
         <Toolbar sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -283,7 +287,6 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
             </Typography>
           </Box>
 
-          {/* Sección de notificaciones y perfil mejorada */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <Tooltip title="Notificaciones">
               <IconButton color="inherit" onClick={handleNotificationsClick} aria-label="Notificaciones">
@@ -301,7 +304,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
         </Toolbar>
       </AppBar>
 
-      {/* Menú de notificaciones mejorado (manteniendo colores originales) */}
+      {/* Menú de notificaciones mejorado */}
       <Menu
         anchorEl={anchorElNotifications}
         open={Boolean(anchorElNotifications)}
@@ -333,7 +336,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
               onClick={() => markNotificationAsRead(index)}
               sx={{
                 backgroundColor: notification.read ? "#f5f5f5" : "#fff",
-                "&:hover": { backgroundColor: "#78c1c8" }, // Color de hover original
+                "&:hover": { backgroundColor: "#78c1c8" },
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -342,7 +345,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
                     width: 10,
                     height: 10,
                     borderRadius: "50%",
-                    backgroundColor: notification.read ? "#ccc" : index % 2 === 0 ? "#00c4b4" : "#f06292", // Colores originales
+                    backgroundColor: notification.read ? "#ccc" : index % 2 === 0 ? "#00c4b4" : "#f06292",
                   }}
                 />
                 <Box>
@@ -363,7 +366,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
         )}
       </Menu>
 
-      {/* Menú de perfil mejorado (manteniendo colores originales) */}
+      {/* Menú de perfil mejorado */}
       <Menu
         anchorEl={anchorElProfile}
         open={Boolean(anchorElProfile)}
@@ -406,7 +409,6 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
           </ListItemIcon>
           <Typography variant="body2">Cambiar Contraseña</Typography>
         </MenuItem>
-
         <Divider />
         <MenuItem onClick={cerrarSesion}>
           <ListItemIcon>
@@ -427,11 +429,11 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
             boxSizing: "border-box",
             display: "flex",
             flexDirection: "column",
-            backgroundColor: "rgba(3, 68, 94, 0.9)", // Color original
-            color: "#d2f4ea", // Color original
-            transition: "width 0.2s ease-in-out", // Animación original
+            backgroundColor: "rgba(3, 68, 94, 0.9)",
+            color: "#d2f4ea",
+            transition: "width 0.2s ease-in-out",
             overflowX: "hidden",
-            boxShadow: "4px 0 12px rgba(0, 0, 0, 0.2)", // Sombra para profundidad
+            boxShadow: "4px 0 12px rgba(0, 0, 0, 0.2)",
           },
         }}
       >
@@ -440,12 +442,11 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
             height: drawerOpen ? "180px" : "64px",
             justifyContent: "center",
             padding: "16px",
-            background: "#0096c7", // Color original
+            background: "#0096c7",
             flexDirection: "column",
             alignItems: "center",
-            textAlign: "center",
             flexShrink: 0,
-            transition: "height 0.2s ease-in-out", // Animación original
+            transition: "height 0.2s ease-in-out",
           }}
         >
           <Box
@@ -457,9 +458,9 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
               height: drawerOpen ? "90px" : "40px",
               objectFit: "contain",
               borderRadius: "50%",
-              transition: "all 0.2s ease-in-out", // Animación original
+              transition: "all 0.2s ease-in-out",
               marginBottom: drawerOpen ? "8px" : "0",
-              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)", // Sombra para el logo
+              boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
             }}
           />
           {drawerOpen && (
@@ -467,7 +468,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
               variant="subtitle1"
               sx={{
                 fontWeight: "bold",
-                color: "#e0f7fa", // Color original
+                color: "#e0f7fa",
                 textAlign: "center",
                 wordWrap: "break-word",
                 whiteSpace: "normal",
@@ -489,18 +490,18 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
               width: "8px",
             },
             "&::-webkit-scrollbar-track": {
-              background: "#03445e", // Color original
+              background: "#03445e",
             },
             "&::-webkit-scrollbar-thumb": {
-              background: "#78c1c8", // Color original
+              background: "#78c1c8",
               borderRadius: "4px",
             },
             "&::-webkit-scrollbar-thumb:hover": {
-              background: "#0096c7", // Color original
+              background: "#0096c7",
             },
           }}
         >
-          <Divider sx={{ backgroundColor: "#78c1c8" }} /> {/* Color original */}
+          <Divider sx={{ backgroundColor: "#78c1c8" }} />
           <List sx={{ padding: 0 }}>
             {menuItems.map((item, index) => (
               <React.Fragment key={index}>
@@ -521,17 +522,17 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
                         justifyContent: drawerOpen ? "initial" : "center",
                         padding: "10px 16px",
                         "&:hover": {
-                          backgroundColor: "#78c1c8", // Color de hover original
+                          backgroundColor: "#78c1c8",
                         },
-                        backgroundColor: location.pathname === item.href ? "#78c1c8" : "transparent", // Color de selección original
+                        backgroundColor: location.pathname === item.href ? "#78c1c8" : "transparent",
                       }}
                     >
                       <ListItemIcon
                         sx={{
-                          color: "#d2f4ea", // Color original
+                          color: "#d2f4ea",
                           minWidth: 0,
                           marginRight: drawerOpen ? "16px" : "0",
-                          fontSize: "1.2rem", // Tamaño de iconos ajustado
+                          fontSize: "1.2rem",
                         }}
                       >
                         {item.icon}
@@ -562,11 +563,11 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
                           <ListItemButton
                             onClick={() => navigate(subItem.href)}
                             sx={{
-                              pl: 6, // Aumentar el padding para submenús
+                              pl: 6,
                               "&:hover": {
-                                backgroundColor: "#78c1c8", // Color de hover original
+                                backgroundColor: "#78c1c8",
                               },
-                              backgroundColor: location.pathname === subItem.href ? "#78c1c8" : "transparent", // Color de selección original
+                              backgroundColor: location.pathname === subItem.href ? "#78c1c8" : "transparent",
                             }}
                           >
                             <ListItemText

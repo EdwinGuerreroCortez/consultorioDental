@@ -19,7 +19,7 @@ const Detalleservicio = () => {
     useEffect(() => {
         const fetchTratamiento = async () => {
             try {
-                const response = await fetch(`http://localhost:4000/api/tratamientos/${hash}/detalle`);
+                const response = await fetch(`https://backenddent.onrender.com/api/tratamientos/${hash}/detalle`);
                 if (!response.ok) {
                     throw new Error('No se pudo obtener los detalles del tratamiento.');
                 }

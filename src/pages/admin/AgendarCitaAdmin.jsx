@@ -42,6 +42,7 @@ const AgendarCitaAdmin = () => {
     telefono: ''
   });
   const [pasoActual, setPasoActual] = useState(1);
+  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
 
   const inputStyle = {
     "& .MuiOutlinedInput-root": {
@@ -106,7 +107,7 @@ const AgendarCitaAdmin = () => {
   }, []);
 
   const axiosInstance = axios.create({
-    baseURL: 'http://localhost:4000/api',
+    baseURL: 'https://backenddent.onrender.com/api',
     withCredentials: true,
   });
 
@@ -175,15 +176,28 @@ const AgendarCitaAdmin = () => {
     }
   };
 
+  // Obtener el token CSRF al cargar el componente y guardarlo en el estado
+  useEffect(() => {
+    const obtenerTokenCSRF = async () => {
+      try {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", { credentials: "include" });
+        const data = await response.json();
+        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+      } catch (error) {
+        console.error("Error obteniendo el token CSRF:", error);
+      }
+    };
+    obtenerTokenCSRF();
+  }, []);
+
   const buscarUsuario = async () => {
     const datosEnvio = {
       ...busquedaUsuario,
       fecha_nacimiento: busquedaUsuario.fecha_nacimiento ? busquedaUsuario.fecha_nacimiento.toISOString().split('T')[0] : "",
     };
     try {
-      const csrfToken = document.cookie.split("; ").find(row => row.startsWith("XSRF-TOKEN="))?.split("=")[1];
-      const response = await axios.post('http://localhost:4000/api/usuarios/buscar', datosEnvio, {
-        headers: { 'X-XSRF-TOKEN': csrfToken },
+      const response = await axios.post('https://backenddent.onrender.com/api/usuarios/buscar', datosEnvio, {
+        headers: { 'X-XSRF-TOKEN': csrfToken }, // Usar el token del estado
         withCredentials: true,
       });
       if (response.data.length > 0) {
@@ -201,24 +215,12 @@ const AgendarCitaAdmin = () => {
     }
   };
 
-  useEffect(() => {
-    const obtenerTokenCSRF = async () => {
-      try {
-        await fetch("http://localhost:4000/api/get-csrf-token", { credentials: "include" });
-      } catch (error) {
-        console.error("Error obteniendo el token CSRF:", error);
-      }
-    };
-    obtenerTokenCSRF();
-  }, []);
-
   const handleAgendarCita = async () => {
     if (!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada) {
       setAlerta({ mostrar: true, mensaje: 'Completa todos los campos.', tipo: 'error' });
       return;
     }
     try {
-      const csrfToken = document.cookie.split("; ").find(row => row.startsWith("XSRF-TOKEN="))?.split("=")[1];
       const tratamientoSeleccionado = servicios.find(s => s.nombre === servicioSeleccionado);
       const estadoTratamiento = tratamientoSeleccionado.requiere_evaluacion ? 'pendiente' : 'en progreso';
       const fechaSeleccionadaStr = fechaSeleccionada.toISOString().split('T')[0];
@@ -228,14 +230,14 @@ const AgendarCitaAdmin = () => {
       if (!esPM && hora === 12) horaFinal = 0;
       const fechaHoraLocal = new Date(`${fechaSeleccionadaStr}T${horaFinal.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:00`);
       const fechaHoraUTC = new Date(fechaHoraLocal.getTime() - fechaHoraLocal.getTimezoneOffset() * 60000);
-  
+
       let usuarioId = null, pacienteId = null;
       if (usuarioEncontrado) {
         if (usuarioEncontrado.tipo === 'usuario') usuarioId = usuarioEncontrado.id;
         else if (usuarioEncontrado.tipo === 'paciente_sin_plataforma') pacienteId = usuarioEncontrado.id;
       }
       if (!usuarioId && !pacienteId) throw new Error("No se pudo identificar el tipo de usuario.");
-  
+
       const datosEnvio = {
         usuarioId,
         pacienteId,
@@ -246,7 +248,7 @@ const AgendarCitaAdmin = () => {
         precio: tratamientoSeleccionado.precio,
         requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
       };
-      await axiosInstance.post('/tratamientos-pacientes/crear', datosEnvio, { headers: { 'X-XSRF-TOKEN': csrfToken } });
+      await axiosInstance.post('/tratamientos-pacientes/crear', datosEnvio, { headers: { 'X-XSRF-TOKEN': csrfToken } }); // Usar el token del estado
       setAlerta({
         mostrar: true,
         mensaje: tratamientoSeleccionado.requiere_evaluacion ? 'Tratamiento pendiente de evaluación.' : 'Cita agendada correctamente.',
@@ -552,7 +554,7 @@ const AgendarCitaAdmin = () => {
       {alerta.mostrar && (
         <Box sx={{ position: "fixed", bottom: 20, left: 20, zIndex: 2000 }}>
           <Alert
-            severity={alerta.tipo} // 🔹 Cambia el icono y estilo según el tipo
+            severity={alerta.tipo}
             variant="filled"
             sx={{
               width: "100%",
@@ -560,12 +562,12 @@ const AgendarCitaAdmin = () => {
                 alerta.tipo === "success" ? "#DFF6DD" :
                   alerta.tipo === "error" ? "#F8D7DA" :
                     alerta.tipo === "warning" ? "#FFF3CD" :
-                      "#D1ECF1", // 🔹 Default: Info
+                      "#D1ECF1",
               color:
                 alerta.tipo === "success" ? "#1E4620" :
                   alerta.tipo === "error" ? "#721C24" :
                     alerta.tipo === "warning" ? "#856404" :
-                      "#0C5460", // 🔹 Default: Info
+                      "#0C5460",
             }}
             onClose={() => setAlerta({ mostrar: false, mensaje: '', tipo: '' })}
           >

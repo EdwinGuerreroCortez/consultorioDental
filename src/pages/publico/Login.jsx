@@ -55,6 +55,7 @@ const Login = () => {
   const [alert, setAlert] = useState({ type: "", message: "" });
   const [errors, setErrors] = useState({ email: "", password: "" });
   const [bubbles, setBubbles] = useState([]);
+  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -67,12 +68,15 @@ const Login = () => {
     setBubbles(generatedBubbles);
   }, []);
 
+  // Obtener el token CSRF al cargar el componente
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        await fetch("http://localhost:4000/api/get-csrf-token", {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
           credentials: "include",
         });
+        const data = await response.json();
+        setCsrfToken(data.csrfToken); // Guardar el token en el estado
       } catch (error) {
         console.error("Error obteniendo el token CSRF:", error);
       }
@@ -91,19 +95,14 @@ const Login = () => {
     }
 
     try {
-      const csrfToken = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("XSRF-TOKEN="))
-        ?.split("=")[1];
-
       const response = await axios.post(
-        "http://localhost:4000/api/usuarios/login",
+        "https://backenddent.onrender.com/api/usuarios/login",
         { email, password },
         {
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",
-            "X-XSRF-TOKEN": csrfToken,
+            "X-XSRF-TOKEN": csrfToken, // Usar el token del estado
           },
         }
       );
@@ -152,9 +151,8 @@ const Login = () => {
     setShowPassword(!showPassword);
   };
 
-  // Function to go back to the previous page
   const handleGoBack = () => {
-    navigate(-1); // This navigates to the previous page in history
+    navigate(-1); // Navega a la página anterior
   };
 
   return (

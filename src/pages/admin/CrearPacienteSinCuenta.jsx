@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   TextField,
@@ -70,13 +70,25 @@ const textColor = "#1a3c40";
 const CrearPacienteSinCuenta = () => {
   const [mensaje, setMensaje] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
 
-  const obtenerTokenCSRF = () => {
-    return document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1];
-  };
+  // Obtener el token CSRF al cargar el componente
+  useEffect(() => {
+    const obtenerTokenCSRF = async () => {
+      try {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+      } catch (error) {
+        console.error("Error obteniendo el token CSRF:", error);
+        setMensaje({ tipo: "error", texto: "Error al obtener el token CSRF" });
+        setTimeout(() => setMensaje(null), 3000);
+      }
+    };
+    obtenerTokenCSRF();
+  }, []);
 
   const formik = useFormik({
     initialValues: {
@@ -94,13 +106,12 @@ const CrearPacienteSinCuenta = () => {
     onSubmit: async (values, { resetForm }) => {
       setLoading(true);
       try {
-        const csrfToken = obtenerTokenCSRF();
         const response = await axios.post(
-          "http://localhost:4000/api/pacientes-sin-plataforma/registrar",
+          "https://backenddent.onrender.com/api/pacientes-sin-plataforma/registrar",
           values,
           {
             headers: {
-              "X-XSRF-TOKEN": csrfToken,
+              "X-XSRF-TOKEN": csrfToken, // Usar el token del estado
               "Content-Type": "application/json",
             },
             withCredentials: true,
@@ -189,7 +200,7 @@ const CrearPacienteSinCuenta = () => {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.7, ease: "easeOut" }}
-      maxWidth="lg" // Cambiado de "md" a "lg" para un formulario más ancho
+      maxWidth="lg"
       sx={{
         mt: 6,
         p: 5,

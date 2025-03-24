@@ -45,10 +45,35 @@ const MisCatalogos = () => {
   const [dialogoEdicionAbierto, setDialogoEdicionAbierto] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errores, setErrores] = useState({});
+  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
+
+  // Obtener el token CSRF al montar el componente
+  useEffect(() => {
+    const obtenerTokenCSRF = async () => {
+      try {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+      } catch (error) {
+        console.error("Error obteniendo el token CSRF:", error);
+        setAlerta({ open: true, message: "Error al obtener el token CSRF", severity: "error" });
+      }
+    };
+    obtenerTokenCSRF();
+  }, []);
 
   const obtenerTratamientos = async () => {
+    if (!csrfToken) return; // Esperar a que el token esté disponible
+
     try {
-      const response = await fetch("http://localhost:4000/api/tratamientos");
+      const response = await fetch("https://backenddent.onrender.com/api/tratamientos", {
+        headers: {
+          "X-XSRF-TOKEN": csrfToken,
+        },
+        credentials: "include",
+      });
       const data = await response.json();
       setTratamientos(data);
       setLoading(false);
@@ -60,12 +85,16 @@ const MisCatalogos = () => {
   };
 
   const actualizarEstado = async (id, estadoActual) => {
-    const csrfToken = obtenerTokenCSRF();
+    if (!csrfToken) return; // Esperar a que el token esté disponible
+
     try {
       const nuevoEstado = estadoActual === 1 ? 0 : 1;
-      await fetch(`http://localhost:4000/api/tratamientos/${id}/estado`, {
+      await fetch(`https://backenddent.onrender.com/api/tratamientos/${id}/estado`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": csrfToken },
+        headers: {
+          "Content-Type": "application/json",
+          "X-XSRF-TOKEN": csrfToken,
+        },
         credentials: "include",
         body: JSON.stringify({ estado: nuevoEstado }),
       });
@@ -124,24 +153,22 @@ const MisCatalogos = () => {
     setErrores((prev) => ({ ...prev, [campo]: error }));
   };
 
-  const obtenerTokenCSRF = () => {
-    return document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1];
-  };
-
   const guardarCambios = async () => {
+    if (!csrfToken) return; // Esperar a que el token esté disponible
+
     const camposValidos = Object.values(errores).every((error) => error === "");
     if (!camposValidos) {
       setAlerta({ open: true, message: "Corrige los errores antes de guardar.", severity: "error" });
       return;
     }
-    const csrfToken = obtenerTokenCSRF();
+
     try {
-      await fetch(`http://localhost:4000/api/tratamientos/${tratamientoSeleccionado.id}`, {
+      await fetch(`https://backenddent.onrender.com/api/tratamientos/${tratamientoSeleccionado.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": csrfToken },
+        headers: {
+          "Content-Type": "application/json",
+          "X-XSRF-TOKEN": csrfToken,
+        },
         credentials: "include",
         body: JSON.stringify(tratamientoSeleccionado),
       });
@@ -161,8 +188,10 @@ const MisCatalogos = () => {
   };
 
   useEffect(() => {
-    obtenerTratamientos();
-  }, []);
+    if (csrfToken) {
+      obtenerTratamientos();
+    }
+  }, [csrfToken]);
 
   const cerrarAlerta = () => setAlerta({ ...alerta, open: false });
 
@@ -385,7 +414,7 @@ const MisCatalogos = () => {
         </DialogTitle>
         <DialogContent sx={{ padding: "2rem 1rem 1rem" }}>
           {tratamientoSeleccionado && (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: "0.6rem",padding:"2rem 0.5rem 0.5rem" }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: "0.6rem", padding: "2rem 0.5rem 0.5rem" }}>
               <TextField
                 label="Descripción"
                 name="descripcion"

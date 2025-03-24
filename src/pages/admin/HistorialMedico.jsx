@@ -31,10 +31,38 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
+
+  // Obtener el token CSRF al montar el componente
+  useEffect(() => {
+    const obtenerTokenCSRF = async () => {
+      try {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+      } catch (error) {
+        console.error("Error obteniendo el token CSRF:", error);
+        setSnackbarMessage("Error al obtener el token CSRF");
+        setSnackbarSeverity("error");
+        setOpenSnackbar(true);
+        setTimeout(() => setOpenSnackbar(false), 3000);
+      }
+    };
+    obtenerTokenCSRF();
+  }, []);
 
   const obtenerHistorial = async () => {
+    if (!csrfToken) return; // Esperar a que el token esté disponible
+
     try {
-      const response = await fetch(`http://localhost:4000/api/historial/usuario/${paciente.id}`);
+      const response = await fetch(`https://backenddent.onrender.com/api/historial/usuario/${paciente.id}`, {
+        headers: {
+          "X-XSRF-TOKEN": csrfToken,
+        },
+        credentials: "include",
+      });
 
       if (!response.ok) {
         console.warn(`⚠️ No se encontró historial médico.`);
@@ -70,22 +98,11 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
   };
 
   useEffect(() => {
-    if (!open || !paciente || !paciente.id) {
+    if (!open || !paciente || !paciente.id || !csrfToken) {
       return;
     }
     obtenerHistorial();
-  }, [open, paciente]);
-
-  const obtenerTokenCSRF = () => {
-    const csrfToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1];
-
-    console.log("🔹 Token CSRF obtenido:", csrfToken);
-
-    return csrfToken || "";
-  };
+  }, [open, paciente, csrfToken]);
 
   const guardarHistorial = async () => {
     if (!paciente || !paciente.id) {
@@ -104,11 +121,14 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
       observaciones_medicas: comentario,
       fecha_registro: fechaActual,
     };
-    const csrfToken = obtenerTokenCSRF();
+
     try {
-      const response = await fetch(`http://localhost:4000/api/historial/usuario/${paciente.id}`, {
+      const response = await fetch(`https://backenddent.onrender.com/api/historial/usuario/${paciente.id}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-XSRF-TOKEN": csrfToken },
+        headers: {
+          "Content-Type": "application/json",
+          "X-XSRF-TOKEN": csrfToken, // Usar el token del estado
+        },
         credentials: "include",
         body: JSON.stringify(historialData),
       });
@@ -151,8 +171,8 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle
         sx={{
-          background: "linear-gradient(90deg, #006d77 0%, #78c1c8 100%)", // Consistente con TratamientosEnCurso
-          color: "#e0f7fa", // Consistente con TratamientosEnCurso
+          background: "linear-gradient(90deg, #006d77 0%, #78c1c8 100%)",
+          color: "#e0f7fa",
           textAlign: "center",
           fontWeight: "bold",
           fontFamily: "'Poppins', sans-serif",
@@ -165,13 +185,13 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
       <DialogContent
         dividers
         sx={{
-          padding: "2rem", // Aumentado para consistencia
+          padding: "2rem",
           overflowY: "auto",
           "&::-webkit-scrollbar": {
             width: "8px",
           },
           "&::-webkit-scrollbar-thumb": {
-            backgroundColor: "#006d77", // Consistente con TratamientosEnCurso
+            backgroundColor: "#006d77",
             borderRadius: "4px",
           },
           "&::-webkit-scrollbar-track": {
@@ -529,8 +549,8 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
         sx={{
           justifyContent: "space-between",
           padding: "1.5rem",
-          backgroundColor: "#f9fbfd", // Consistente con el fondo general
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)", // Sombra sutil
+          backgroundColor: "#f9fbfd",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
         }}
       >
         <Button
@@ -590,9 +610,9 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
             sx={{
               backgroundColor:
                 snackbarSeverity === "success"
-                  ? "#e8f5e9" // Consistente con TratamientosEnCurso
+                  ? "#e8f5e9"
                   : snackbarSeverity === "error"
-                  ? "#ffebee" // Consistente con TratamientosEnCurso
+                  ? "#ffebee"
                   : "#fff3e0",
               color:
                 snackbarSeverity === "success"
@@ -601,7 +621,7 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                   ? "#c62828"
                   : "#f57f17",
               borderRadius: "10px",
-              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)", // Consistente con TratamientosEnCurso
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
               fontFamily: "'Poppins', sans-serif",
             }}
             onClose={() => setOpenSnackbar(false)}
