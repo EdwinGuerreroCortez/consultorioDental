@@ -11,6 +11,7 @@ import {
   Button,
   Alert,
   Grid,
+  CircularProgress
 } from "@mui/material";
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -42,7 +43,8 @@ const AgendarCitaAdmin = () => {
     telefono: ''
   });
   const [pasoActual, setPasoActual] = useState(1);
-  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
+  const [csrfToken, setCsrfToken] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const inputStyle = {
     "& .MuiOutlinedInput-root": {
@@ -176,13 +178,12 @@ const AgendarCitaAdmin = () => {
     }
   };
 
-  // Obtener el token CSRF al cargar el componente y guardarlo en el estado
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
         const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", { credentials: "include" });
         const data = await response.json();
-        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+        setCsrfToken(data.csrfToken);
       } catch (error) {
         console.error("Error obteniendo el token CSRF:", error);
       }
@@ -197,7 +198,7 @@ const AgendarCitaAdmin = () => {
     };
     try {
       const response = await axios.post('https://backenddent.onrender.com/api/usuarios/buscar', datosEnvio, {
-        headers: { 'X-XSRF-TOKEN': csrfToken }, // Usar el token del estado
+        headers: { 'X-XSRF-TOKEN': csrfToken },
         withCredentials: true,
       });
       if (response.data.length > 0) {
@@ -220,6 +221,11 @@ const AgendarCitaAdmin = () => {
       setAlerta({ mostrar: true, mensaje: 'Completa todos los campos.', tipo: 'error' });
       return;
     }
+
+    if (isLoading) return;
+
+    setIsLoading(true);
+
     try {
       const tratamientoSeleccionado = servicios.find(s => s.nombre === servicioSeleccionado);
       const estadoTratamiento = tratamientoSeleccionado.requiere_evaluacion ? 'pendiente' : 'en progreso';
@@ -248,18 +254,19 @@ const AgendarCitaAdmin = () => {
         precio: tratamientoSeleccionado.precio,
         requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
       };
-      await axiosInstance.post('/tratamientos-pacientes/crear', datosEnvio, { headers: { 'X-XSRF-TOKEN': csrfToken } }); // Usar el token del estado
+      await axiosInstance.post('/tratamientos-pacientes/crear', datosEnvio, { headers: { 'X-XSRF-TOKEN': csrfToken } });
       setAlerta({
         mostrar: true,
         mensaje: tratamientoSeleccionado.requiere_evaluacion ? 'Tratamiento pendiente de evaluación.' : 'Cita agendada correctamente.',
         tipo: 'success',
       });
-      // Add a small delay to allow the success message to be visible before reloading
       setTimeout(() => {
         window.location.reload();
-      }, 2000); // 2-second delay before reload
+      }, 2000);
     } catch (error) {
       setAlerta({ mostrar: true, mensaje: 'Error al agendar la cita.', tipo: 'error' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -515,7 +522,7 @@ const AgendarCitaAdmin = () => {
               <Button
                 variant="contained"
                 onClick={handleAgendarCita}
-                disabled={tratamientoActivo}
+                disabled={tratamientoActivo || isLoading}
                 sx={{
                   backgroundColor: tratamientoActivo ? "#ccc" : "#006d77",
                   color: "#e0f7fa",
@@ -523,15 +530,29 @@ const AgendarCitaAdmin = () => {
                   borderRadius: "12px",
                   fontFamily: "'Poppins', sans-serif",
                   fontWeight: 600,
-                  "&:hover": { backgroundColor: tratamientoActivo ? "#ccc" : "#78c1c8", transform: "translateY(-2px)" },
+                  "&:hover": { 
+                    backgroundColor: tratamientoActivo ? "#ccc" : "#78c1c8", 
+                    transform: "translateY(-2px)" 
+                  },
                   transition: "all 0.3s ease-in-out",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1
                 }}
               >
-                Confirmar Cita
+                {isLoading ? (
+                  <>
+                    <CircularProgress size={20} sx={{ color: "#e0f7fa" }} />
+                    Cargando...
+                  </>
+                ) : (
+                  "Confirmar Cita"
+                )}
               </Button>
               <Button
                 variant="outlined"
                 onClick={() => setPasoActual(1)}
+                disabled={isLoading}
                 sx={{
                   borderColor: "#006d77",
                   color: "#006d77",

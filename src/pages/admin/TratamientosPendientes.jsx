@@ -34,7 +34,7 @@ const TratamientosPendientes = () => {
   const [tratamientoSeleccionado, setTratamientoSeleccionado] = useState(null);
   const [numCitas, setNumCitas] = useState("");
   const [precio, setPrecio] = useState("");
-  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
+  const [csrfToken, setCsrfToken] = useState(null);
   const elementosPorPagina = 10;
 
   // Obtener el token CSRF al montar el componente
@@ -45,7 +45,7 @@ const TratamientosPendientes = () => {
           credentials: "include",
         });
         const data = await response.json();
-        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+        setCsrfToken(data.csrfToken);
       } catch (error) {
         console.error("Error obteniendo el token CSRF:", error);
         setAlerta({ open: true, message: "Error al obtener el token CSRF", severity: "error" });
@@ -61,7 +61,7 @@ const TratamientosPendientes = () => {
   }, [csrfToken]);
 
   useEffect(() => {
-    if (!csrfToken) return; // Esperar a que el token esté disponible
+    if (!csrfToken) return;
 
     const intervalo = setInterval(() => {
       obtenerTratamientos(false);
@@ -70,7 +70,7 @@ const TratamientosPendientes = () => {
   }, [csrfToken]);
 
   const obtenerTratamientos = async (isFirstLoad = false) => {
-    if (!csrfToken) return; // Esperar a que el token esté disponible
+    if (!csrfToken) return;
 
     try {
       const response = await axios.get("https://backenddent.onrender.com/api/tratamientos-pacientes/pendientes", {
@@ -102,7 +102,7 @@ const TratamientosPendientes = () => {
   };
 
   const handleGuardar = async () => {
-    if (!csrfToken) return; // Esperar a que el token esté disponible
+    if (!csrfToken) return;
 
     if (!numCitas || !precio || isNaN(numCitas) || isNaN(precio) || numCitas <= 0 || precio <= 0) {
       setAlerta({ open: true, message: "Por favor ingresa valores válidos.", severity: "warning" });
@@ -138,12 +138,14 @@ const TratamientosPendientes = () => {
     (pagina - 1) * elementosPorPagina,
     pagina * elementosPorPagina
   );
+  const filasFaltantes = elementosPorPagina - tratamientosPaginados.length;
+
+  // Estilo para las celdas, alineado con TratamientosEnCurso
   const cellStyle = {
     textAlign: "center",
-    fontFamily: "'Poppins', sans-serif",
     color: "#03445e",
-    fontSize: "1rem",
-    py: "16px",
+    fontFamily: "'Poppins', sans-serif",
+    padding: "16px",
   };
 
   return (
@@ -172,7 +174,7 @@ const TratamientosPendientes = () => {
               backgroundColor: "#ffffff",
               borderRadius: "16px",
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
-              border: "1px solid #78c1c8",
+              border: "1px solid #eef3f7",
             }}
           >
             <CircularProgress
@@ -232,12 +234,12 @@ const TratamientosPendientes = () => {
                       <TableCell
                         key={header}
                         sx={{
-                          ...cellStyle,
                           color: "#e0f7fa",
                           fontWeight: 700,
+                          textAlign: "center",
+                          fontFamily: "'Poppins', sans-serif",
                           borderBottom: "none",
                           padding: "16px",
-                          fontSize: "1.1rem",
                         }}
                       >
                         {header}
@@ -265,7 +267,7 @@ const TratamientosPendientes = () => {
                     <TableCell sx={cellStyle}>{tratamiento.apellido_materno}</TableCell>
                     <TableCell sx={cellStyle}>{tratamiento.telefono}</TableCell>
                     <TableCell sx={cellStyle}>{tratamiento.email || "N/A"}</TableCell>
-                    <TableCell sx={cellStyle}>{tratamiento.edad || "N/A"}</TableCell>
+                    <TableCell sx={cellStyle}>{tratamiento.fecha_nacimiento || "N/A"}</TableCell>
                     <TableCell sx={cellStyle}>{tratamiento.sexo || "N/A"}</TableCell>
                     <TableCell sx={cellStyle}>{tratamiento.tratamiento_nombre}</TableCell>
                     <TableCell sx={cellStyle}>{tratamiento.fecha_inicio || "N/A"}</TableCell>
@@ -284,13 +286,27 @@ const TratamientosPendientes = () => {
                     </TableCell>
                   </TableRow>
                 ))}
+                {filasFaltantes > 0 &&
+                  Array.from({ length: filasFaltantes }).map((_, index) => (
+                    <TableRow key={`empty-${index}`}>
+                      <TableCell sx={{ ...cellStyle, color: "#999" }}>
+                        {(pagina - 1) * elementosPorPagina + tratamientosPaginados.length + index + 1}
+                      </TableCell>
+                      {Array(10)
+                        .fill("-")
+                        .map((_, i) => (
+                          <TableCell key={i} sx={{ ...cellStyle, color: "#999" }}>
+                            -
+                          </TableCell>
+                        ))}
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
           </TableContainer>
         )}
       </Box>
 
-      {/* Paginación (mostrar solo si hay tratamientos) */}
       {tratamientos.length > 0 && (
         <Box
           sx={{
@@ -335,7 +351,6 @@ const TratamientosPendientes = () => {
         </Box>
       )}
 
-      {/* Modal para asignar citas y precio */}
       <Dialog
         open={modalOpen}
         onClose={handleCerrarModal}
@@ -444,7 +459,6 @@ const TratamientosPendientes = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar (abajo a la izquierda) */}
       <Snackbar
         open={alerta.open}
         autoHideDuration={4000}

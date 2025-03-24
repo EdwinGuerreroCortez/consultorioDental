@@ -17,7 +17,6 @@ import {
   Paper,
 } from "@mui/material";
 import axios from "axios";
-import { motion } from "framer-motion";
 
 const HistorialProcesosTerminados = () => {
   const [tratamientos, setTratamientos] = useState([]);
@@ -65,30 +64,16 @@ const HistorialProcesosTerminados = () => {
     setComentario(null);
   };
 
-  const tableVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, staggerChildren: 0.1 } },
-  };
-
-  const rowVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-  };
-
+  // Estilo para las celdas, alineado con el tamaño más pequeño de TratamientosEnCurso
   const cellStyle = {
     textAlign: "center",
-    width: "auto",
-    maxWidth: "200px",
-    whiteSpace: "normal",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    fontFamily: "'Poppins', sans-serif",
     color: "#03445e",
-    fontSize: "1rem",
-    py: "16px",
+    fontFamily: "'Poppins', sans-serif",
+    padding: "12px", // Reduced padding to match TratamientosEnCurso
+    fontSize: "0.9rem", // Smaller font size
+    whiteSpace: "normal", // Allow text wrapping to ensure visibility
+    wordWrap: "break-word", // Break long words if necessary
   };
-
-  const MotionTableRow = motion(TableRow);
 
   return (
     <Box
@@ -106,107 +91,109 @@ const HistorialProcesosTerminados = () => {
       }}
     >
       <Box sx={{ flexGrow: 1, width: "100%" }}>
-        <motion.div variants={tableVariants} initial="hidden" animate="visible">
-          <TableContainer
-            component={Paper}
-            sx={{
-              borderRadius: "16px",
-              boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
-              overflow: "hidden",
-              mt: 3,
-              maxWidth: "1400px",
-              mx: "auto",
-              border: "1px solid #78c1c8",
-            }}
-          >
-            <Table sx={{ tableLayout: "fixed" }}>
-              <TableHead
-                sx={{
-                  background: "linear-gradient(90deg, #006d77 0%, #78c1c8 100%)",
-                }}
-              >
-                <TableRow>
-                  {[
-                    "Nombre del Paciente",
-                    "Edad",
-                    "Sexo",
-                    "Correo",
-                    "Teléfono",
-                    "Tratamiento",
-                    "Citas Totales / Asistidas",
-                    "Fecha de Inicio",
-                    "Acciones",
-                  ].map((header) => (
-                    <TableCell
-                      key={header}
-                      sx={{
-                        ...cellStyle,
-                        color: "#e0f7fa",
-                        fontWeight: 700,
-                        borderBottom: "none",
-                        padding: "16px",
-                        fontSize: "1.1rem",
-                      }}
-                    >
-                      {header}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {tratamientos.length > 0 ? (
-                  tratamientos.map((tratamiento) => (
-                    <MotionTableRow
-                      key={tratamiento.tratamiento_id}
-                      variants={rowVariants}
-                      whileHover={{
-                        scale: 1.01,
+        <TableContainer
+          component={Paper}
+          sx={{
+            borderRadius: "16px",
+            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+            overflow: "hidden",
+            mt: 3,
+            maxWidth: "1400px",
+            mx: "auto",
+            border: "1px solid #78c1c8",
+          }}
+        >
+          <Table sx={{ tableLayout: "auto" }}> {/* Changed to "auto" to allow natural column sizing */}
+            <TableHead
+              sx={{
+                background: "linear-gradient(90deg, #006d77 0%, #78c1c8 100%)",
+              }}
+            >
+              <TableRow>
+                {[
+                  "Nombre del Paciente",
+                  "Edad",
+                  "Sexo",
+                  "Correo",
+                  "Teléfono",
+                  "Tratamiento",
+                  "Citas Totales / Asistidas",
+                  "Fecha de Inicio",
+                  "Acciones",
+                ].map((header) => (
+                  <TableCell
+                    key={header}
+                    sx={{
+                      color: "#e0f7fa",
+                      fontWeight: 700,
+                      textAlign: "center",
+                      fontFamily: "'Poppins', sans-serif",
+                      borderBottom: "none",
+                      padding: "12px", // Reduced padding
+                      fontSize: "0.95rem", // Smaller font size
+                      whiteSpace: "normal", // Allow wrapping
+                    }}
+                  >
+                    {header}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {tratamientos.length > 0 ? (
+                tratamientos.map((tratamiento) => (
+                  <TableRow
+                    key={tratamiento.tratamiento_id}
+                    sx={{
+                      "&:hover": {
                         backgroundColor: "#e0f7fa",
-                        boxShadow: "inset 0 2px 8px rgba(0, 0, 0, 0.05)",
-                      }}
-                      sx={{ transition: "all 0.2s ease" }}
-                    >
-                      <TableCell sx={cellStyle}>{`${tratamiento.nombre} ${tratamiento.apellido_paterno} ${tratamiento.apellido_materno}`}</TableCell>
-                      <TableCell sx={cellStyle}>{tratamiento.edad || "N/A"}</TableCell>
-                      <TableCell sx={cellStyle}>{tratamiento.sexo || "N/A"}</TableCell>
-                      <TableCell sx={cellStyle}>{tratamiento.email || "N/A"}</TableCell>
-                      <TableCell sx={cellStyle}>{tratamiento.telefono || "N/A"}</TableCell>
-                      <TableCell sx={cellStyle}>{tratamiento.tratamiento_nombre}</TableCell>
-                      <TableCell sx={cellStyle}>{`${tratamiento.citas_totales} / ${tratamiento.citas_asistidas}`}</TableCell>
-                      <TableCell sx={cellStyle}>{tratamiento.fecha_inicio || "N/A"}</TableCell>
-                      <TableCell sx={cellStyle}>
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          onClick={() => handleVerDetalles(tratamiento)}
-                          sx={{
-                            textTransform: "none",
-                            borderRadius: "8px",
-                            background: "linear-gradient(45deg, #006d77, #78c1c8)",
-                            boxShadow: "0 2px 8px rgba(0, 109, 119, 0.3)",
-                            "&:hover": {
-                              background: "linear-gradient(45deg, #004d57, #48cae4)",
-                              boxShadow: "0 4px 12px rgba(0, 109, 119, 0.4)",
-                            },
-                            minWidth: "120px",
-                          }}
-                        >
-                          Ver Detalles
-                        </Button>
-                      </TableCell>
-                    </MotionTableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={9} sx={{ textAlign: "center", fontFamily: "'Poppins', sans-serif", color: "#03445e", py: "16px" }}>
-                      No hay tratamientos registrados.
+                        transition: "background-color 0.3s ease",
+                        boxShadow: "inset 0 2px 10px rgba(0, 0, 0, 0.05)",
+                      },
+                      borderBottom: "1px solid #eef3f7",
+                    }}
+                  >
+                    <TableCell sx={cellStyle}>{`${tratamiento.nombre} ${tratamiento.apellido_paterno} ${tratamiento.apellido_materno}`}</TableCell>
+                    <TableCell sx={cellStyle}>{tratamiento.edad || "N/A"}</TableCell>
+                    <TableCell sx={cellStyle}>{tratamiento.sexo || "N/A"}</TableCell>
+                    <TableCell sx={cellStyle}>{tratamiento.email || "N/A"}</TableCell>
+                    <TableCell sx={cellStyle}>{tratamiento.telefono || "N/A"}</TableCell>
+                    <TableCell sx={cellStyle}>{tratamiento.tratamiento_nombre}</TableCell>
+                    <TableCell sx={cellStyle}>{`${tratamiento.citas_totales} / ${tratamiento.citas_asistidas}`}</TableCell>
+                    <TableCell sx={cellStyle}>{tratamiento.fecha_inicio || "N/A"}</TableCell>
+                    <TableCell sx={cellStyle}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => handleVerDetalles(tratamiento)}
+                        sx={{
+                          textTransform: "none",
+                          borderRadius: "8px",
+                          background: "linear-gradient(45deg, #006d77, #78c1c8)",
+                          boxShadow: "0 2px 8px rgba(0, 109, 119, 0.3)",
+                          "&:hover": {
+                            background: "linear-gradient(45deg, #004d57, #48cae4)",
+                            boxShadow: "0 4px 12px rgba(0, 109, 119, 0.4)",
+                          },
+                          fontSize: "0.9rem", // Smaller font size
+                          padding: "6px 12px", // Reduced padding
+                        }}
+                      >
+                        Ver Detalles
+                      </Button>
                     </TableCell>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </motion.div>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={9} sx={{ ...cellStyle, color: "#999" }}>
+                    No hay tratamientos registrados.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Box>
 
       {/* Diálogo de Detalles */}
@@ -224,12 +211,13 @@ const HistorialProcesosTerminados = () => {
             fontFamily: "'Poppins', sans-serif",
             fontWeight: 600,
             borderRadius: "12px 12px 0 0",
-            padding: "20px",
+            padding: "16px", // Reduced padding
+            fontSize: "1.1rem", // Slightly smaller font
           }}
         >
           Detalles del Tratamiento
         </DialogTitle>
-        <DialogContent sx={{ padding: "2rem", backgroundColor: "#ffffff" }}>
+        <DialogContent sx={{ padding: "1.5rem", backgroundColor: "#ffffff" }}> {/* Reduced padding */}
           {detalleSeleccionado ? (
             <>
               <Tabs
@@ -237,11 +225,11 @@ const HistorialProcesosTerminados = () => {
                 onChange={handleTabChange}
                 centered
                 sx={{
-                  mb: "1.5rem",
+                  mb: "1rem", // Reduced margin
                   "& .MuiTab-root": {
                     fontFamily: "'Poppins', sans-serif",
                     textTransform: "none",
-                    fontSize: "1.1rem",
+                    fontSize: "1rem", // Smaller font
                     "&.Mui-selected": {
                       color: "#006d77",
                     },
@@ -262,10 +250,10 @@ const HistorialProcesosTerminados = () => {
                   <Table>
                     <TableHead sx={{ backgroundColor: "#e0f7fa" }}>
                       <TableRow>
-                        <TableCell sx={{ fontWeight: 600, textAlign: "center", fontSize: "1rem", fontFamily: "'Poppins', sans-serif" }}>Fecha</TableCell>
-                        <TableCell sx={{ fontWeight: 600, textAlign: "center", fontSize: "1rem", fontFamily: "'Poppins', sans-serif" }}>Estado</TableCell>
-                        <TableCell sx={{ fontWeight: 600, textAlign: "center", fontSize: "1rem", fontFamily: "'Poppins', sans-serif" }}>Pago</TableCell>
-                        <TableCell sx={{ fontWeight: 600, textAlign: "center", fontSize: "1rem", fontFamily: "'Poppins', sans-serif" }}>Comentario</TableCell>
+                        <TableCell sx={{ ...cellStyle, fontWeight: 600 }}>Fecha</TableCell>
+                        <TableCell sx={{ ...cellStyle, fontWeight: 600 }}>Estado</TableCell>
+                        <TableCell sx={{ ...cellStyle, fontWeight: 600 }}>Pago</TableCell>
+                        <TableCell sx={{ ...cellStyle, fontWeight: 600 }}>Comentario</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -291,6 +279,8 @@ const HistorialProcesosTerminados = () => {
                                     backgroundColor: "#e0f7fa",
                                     borderColor: "#004d57",
                                   },
+                                  fontSize: "0.8rem", // Smaller font
+                                  padding: "4px 8px", // Reduced padding
                                 }}
                               >
                                 Ver Comentario
@@ -300,7 +290,7 @@ const HistorialProcesosTerminados = () => {
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={4} sx={{ textAlign: "center", fontFamily: "'Poppins', sans-serif", color: "#03445e" }}>
+                          <TableCell colSpan={4} sx={{ ...cellStyle, color: "#999" }}>
                             No hay citas registradas.
                           </TableCell>
                         </TableRow>
@@ -317,10 +307,10 @@ const HistorialProcesosTerminados = () => {
                   <Table>
                     <TableHead sx={{ backgroundColor: "#e0f7fa" }}>
                       <TableRow>
-                        <TableCell sx={{ fontWeight: 600, textAlign: "center", fontSize: "1rem", fontFamily: "'Poppins', sans-serif" }}>Monto</TableCell>
-                        <TableCell sx={{ fontWeight: 600, textAlign: "center", fontSize: "1rem", fontFamily: "'Poppins', sans-serif" }}>Método</TableCell>
-                        <TableCell sx={{ fontWeight: 600, textAlign: "center", fontSize: "1rem", fontFamily: "'Poppins', sans-serif" }}>Estado</TableCell>
-                        <TableCell sx={{ fontWeight: 600, textAlign: "center", fontSize: "1rem", fontFamily: "'Poppins', sans-serif" }}>Fecha</TableCell>
+                        <TableCell sx={{ ...cellStyle, fontWeight: 600 }}>Monto</TableCell>
+                        <TableCell sx={{ ...cellStyle, fontWeight: 600 }}>Método</TableCell>
+                        <TableCell sx={{ ...cellStyle, fontWeight: 600 }}>Estado</TableCell>
+                        <TableCell sx={{ ...cellStyle, fontWeight: 600 }}>Fecha</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -338,7 +328,7 @@ const HistorialProcesosTerminados = () => {
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={4} sx={{ textAlign: "center", fontFamily: "'Poppins', sans-serif", color: "#03445e" }}>
+                          <TableCell colSpan={4} sx={{ ...cellStyle, color: "#999" }}>
                             No hay pagos registrados.
                           </TableCell>
                         </TableRow>
@@ -349,7 +339,7 @@ const HistorialProcesosTerminados = () => {
               )}
             </>
           ) : (
-            <Typography sx={{ textAlign: "center", color: "#03445e", fontFamily: "'Poppins', sans-serif" }}>
+            <Typography sx={{ textAlign: "center", color: "#03445e", fontFamily: "'Poppins', sans-serif", fontSize: "0.9rem" }}>
               No se encontraron detalles.
             </Typography>
           )}
@@ -371,16 +361,18 @@ const HistorialProcesosTerminados = () => {
             fontFamily: "'Poppins', sans-serif",
             fontWeight: 600,
             borderRadius: "12px 12px 0 0",
+            padding: "12px", // Reduced padding
+            fontSize: "1rem", // Smaller font
           }}
         >
           Comentario
         </DialogTitle>
-        <DialogContent sx={{ padding: "1.5rem", backgroundColor: "#ffffff" }}>
+        <DialogContent sx={{ padding: "1rem", backgroundColor: "#ffffff" }}> {/* Reduced padding */}
           <Typography
             sx={{
               fontFamily: "'Poppins', sans-serif",
               color: "#03445e",
-              fontSize: "1rem",
+              fontSize: "0.9rem", // Smaller font
               textAlign: "center",
             }}
           >

@@ -64,7 +64,7 @@ const TratamientosEnCurso = () => {
         maxWidth: "1400px",
         mx: "auto",
         fontFamily: "'Poppins', sans-serif",
-        backgroundColor: "#f9fbfd", // Light background to match Navbar's subtle tones
+        backgroundColor: "#f9fbfd",
       }}
     >
       <Box sx={{ flexGrow: 1, width: "100%" }}>
@@ -85,7 +85,7 @@ const TratamientosEnCurso = () => {
               size={80}
               thickness={4}
               sx={{
-                color: "#006d77", // Matches AppBar color
+                color: "#006d77",
                 "& .MuiCircularProgress-circle": { strokeLinecap: "round" },
               }}
             />
@@ -95,27 +95,28 @@ const TratamientosEnCurso = () => {
             component={Paper}
             sx={{
               borderRadius: "16px",
-              boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)", // Matches Navbar shadow depth
+              boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
               overflow: "hidden",
               background: "#ffffff",
-              border: "1px solid #78c1c8", // Subtle teal border to tie with Navbar
+              border: "1px solid #78c1c8",
             }}
           >
             <Table>
               <TableHead
                 sx={{
-                  background: "linear-gradient(90deg, #006d77 0%, #78c1c8 100%)", // Matches AppBar gradient
+                  background: "linear-gradient(90deg, #006d77 0%, #78c1c8 100%)",
                 }}
               >
                 <TableRow>
                   <TableCell
                     sx={{
-                      color: "#e0f7fa", // Matches AppBar text color
+                      color: "#e0f7fa",
                       fontWeight: 700,
                       textAlign: "center",
                       fontFamily: "'Poppins', sans-serif",
                       borderBottom: "none",
-                      padding: "16px",
+                      padding: "12px", // Reduced padding
+                      fontSize: "0.95rem", // Slightly smaller font
                     }}
                   >
                     #
@@ -142,7 +143,8 @@ const TratamientosEnCurso = () => {
                         textAlign: "center",
                         fontFamily: "'Poppins', sans-serif",
                         borderBottom: "none",
-                        padding: "16px",
+                        padding: "12px", // Reduced padding
+                        fontSize: "0.95rem", // Slightly smaller font
                       }}
                     >
                       {header}
@@ -156,7 +158,7 @@ const TratamientosEnCurso = () => {
                     key={tratamiento.id}
                     sx={{
                       "&:hover": {
-                        backgroundColor: "#e0f7fa", // Light teal hover to match Navbar
+                        backgroundColor: "#e0f7fa",
                         transition: "background-color 0.3s ease",
                         boxShadow: "inset 0 2px 10px rgba(0, 0, 0, 0.05)",
                       },
@@ -166,21 +168,36 @@ const TratamientosEnCurso = () => {
                     <TableCell
                       sx={{
                         textAlign: "center",
-                        color: "#03445e", // Darker teal to match Drawer text
+                        color: "#03445e",
                         fontFamily: "'Poppins', sans-serif",
-                        padding: "16px",
+                        padding: "12px", // Reduced padding
+                        fontSize: "0.9rem", // Slightly smaller font
                       }}
                     >
                       {(pagina - 1) * elementosPorPagina + index + 1}
                     </TableCell>
-                    {[tratamiento.nombre, tratamiento.apellido_paterno, tratamiento.apellido_materno, tratamiento.edad || "N/A", tratamiento.sexo, tratamiento.telefono, tratamiento.email || "N/A", tratamiento.tratamiento_nombre, tratamiento.fecha_inicio || "N/A", tratamiento.citas_totales, tratamiento.citas_asistidas, tratamiento.estado].map((value, i) => (
+                    {[
+                      tratamiento.nombre,
+                      tratamiento.apellido_paterno,
+                      tratamiento.apellido_materno,
+                      tratamiento.edad || "N/A",
+                      tratamiento.sexo,
+                      tratamiento.telefono,
+                      tratamiento.email || "N/A",
+                      tratamiento.tratamiento_nombre,
+                      tratamiento.fecha_inicio || "N/A",
+                      tratamiento.citas_totales,
+                      tratamiento.citas_asistidas,
+                      tratamiento.estado,
+                    ].map((value, i) => (
                       <TableCell
                         key={i}
                         sx={{
                           textAlign: "center",
                           color: "#03445e",
                           fontFamily: "'Poppins', sans-serif",
-                          padding: "16px",
+                          padding: "12px", // Reduced padding
+                          fontSize: "0.9rem", // Slightly smaller font
                         }}
                       >
                         {value}
@@ -196,7 +213,8 @@ const TratamientosEnCurso = () => {
                           textAlign: "center",
                           color: "#999",
                           fontFamily: "'Poppins', sans-serif",
-                          padding: "16px",
+                          padding: "12px", // Reduced padding
+                          fontSize: "0.9rem", // Slightly smaller font
                         }}
                       >
                         {(pagina - 1) * elementosPorPagina + tratamientosPaginados.length + index + 1}
@@ -210,7 +228,8 @@ const TratamientosEnCurso = () => {
                               textAlign: "center",
                               color: "#999",
                               fontFamily: "'Poppins', sans-serif",
-                              padding: "16px",
+                              padding: "12px", // Reduced padding
+                              fontSize: "0.9rem", // Slightly smaller font
                             }}
                           >
                             -
@@ -238,28 +257,28 @@ const TratamientosEnCurso = () => {
           page={pagina}
           onChange={handleChangePagina}
           color="primary"
-          size="large"
+          size="medium" // Changed from large to medium for smaller size
           sx={{
             "& .MuiPaginationItem-root": {
-              fontSize: "1.1rem",
-              padding: "10px 18px",
-              margin: "0 6px",
-              borderRadius: "10px",
+              fontSize: "1rem", // Slightly smaller font
+              padding: "8px 16px", // Reduced padding
+              margin: "0 4px", // Reduced margin
+              borderRadius: "8px", // Slightly smaller radius
               backgroundColor: "#ffffff",
               boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-              color: "#006d77", // Matches AppBar color
+              color: "#006d77",
               fontFamily: "'Poppins', sans-serif",
               "&:hover": {
-                backgroundColor: "#78c1c8", // Matches Drawer hover
+                backgroundColor: "#78c1c8",
                 color: "#ffffff",
                 transition: "all 0.3s ease",
               },
             },
             "& .Mui-selected": {
-              backgroundColor: "#006d77", // Matches AppBar
-              color: "#e0f7fa", // Matches AppBar text
+              backgroundColor: "#006d77",
+              color: "#e0f7fa",
               "&:hover": {
-                backgroundColor: "#004d57", // Darker shade for consistency
+                backgroundColor: "#004d57",
                 transition: "all 0.3s ease",
               },
             },
@@ -294,6 +313,8 @@ const TratamientosEnCurso = () => {
                 : alerta.severity === "error"
                 ? "#c62828"
                 : "#f57f17",
+            fontSize: "0.9rem", // Slightly smaller font
+            padding: "8px 16px", // Reduced padding
           }}
         >
           {alerta.message}

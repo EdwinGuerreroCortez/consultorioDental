@@ -59,8 +59,7 @@ export default function EvaluarCitasPendientes() {
   const [horaSeleccionada, setHoraSeleccionada] = useState("");
   const [citasOcupadas, setCitasOcupadas] = useState([]);
   const [citasPorTratamiento, setCitasPorTratamiento] = useState({});
-  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
-
+  const [csrfToken, setCsrfToken] = useState(null);
   const disponibilidad = [
     "09:00 AM",
     "10:00 AM",
@@ -82,7 +81,7 @@ export default function EvaluarCitasPendientes() {
           credentials: "include",
         });
         const data = await response.json();
-        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+        setCsrfToken(data.csrfToken);
       } catch (error) {
         console.error("Error obteniendo el token CSRF:", error);
         setAlerta({
@@ -193,7 +192,7 @@ export default function EvaluarCitasPendientes() {
         },
         {
           headers: {
-            "X-XSRF-TOKEN": csrfToken, // Usar el token del estado
+            "X-XSRF-TOKEN": csrfToken,
           },
           withCredentials: true,
         }
@@ -261,19 +260,22 @@ export default function EvaluarCitasPendientes() {
           "https://backenddent.onrender.com/api/tratamientos-pacientes/en-progreso",
           {
             headers: {
-              "X-XSRF-TOKEN": csrfToken, // Usar el token del estado
+              "X-XSRF-TOKEN": csrfToken,
             },
             withCredentials: true,
           }
         );
 
-        if (tratamientos.length === 0) return;
+        if (tratamientos.length === 0) {
+          setTratamientos([]); // Aseguramos que el estado refleje que no hay datos
+          return;
+        }
 
         const peticionesCitas = tratamientos.map((tratamiento) =>
           axios
             .get(`https://backenddent.onrender.com/api/citas/tratamiento/${tratamiento.id}`, {
               headers: {
-                "X-XSRF-TOKEN": csrfToken, // Usar el token del estado
+                "X-XSRF-TOKEN": csrfToken,
               },
               withCredentials: true,
             })
@@ -307,6 +309,7 @@ export default function EvaluarCitasPendientes() {
         setCitasPorTratamiento(citasMap);
       } catch (error) {
         console.error("Error al obtener tratamientos y citas", error);
+        setTratamientos([]); // En caso de error, también mostramos que no hay datos
       }
     };
 
@@ -315,32 +318,26 @@ export default function EvaluarCitasPendientes() {
     }
   }, [csrfToken]);
 
-const convertirHoraLocal = (fechaISO) => {
-  if (!fechaISO) return "Sin asignar";
+  const convertirHoraLocal = (fechaISO) => {
+    if (!fechaISO) return "Sin asignar";
 
-  // Extraer la fecha y hora directamente del string ISO
-  const [fechaParte, horaParte] = fechaISO.split("T");
-  const [anio, mes, dia] = fechaParte.split("-");
-  const [hora, minutos] = horaParte.split(":"); // Ignoramos segundos y "Z"
+    const [fechaParte, horaParte] = fechaISO.split("T");
+    const [anio, mes, dia] = fechaParte.split("-");
+    const [hora, minutos] = horaParte.split(":");
 
-  // Convertir la hora a formato 12 horas con AM/PM
-  let horaNum = parseInt(hora, 10);
-  const esPM = horaNum >= 12;
-  const hora12 = horaNum % 12 || 12; // Si es 0, mostrar 12 (medianoche o mediodía)
-  const ampm = esPM ? "PM" : "AM";
+    let horaNum = parseInt(hora, 10);
+    const esPM = horaNum >= 12;
+    const hora12 = horaNum % 12 || 12;
+    const ampm = esPM ? "PM" : "AM";
 
-  // Meses en español
-  const meses = [
-    "enero", "febrero", "marzo", "abril", "mayo", "junio",
-    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
-  ];
-  const mesTexto = meses[parseInt(mes, 10) - 1];
+    const meses = [
+      "enero", "febrero", "marzo", "abril", "mayo", "junio",
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ];
+    const mesTexto = meses[parseInt(mes, 10) - 1];
 
-  // Formatear la fecha y hora
-  return `${parseInt(dia, 10)} de ${mesTexto} del ${anio} a las ${hora12}:${minutos} ${ampm}`;
-};
-  
-  
+    return `${parseInt(dia, 10)} de ${mesTexto} del ${anio} a las ${hora12}:${minutos} ${ampm}`;
+  };
 
   const handleOpenDialog = (tratamiento) => {
     setSelectedTratamiento(tratamiento);
@@ -394,136 +391,163 @@ const convertirHoraLocal = (fechaISO) => {
 
   return (
     <Box sx={{ p: 3, fontFamily: "'Poppins', sans-serif" }}>
-      <Grid container spacing={3}>
-        {tratamientos.map((tratamiento, index) => (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={tratamiento.id}>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: "easeOut", delay: index * 0.1 }}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-              style={{ cursor: "pointer" }}
-            >
-              <Card
-                sx={{
-                  borderRadius: 12,
-                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-                  p: 2,
-                  background: "#ffffff",
-                  border: "1px solid #e0f7fa",
-                  transition: "transform 0.3s ease",
-                  minHeight: 220,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  "&:hover": { boxShadow: "0 6px 16px rgba(0, 109, 119, 0.2)" },
-                }}
-                onClick={() => handleOpenDialog(tratamiento)}
+      {tratamientos.length === 0 ? (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "70vh",
+            backgroundColor: "#ffffff",
+            borderRadius: "16px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
+            border: "1px solid #78c1c8",
+          }}
+        >
+          <Typography
+            variant="h5"
+            sx={{
+              fontFamily: "'Poppins', sans-serif",
+              color: "#03445e",
+              fontWeight: 500,
+              textAlign: "center",
+            }}
+          >
+            No hay tratamientos en progreso.
+          </Typography>
+        </Box>
+      ) : (
+        <Grid container spacing={3}>
+          {tratamientos.map((tratamiento, index) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={tratamiento.id}>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut", delay: index * 0.1 }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                style={{ cursor: "pointer" }}
               >
-                <CardContent>
-                  <Box sx={{ mb: 2, textAlign: "center" }}>
-                    <Avatar
-                      sx={{ bgcolor: "#e0f7fa", width: 40, height: 40, mx: "auto", mb: 1 }}
-                    >
-                      <AssignmentTurnedIn sx={{ fontSize: 24, color: "#006d77" }} />
-                    </Avatar>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: "bold", color: "#006d77", textTransform: "uppercase" }}
-                    >
-                      {determinarTipoCita(tratamiento)}
-                    </Typography>
-                  </Box>
+                <Card
+                  sx={{
+                    borderRadius: 12,
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+                    p: 2,
+                    background: "#ffffff",
+                    border: "1px solid #e0f7fa",
+                    transition: "transform 0.3s ease",
+                    minHeight: 220,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    "&:hover": { boxShadow: "0 6px 16px rgba(0, 109, 119, 0.2)" },
+                  }}
+                  onClick={() => handleOpenDialog(tratamiento)}
+                >
+                  <CardContent>
+                    <Box sx={{ mb: 2, textAlign: "center" }}>
+                      <Avatar
+                        sx={{ bgcolor: "#e0f7fa", width: 40, height: 40, mx: "auto", mb: 1 }}
+                      >
+                        <AssignmentTurnedIn sx={{ fontSize: 24, color: "#006d77" }} />
+                      </Avatar>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: "bold", color: "#006d77", textTransform: "uppercase" }}
+                      >
+                        {determinarTipoCita(tratamiento)}
+                      </Typography>
+                    </Box>
 
-                  <Box display="flex" alignItems="center" gap={2} mb={2}>
-                    <Avatar sx={{ bgcolor: "#e0f7fa", width: 40, height: 40 }}>
-                      <Person sx={{ fontSize: 24, color: "#006d77" }} />
-                    </Avatar>
-                    <Box>
-                      <Typography
-                        variant="h6"
-                        sx={{ fontWeight: "bold", color: "#006d77", lineHeight: 1.2 }}
-                      >
-                        {`${(tratamiento.nombre || "")
-                          .charAt(0)
-                          .toUpperCase()}${(
-                          tratamiento.nombre || ""
-                        ).slice(1).toLowerCase()}`}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "#78909c", fontStyle: "italic" }}
-                      >
-                        {`${(tratamiento.apellido_paterno || "")
-                          .charAt(0)
-                          .toUpperCase()}${(
-                          tratamiento.apellido_paterno || ""
-                        ).slice(1).toLowerCase()} ${
-                          (tratamiento.apellido_materno || "")
+                    <Box display="flex" alignItems="center" gap={2} mb={2}>
+                      <Avatar sx={{ bgcolor: "#e0f7fa", width: 40, height: 40 }}>
+                        <Person sx={{ fontSize: 24, color: "#006d77" }} />
+                      </Avatar>
+                      <Box>
+                        <Typography
+                          variant="h6"
+                          sx={{ fontWeight: "bold", color: "#006d77", lineHeight: 1.2 }}
+                        >
+                          {`${(tratamiento.nombre || "")
                             .charAt(0)
-                            .toUpperCase()
-                        }${(tratamiento.apellido_materno || "").slice(1).toLowerCase()}`}
-                      </Typography>
-                      <Box
-                        sx={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          bgcolor: "#e0f7fa",
-                          borderRadius: "50%",
-                          px: 1.5,
-                          py: 0.5,
-                          mt: 0.5,
-                        }}
-                      >
-                        <CalendarToday sx={{ fontSize: 16, color: "#006d77", mr: 0.5 }} />
-                        <Typography variant="caption" sx={{ color: "#006d77" }}>
-                          {tratamiento.edad} años
+                            .toUpperCase()}${(
+                            tratamiento.nombre || ""
+                          ).slice(1).toLowerCase()}`}
                         </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "#78909c", fontStyle: "italic" }}
+                        >
+                          {`${(tratamiento.apellido_paterno || "")
+                            .charAt(0)
+                            .toUpperCase()}${(
+                            tratamiento.apellido_paterno || ""
+                          ).slice(1).toLowerCase()} ${
+                            (tratamiento.apellido_materno || "")
+                              .charAt(0)
+                              .toUpperCase()
+                          }${(tratamiento.apellido_materno || "").slice(1).toLowerCase()}`}
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            bgcolor: "#e0f7fa",
+                            borderRadius: "50%",
+                            px: 1.5,
+                            py: 0.5,
+                            mt: 0.5,
+                          }}
+                        >
+                          <CalendarToday sx={{ fontSize: 16, color: "#006d77", mr: 0.5 }} />
+                          <Typography variant="caption" sx={{ color: "#006d77" }}>
+                            {tratamiento.edad} años
+                          </Typography>
+                        </Box>
                       </Box>
                     </Box>
-                  </Box>
 
-                  <Box sx={{ mt: 2 }}>
-                    <Typography
-                      variant="body1"
-                      sx={{ fontWeight: "bold", color: "#006d77", mb: 1 }}
-                    >
-                      Progreso de citas
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        bgcolor: "#e0f7fa",
-                        borderRadius: 8,
-                        overflow: "hidden",
-                        height: 10,
-                      }}
-                    >
+                    <Box sx={{ mt: 2 }}>
+                      <Typography
+                        variant="body1"
+                        sx={{ fontWeight: "bold", color: "#006d77", mb: 1 }}
+                      >
+                        Progreso de citas
+                      </Typography>
                       <Box
                         sx={{
-                          bgcolor: "#78c1c8",
-                          height: "100%",
-                          width: `${(tratamiento.citas_asistidas / tratamiento.citas_totales) * 100}%`,
-                          transition: "width 0.3s ease",
+                          display: "flex",
+                          alignItems: "center",
+                          bgcolor: "#e0f7fa",
+                          borderRadius: 8,
+                          overflow: "hidden",
+                          height: 10,
                         }}
-                      />
+                      >
+                        <Box
+                          sx={{
+                            bgcolor: "#78c1c8",
+                            height: "100%",
+                            width: `${(tratamiento.citas_asistidas / tratamiento.citas_totales) * 100}%`,
+                            transition: "width 0.3s ease",
+                          }}
+                        />
+                      </Box>
+                      <Typography
+                        variant="body2"
+                        sx={{ mt: 1, color: "#78909c", textAlign: "right" }}
+                      >
+                        <strong>{tratamiento.citas_asistidas}</strong> de{" "}
+                        {tratamiento.citas_totales}
+                      </Typography>
                     </Box>
-                    <Typography
-                      variant="body2"
-                      sx={{ mt: 1, color: "#78909c", textAlign: "right" }}
-                    >
-                      <strong>{tratamiento.citas_asistidas}</strong> de{" "}
-                      {tratamiento.citas_totales}
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </Grid>
-        ))}
-      </Grid>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </Grid>
+          ))}
+        </Grid>
+      )}
 
       {selectedTratamiento && (
         <Dialog

@@ -38,20 +38,24 @@ const ListaPacientesSinPlataforma = () => {
       setLoading(true);
       try {
         const response = await fetch("https://backenddent.onrender.com/api/pacientes-sin-plataforma");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`); // Line 42
+        }
         const data = await response.json();
-        setPacientes(data);
-
+        const pacientesArray = Array.isArray(data) ? data : [];
+        setPacientes(pacientesArray);
         const estadoInicial = {};
-        data.forEach((paciente) => {
+        pacientesArray.forEach((paciente) => {
           estadoInicial[paciente.id] = true;
         });
         setEstadoCuentas(estadoInicial);
       } catch (error) {
-        console.error("Error al obtener los pacientes:", error);
+        console.error("Error al obtener los pacientes:", error); // Line 57
+        setPacientes([]);
       }
       setLoading(false);
     };
-
+  
     fetchPacientes();
   }, []);
 
