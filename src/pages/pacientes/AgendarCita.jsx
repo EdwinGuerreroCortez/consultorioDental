@@ -214,7 +214,7 @@ const AgendarCita = () => {
     const [citasOcupadas, setCitasOcupadas] = useState([]);
     const [alerta, setAlerta] = useState({ mostrar: false, mensaje: '', tipo: '' });
     const [isLoading, setIsLoading] = useState(false);
-    const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
+    const [csrfToken, setCsrfToken] = useState(null);
 
     const ultimaFechaConsultada = useRef(null);
 
@@ -223,7 +223,6 @@ const AgendarCita = () => {
         withCredentials: true,
     }), []);
 
-    // Obtener el token CSRF al montar el componente
     useEffect(() => {
         const obtenerTokenCSRF = async () => {
             try {
@@ -231,7 +230,7 @@ const AgendarCita = () => {
                     credentials: "include",
                 });
                 const data = await response.json();
-                setCsrfToken(data.csrfToken); // Guardar el token en el estado
+                setCsrfToken(data.csrfToken);
             } catch (error) {
                 console.error("Error obteniendo el token CSRF:", error);
                 setAlerta({ mostrar: true, mensaje: "Error al obtener el token CSRF", tipo: "error" });
@@ -279,7 +278,7 @@ const AgendarCita = () => {
     }, [fechaSeleccionada, csrfToken]);
 
     const obtenerCitasOcupadas = useCallback(async () => {
-        if (!csrfToken) return; // Esperar a que el token esté disponible
+        if (!csrfToken) return;
 
         try {
             setIsLoading(true);
@@ -287,17 +286,20 @@ const AgendarCita = () => {
                 headers: { "X-XSRF-TOKEN": csrfToken },
             });
             const citas = response.data || [];
-            const citasConZonaHoraria = citas.map(cita => {
-                const fechaUTC = new Date(cita.fecha_hora);
-                const fechaMX = new Intl.DateTimeFormat('es-MX', {
-                    timeZone: 'America/Mexico_City',
-                    year: 'numeric', month: '2-digit', day: '2-digit',
-                    hour: '2-digit', minute: '2-digit', second: '2-digit',
-                    hour12: true
-                }).format(fechaUTC);
-                return { ...cita, fecha_hora_mx: fechaMX };
+            console.log("📌 Citas ocupadas desde la API:", citas);
+
+            const citasConHoraFormateada = citas.map(cita => {
+                const fechaUTC = new Date(cita.fecha_hora); // '2025-03-25T16:00:00.000Z'
+                let horas = fechaUTC.getUTCHours(); // 16
+                const minutos = fechaUTC.getUTCMinutes().toString().padStart(2, '0'); // 00
+                const periodo = horas >= 12 ? 'PM' : 'AM';
+                horas = horas % 12 || 12; // Convierte 16 a 4
+                const horaFormateada = `${horas.toString().padStart(2, '0')}:${minutos} ${periodo}`; // '04:00 PM'
+                return { ...cita, hora_formateada: horaFormateada };
             });
-            setCitasOcupadas(citasConZonaHoraria);
+
+            console.log("📌 Citas ocupadas con hora ajustada:", citasConHoraFormateada);
+            setCitasOcupadas(citasConHoraFormateada);
         } catch (error) {
             console.error('❌ Error al obtener las citas ocupadas:', error);
             setAlerta({
@@ -359,31 +361,43 @@ const AgendarCita = () => {
     }, [axiosInstance, usuarioId, csrfToken]);
 
     const obtenerHorasDisponibles = useMemo(() => {
-        if (!fechaSeleccionada) return disponibilidad;
+        if (!fechaSeleccionada) return disponibilidad.map(hora => ({ value: hora, isOccupied: false }));
+
         const fechaFormateada = fechaSeleccionada ? new Date(fechaSeleccionada).toISOString().split('T')[0] : null;
-        if (!fechaFormateada) return disponibilidad;
+        if (!fechaFormateada) return disponibilidad.map(hora => ({ value: hora, isOccupied: false }));
+
         const horasOcupadas = citasOcupadas
             .filter(cita => {
                 const fechaCita = new Date(cita.fecha_hora).toISOString().split('T')[0];
                 return fechaCita === fechaFormateada;
             })
-            .map(cita => {
-                return new Date(cita.fecha_hora).toLocaleTimeString('es-MX', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true
-                }).toUpperCase().replace(/\./g, "");
-            });
-        return disponibilidad.filter(hora => !horasOcupadas.includes(hora));
+            .map(cita => cita.hora_formateada);
+
+        console.log("📌 Horas ocupadas para esta fecha:", horasOcupadas);
+
+        return disponibilidad.map(hora => ({
+            value: hora,
+            isOccupied: horasOcupadas.includes(hora),
+        }));
     }, [fechaSeleccionada, citasOcupadas, disponibilidad]);
 
     const handleAgendarCita = useCallback(async () => {
-        if (!csrfToken) return; // Esperar a que el token esté disponible
+        if (!csrfToken) return;
 
         if (!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada) {
             setAlerta({
                 mostrar: true,
                 mensaje: 'Por favor, completa todos los campos.',
+                tipo: 'error',
+            });
+            return;
+        }
+
+        const selectedHourObj = obtenerHorasDisponibles.find(h => h.value === horaSeleccionada);
+        if (selectedHourObj.isOccupied) {
+            setAlerta({
+                mostrar: true,
+                mensaje: 'Esta hora ya está ocupada. Por favor, selecciona otra.',
                 tipo: 'error',
             });
             return;
@@ -702,7 +716,7 @@ const AgendarCita = () => {
                                             value={horaSeleccionada}
                                             onChange={(e) => setHoraSeleccionada(e.target.value)}
                                             displayEmpty
-                                            disabled={!fechaSeleccionada || obtenerHorasDisponibles.length === 0}
+                                            disabled={!fechaSeleccionada}
                                             sx={inputStyles}
                                             startAdornment={
                                                 <InputAdornment position="start">
@@ -712,15 +726,22 @@ const AgendarCita = () => {
                                             MenuProps={menuProps}
                                             aria-label="Selecciona la hora de la cita"
                                         >
-                                            {obtenerHorasDisponibles.length > 0 ? (
-                                                obtenerHorasDisponibles.map((hora, index) => (
-                                                    <MenuItem key={index} value={hora}>
-                                                        {hora}
-                                                    </MenuItem>
-                                                ))
-                                            ) : (
-                                                <MenuItem disabled>No hay horarios disponibles</MenuItem>
-                                            )}
+                                            <MenuItem disabled value="">
+                                                Selecciona una hora
+                                            </MenuItem>
+                                            {obtenerHorasDisponibles.map((horaObj, index) => (
+                                                <MenuItem
+                                                    key={index}
+                                                    value={horaObj.value}
+                                                    disabled={horaObj.isOccupied}
+                                                    sx={{
+                                                        color: horaObj.isOccupied ? "#d32f2f" : "inherit",
+                                                        fontStyle: horaObj.isOccupied ? "italic" : "normal",
+                                                    }}
+                                                >
+                                                    {horaObj.value} {horaObj.isOccupied && "(Ocupada)"}
+                                                </MenuItem>
+                                            ))}
                                         </Select>
                                     </FormControl>
                                 </motion.div>

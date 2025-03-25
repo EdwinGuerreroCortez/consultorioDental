@@ -40,7 +40,6 @@ import {
   Close,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
-import { obtenerCitasOcupadas, obtenerHorasDisponibles } from "../../utils/citas";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -60,20 +59,14 @@ export default function EvaluarCitasPendientes() {
   const [citasOcupadas, setCitasOcupadas] = useState([]);
   const [citasPorTratamiento, setCitasPorTratamiento] = useState({});
   const [csrfToken, setCsrfToken] = useState(null);
-  const disponibilidad = [
-    "09:00 AM",
-    "10:00 AM",
-    "11:00 AM",
-    "12:00 PM",
-    "01:00 PM",
-    "03:00 PM",
-    "04:00 PM",
-    "05:00 PM",
-    "06:00 PM",
-  ];
+  const [horasDisponibles, setHorasDisponibles] = useState([]);
   const [alerta, setAlerta] = useState({ mostrar: false, mensaje: "", tipo: "" });
 
-  // Obtener el token CSRF al cargar el componente
+  const disponibilidadBase = [
+    "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM",
+    "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM",
+  ];
+
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
@@ -93,6 +86,11 @@ export default function EvaluarCitasPendientes() {
     };
     obtenerTokenCSRF();
   }, []);
+
+  const axiosInstance = axios.create({
+    baseURL: "https://backenddent.onrender.com/api",
+    withCredentials: true,
+  });
 
   const inputStyle = {
     "& .MuiOutlinedInput-root": {
@@ -151,16 +149,66 @@ export default function EvaluarCitasPendientes() {
 
   const handleOpenAgendar = () => {
     setOpenAgendar(true);
+    setFechaSeleccionada(null);
+    setHoraSeleccionada("");
   };
 
   const handleCloseAgendar = () => {
     setOpenAgendar(false);
   };
 
+  const fetchCitasOcupadas = async () => {
+    if (!csrfToken) return;
+    try {
+      const response = await axiosInstance.get("/citas/activas", {
+        headers: { "X-XSRF-TOKEN": csrfToken },
+      });
+      const citasConHoraFormateada = response.data.map(cita => {
+        const fechaUTC = new Date(cita.fecha_hora);
+        let horas = fechaUTC.getUTCHours();
+        const minutos = fechaUTC.getUTCMinutes().toString().padStart(2, "0");
+        const periodo = horas >= 12 ? "PM" : "AM";
+        horas = horas % 12 || 12;
+        const horaFormateada = `${horas.toString().padStart(2, "0")}:${minutos} ${periodo}`;
+        return { ...cita, hora_formateada: horaFormateada };
+      });
+      setCitasOcupadas(citasConHoraFormateada);
+    } catch (error) {
+      console.error("Error al obtener citas ocupadas:", error);
+      setAlerta({
+        mostrar: true,
+        mensaje: "Error al cargar las citas ocupadas",
+        tipo: "error",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (fechaSeleccionada && csrfToken) {
+      fetchCitasOcupadas();
+    }
+  }, [fechaSeleccionada, csrfToken]);
+
+  useEffect(() => {
+    if (fechaSeleccionada) {
+      const fechaFormateada = fechaSeleccionada.toISOString().split("T")[0];
+      const horasOcupadas = citasOcupadas
+        .filter(cita => new Date(cita.fecha_hora).toISOString().split("T")[0] === fechaFormateada)
+        .map(cita => cita.hora_formateada);
+
+      const nuevasHoras = disponibilidadBase.map(hora => ({
+        value: hora,
+        isOccupied: horasOcupadas.includes(hora),
+      }));
+      setHorasDisponibles(nuevasHoras);
+    } else {
+      setHorasDisponibles(disponibilidadBase.map(hora => ({ value: hora, isOccupied: false })));
+    }
+  }, [fechaSeleccionada, citasOcupadas]);
+
   const actualizarCita = async () => {
     const proximaCitaId = obtenerProximaCitaId();
     if (!proximaCitaId || !fechaSeleccionada || !horaSeleccionada) {
-      console.warn("⚠️ No se puede actualizar la cita. Verifica los datos.");
       setAlerta({
         mostrar: true,
         mensaje: "⚠️ No se puede agendar la cita. Verifica los datos.",
@@ -169,36 +217,32 @@ export default function EvaluarCitasPendientes() {
       return;
     }
 
+    const selectedHourObj = horasDisponibles.find(h => h.value === horaSeleccionada);
+    if (selectedHourObj.isOccupied) {
+      setAlerta({
+        mostrar: true,
+        mensaje: "Esta hora ya está ocupada. Por favor, selecciona otra.",
+        tipo: "error",
+      });
+      return;
+    }
+
     const fechaSeleccionadaStr = fechaSeleccionada.toISOString().split("T")[0];
     const [hora, minutos] = horaSeleccionada.replace(/( AM| PM)/, "").split(":").map(Number);
     const esPM = horaSeleccionada.includes("PM");
-
     let horaFinal = esPM && hora !== 12 ? hora + 12 : hora;
     if (!esPM && hora === 12) horaFinal = 0;
-
     const fechaHoraLocal = new Date(
       `${fechaSeleccionadaStr}T${horaFinal.toString().padStart(2, "0")}:${minutos.toString().padStart(2, "0")}:00`
     );
     const fechaHoraUTC = new Date(fechaHoraLocal.getTime() - fechaHoraLocal.getTimezoneOffset() * 60000);
 
-    console.log("📌 Enviando actualización de cita con ID:", proximaCitaId);
-    console.log("🕒 Nueva fecha y hora en UTC:", fechaHoraUTC.toISOString());
-
     try {
-      const response = await axios.put(
-        `https://backenddent.onrender.com/api/citas/actualizar/${proximaCitaId}`,
-        {
-          fechaHora: fechaHoraUTC.toISOString(),
-        },
-        {
-          headers: {
-            "X-XSRF-TOKEN": csrfToken,
-          },
-          withCredentials: true,
-        }
+      const response = await axiosInstance.put(
+        `/citas/actualizar/${proximaCitaId}`,
+        { fechaHora: fechaHoraUTC.toISOString() },
+        { headers: { "X-XSRF-TOKEN": csrfToken } }
       );
-
-      console.log("✅ Cita actualizada con éxito:", response.data);
 
       setCitas((prevCitas) =>
         (prevCitas || []).map((cita) =>
@@ -224,7 +268,7 @@ export default function EvaluarCitasPendientes() {
                 ...tratamiento,
                 citas_asistidas: (citasPorTratamiento[selectedTratamiento.id] || [])
                   .filter((cita) => cita.estado === "completada" && cita.pagada === 1 && cita.fecha_hora !== null)
-                  .length + 1,
+                  .length,
               }
             : tratamiento
         )
@@ -248,36 +292,22 @@ export default function EvaluarCitasPendientes() {
   };
 
   useEffect(() => {
-    if (fechaSeleccionada) {
-      obtenerCitasOcupadas().then(setCitasOcupadas);
-    }
-  }, [fechaSeleccionada]);
-
-  useEffect(() => {
     const obtenerDatos = async () => {
+      if (!csrfToken) return;
       try {
-        const { data: tratamientos } = await axios.get(
-          "https://backenddent.onrender.com/api/tratamientos-pacientes/en-progreso",
-          {
-            headers: {
-              "X-XSRF-TOKEN": csrfToken,
-            },
-            withCredentials: true,
-          }
-        );
+        const { data: tratamientos } = await axiosInstance.get("/tratamientos-pacientes/en-progreso", {
+          headers: { "X-XSRF-TOKEN": csrfToken },
+        });
 
         if (tratamientos.length === 0) {
-          setTratamientos([]); // Aseguramos que el estado refleje que no hay datos
+          setTratamientos([]);
           return;
         }
 
         const peticionesCitas = tratamientos.map((tratamiento) =>
-          axios
-            .get(`https://backenddent.onrender.com/api/citas/tratamiento/${tratamiento.id}`, {
-              headers: {
-                "X-XSRF-TOKEN": csrfToken,
-              },
-              withCredentials: true,
+          axiosInstance
+            .get(`/citas/tratamiento/${tratamiento.id}`, {
+              headers: { "X-XSRF-TOKEN": csrfToken },
             })
             .then((response) => ({ id: tratamiento.id, citas: response.data }))
             .catch((error) => {
@@ -287,7 +317,6 @@ export default function EvaluarCitasPendientes() {
         );
 
         const citasObtenidas = await Promise.all(peticionesCitas);
-
         const citasMap = {};
         citasObtenidas.forEach(({ id, citas }) => {
           citasMap[id] = citas;
@@ -298,18 +327,14 @@ export default function EvaluarCitasPendientes() {
           const citasAsistidas = citas.filter(
             (cita) => cita.estado === "completada" && cita.pagada === 1 && cita.fecha_hora !== null
           ).length;
-
-          return {
-            ...tratamiento,
-            citas_asistidas: citasAsistidas,
-          };
+          return { ...tratamiento, citas_asistidas: citasAsistidas };
         });
 
         setTratamientos(tratamientosActualizados);
         setCitasPorTratamiento(citasMap);
       } catch (error) {
         console.error("Error al obtener tratamientos y citas", error);
-        setTratamientos([]); // En caso de error, también mostramos que no hay datos
+        setTratamientos([]);
       }
     };
 
@@ -320,23 +345,15 @@ export default function EvaluarCitasPendientes() {
 
   const convertirHoraLocal = (fechaISO) => {
     if (!fechaISO) return "Sin asignar";
-
-    const [fechaParte, horaParte] = fechaISO.split("T");
-    const [anio, mes, dia] = fechaParte.split("-");
-    const [hora, minutos] = horaParte.split(":");
-
-    let horaNum = parseInt(hora, 10);
-    const esPM = horaNum >= 12;
-    const hora12 = horaNum % 12 || 12;
-    const ampm = esPM ? "PM" : "AM";
-
-    const meses = [
-      "enero", "febrero", "marzo", "abril", "mayo", "junio",
-      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
-    ];
-    const mesTexto = meses[parseInt(mes, 10) - 1];
-
-    return `${parseInt(dia, 10)} de ${mesTexto} del ${anio} a las ${hora12}:${minutos} ${ampm}`;
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleString("es-ES", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
   const handleOpenDialog = (tratamiento) => {
@@ -355,7 +372,7 @@ export default function EvaluarCitasPendientes() {
 
   const ultimaCitaConFecha = citas
     .filter((cita) => cita.fecha_hora)
-    .pop();
+    .sort((a, b) => new Date(b.fecha_hora) - new Date(a.fecha_hora))[0];
 
   const puedeAgendarCita = ultimaCitaConFecha
     ? ultimaCitaConFecha.estado === "completada" && ultimaCitaConFecha.pagada === 1
@@ -363,24 +380,14 @@ export default function EvaluarCitasPendientes() {
 
   const obtenerProximaCitaId = () => {
     const proximaCita = citas.find((cita) => cita.fecha_hora === null && cita.estado === "pendiente");
-    if (proximaCita) {
-      console.log("📌 ID de la próxima cita pendiente:", proximaCita.id);
-      return proximaCita.id;
-    } else {
-      console.log("⚠️ No hay citas pendientes disponibles.");
-      return null;
-    }
+    return proximaCita ? proximaCita.id : null;
   };
 
   const obtenerUltimaFechaCita = () => {
     if (!selectedTratamiento || !citasPorTratamiento[selectedTratamiento.id]) return null;
-
     const citasConFecha = citasPorTratamiento[selectedTratamiento.id].filter((cita) => cita.fecha_hora);
-
     if (citasConFecha.length === 0) return null;
-
     const ultimaCita = citasConFecha.sort((a, b) => new Date(b.fecha_hora) - new Date(a.fecha_hora))[0];
-
     return new Date(ultimaCita.fecha_hora);
   };
 
@@ -446,9 +453,7 @@ export default function EvaluarCitasPendientes() {
                 >
                   <CardContent>
                     <Box sx={{ mb: 2, textAlign: "center" }}>
-                      <Avatar
-                        sx={{ bgcolor: "#e0f7fa", width: 40, height: 40, mx: "auto", mb: 1 }}
-                      >
+                      <Avatar sx={{ bgcolor: "#e0f7fa", width: 40, height: 40, mx: "auto", mb: 1 }}>
                         <AssignmentTurnedIn sx={{ fontSize: 24, color: "#006d77" }} />
                       </Avatar>
                       <Typography
@@ -458,7 +463,6 @@ export default function EvaluarCitasPendientes() {
                         {determinarTipoCita(tratamiento)}
                       </Typography>
                     </Box>
-
                     <Box display="flex" alignItems="center" gap={2} mb={2}>
                       <Avatar sx={{ bgcolor: "#e0f7fa", width: 40, height: 40 }}>
                         <Person sx={{ fontSize: 24, color: "#006d77" }} />
@@ -468,9 +472,7 @@ export default function EvaluarCitasPendientes() {
                           variant="h6"
                           sx={{ fontWeight: "bold", color: "#006d77", lineHeight: 1.2 }}
                         >
-                          {`${(tratamiento.nombre || "")
-                            .charAt(0)
-                            .toUpperCase()}${(
+                          {`${(tratamiento.nombre || "").charAt(0).toUpperCase()}${(
                             tratamiento.nombre || ""
                           ).slice(1).toLowerCase()}`}
                         </Typography>
@@ -478,15 +480,13 @@ export default function EvaluarCitasPendientes() {
                           variant="body2"
                           sx={{ color: "#78909c", fontStyle: "italic" }}
                         >
-                          {`${(tratamiento.apellido_paterno || "")
+                          {`${(tratamiento.apellido_paterno || "").charAt(0).toUpperCase()}${(
+                            tratamiento.apellido_paterno || ""
+                          ).slice(1).toLowerCase()} ${(tratamiento.apellido_materno || "")
                             .charAt(0)
                             .toUpperCase()}${(
-                            tratamiento.apellido_paterno || ""
-                          ).slice(1).toLowerCase()} ${
-                            (tratamiento.apellido_materno || "")
-                              .charAt(0)
-                              .toUpperCase()
-                          }${(tratamiento.apellido_materno || "").slice(1).toLowerCase()}`}
+                            tratamiento.apellido_materno || ""
+                          ).slice(1).toLowerCase()}`}
                         </Typography>
                         <Box
                           sx={{
@@ -506,7 +506,6 @@ export default function EvaluarCitasPendientes() {
                         </Box>
                       </Box>
                     </Box>
-
                     <Box sx={{ mt: 2 }}>
                       <Typography
                         variant="body1"
@@ -537,8 +536,7 @@ export default function EvaluarCitasPendientes() {
                         variant="body2"
                         sx={{ mt: 1, color: "#78909c", textAlign: "right" }}
                       >
-                        <strong>{tratamiento.citas_asistidas}</strong> de{" "}
-                        {tratamiento.citas_totales}
+                        <strong>{tratamiento.citas_asistidas}</strong> de {tratamiento.citas_totales}
                       </Typography>
                     </Box>
                   </CardContent>
@@ -569,9 +567,16 @@ export default function EvaluarCitasPendientes() {
           >
             Citas de {selectedTratamiento.tratamiento}
           </DialogTitle>
-
           <DialogContent
-            sx={{ display: "flex", flexDirection: "column", justifyContent: "space-between", height: "100%", p: 3, pt: 4, backgroundColor: "#fafafa" }}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              height: "100%",
+              p: 3,
+              pt: 4,
+              backgroundColor: "#fafafa",
+            }}
           >
             <TableContainer
               component={Paper}
@@ -584,9 +589,7 @@ export default function EvaluarCitasPendientes() {
             >
               <Table sx={{ minWidth: 650 }}>
                 <TableHead>
-                  <TableRow
-                    sx={{ backgroundColor: "#e0f7fa", borderBottom: "2px solid #78c1c8" }}
-                  >
+                  <TableRow sx={{ backgroundColor: "#e0f7fa", borderBottom: "2px solid #78c1c8" }}>
                     <TableCell
                       sx={{ fontWeight: "bold", textAlign: "center", color: "#006d77", fontSize: "1.1rem", py: 2.5 }}
                     >
@@ -627,9 +630,7 @@ export default function EvaluarCitasPendientes() {
                         >
                           {index + 1 + currentPage * citasPorPagina}
                         </TableCell>
-                        <TableCell
-                          sx={{ textAlign: "center", fontSize: "1rem", color: "#455a64", py: 2 }}
-                        >
+                        <TableCell sx={{ textAlign: "center", fontSize: "1rem", color: "#455a64", py: 2 }}>
                           {cita.fecha_hora ? convertirHoraLocal(cita.fecha_hora) : "Sin Asignar"}
                         </TableCell>
                         <TableCell sx={{ textAlign: "center", py: 2 }}>
@@ -725,14 +726,7 @@ export default function EvaluarCitasPendientes() {
                 </TableBody>
               </Table>
             </TableContainer>
-
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              gap={2}
-              sx={{ mt: 3, mb: 2 }}
-            >
+            <Box display="flex" justifyContent="center" alignItems="center" gap={2} sx={{ mt: 3, mb: 2 }}>
               <Tooltip title="Navegar a la página anterior">
                 <IconButton
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
@@ -762,13 +756,21 @@ export default function EvaluarCitasPendientes() {
               </Tooltip>
             </Box>
           </DialogContent>
-
-          <DialogActions sx={{ backgroundColor: "#fafafa", borderBottomLeftRadius: 12, borderBottomRightRadius: 12, display: "flex", justifyContent: "center", gap: 2 }}>
+          <DialogActions
+            sx={{
+              backgroundColor: "#fafafa",
+              borderBottomLeftRadius: 12,
+              borderBottomRightRadius: 12,
+              display: "flex",
+              justifyContent: "center",
+              gap: 2,
+            }}
+          >
             <Button
               onClick={() => {
                 const proximaCitaId = obtenerProximaCitaId();
                 if (proximaCitaId) {
-                  setOpenAgendar(true);
+                  handleOpenAgendar();
                 }
               }}
               disabled={!puedeAgendarCita}
@@ -822,7 +824,6 @@ export default function EvaluarCitasPendientes() {
         >
           Seleccionar Fecha y Hora
         </DialogTitle>
-
         <DialogContent
           sx={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "24px", backgroundColor: "#ffffff" }}
         >
@@ -847,13 +848,10 @@ export default function EvaluarCitasPendientes() {
                   shouldDisableDate={(date) => ![1, 2, 3, 6].includes(date.getDay())}
                 />
               </LocalizationProvider>
-              <Typography
-                sx={{ mt: 1, color: "#d32f2f", fontFamily: "'Poppins', sans-serif" }}
-              >
+              <Typography sx={{ mt: 1, color: "#d32f2f", fontFamily: "'Poppins', sans-serif" }}>
                 Solo se pueden agendar citas en: Lunes, Martes, Miércoles y Sábado.
               </Typography>
             </Box>
-
             <FormControl fullWidth>
               <Typography sx={{ mb: 1, color: "#03445e", fontWeight: 600, fontFamily: "'Poppins', sans-serif" }}>
                 Hora
@@ -868,10 +866,7 @@ export default function EvaluarCitasPendientes() {
                   </InputAdornment>
                 }
                 sx={selectStyle}
-                disabled={
-                  !fechaSeleccionada ||
-                  obtenerHorasDisponibles(fechaSeleccionada, citasOcupadas, disponibilidad).length === 0
-                }
+                disabled={!fechaSeleccionada}
                 MenuProps={{
                   PaperProps: {
                     sx: {
@@ -882,24 +877,36 @@ export default function EvaluarCitasPendientes() {
                   },
                 }}
               >
-                {obtenerHorasDisponibles(fechaSeleccionada, citasOcupadas, disponibilidad).length > 0 ? (
-                  obtenerHorasDisponibles(fechaSeleccionada, citasOcupadas, disponibilidad).map((hora, index) => (
-                    <MenuItem key={index} value={hora} sx={menuItemStyle}>
-                      {hora}
-                    </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem disabled sx={menuItemStyle}>
-                    No hay horarios disponibles
+                <MenuItem value="" disabled sx={menuItemStyle}>
+                  Selecciona una hora
+                </MenuItem>
+                {horasDisponibles.map((horaObj, index) => (
+                  <MenuItem
+                    key={index}
+                    value={horaObj.value}
+                    disabled={horaObj.isOccupied}
+                    sx={{
+                      ...menuItemStyle,
+                      color: horaObj.isOccupied ? "#d32f2f" : "inherit",
+                      fontStyle: horaObj.isOccupied ? "italic" : "normal",
+                    }}
+                  >
+                    {horaObj.value} {horaObj.isOccupied && "(Ocupada)"}
                   </MenuItem>
-                )}
+                ))}
               </Select>
             </FormControl>
           </motion.div>
         </DialogContent>
-
         <DialogActions
-          sx={{ display: "flex", justifyContent: "center", padding: "24px", backgroundColor: "#ffffff", borderBottomLeftRadius: 12, borderBottomRightRadius: 12 }}
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            padding: "24px",
+            backgroundColor: "#ffffff",
+            borderBottomLeftRadius: 12,
+            borderBottomRightRadius: 12,
+          }}
         >
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
@@ -922,7 +929,6 @@ export default function EvaluarCitasPendientes() {
               Cancelar
             </Button>
           </motion.div>
-
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               variant="contained"
@@ -955,9 +961,8 @@ export default function EvaluarCitasPendientes() {
             sx={{
               width: "100%",
               backgroundColor:
-                alerta.tipo === "success" ? "#e8f5e9" : alerta.tipo === "error" ? "#ffebee" : alerta.tipo === "warning" ? "#fff3e0" : "#e0f7fa",
-              color:
-                alerta.tipo === "success" ? "#4caf50" : alerta.tipo === "error" ? "#f44336" : alerta.tipo === "warning" ? "#ff9800" : "#006d77",
+                alerta.tipo === "success" ? "#e8f5e9" : alerta.tipo === "error" ? "#ffebee" : "#fff3e0",
+              color: alerta.tipo === "success" ? "#4caf50" : alerta.tipo === "error" ? "#f44336" : "#ff9800",
             }}
             onClose={() => setAlerta({ mostrar: false, mensaje: "", tipo: "" })}
           >

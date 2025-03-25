@@ -39,7 +39,7 @@ const HeaderBox = styled(Box)(({ theme }) => ({
   gap: "8px",
   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
   width: "100%",
-  maxWidth: "1200px", // Aumentado para hacer el formulario más largo en los lados
+  maxWidth: "1200px",
 }));
 
 const AppointmentCard = styled(Card)(({ theme }) => ({
@@ -47,7 +47,7 @@ const AppointmentCard = styled(Card)(({ theme }) => ({
   borderRadius: "10px",
   marginBottom: theme.spacing(1.5),
   boxShadow: "0 2px 6px rgba(0, 0, 0, 0.05)",
-  border: "1px solid #e0e0e0", // Borde sutil para mejorar la separación
+  border: "1px solid #e0e0e0",
   transition: "transform 0.2s ease, box-shadow 0.2s ease",
   "&:hover": {
     transform: "translateY(-2px)",
@@ -123,21 +123,18 @@ const MisCitas = () => {
     [citas, pagina]
   );
 
-  const obtenerHoraExacta = useMemo(
-    () => (fechaUTC) => {
-      return fechaUTC
-        ? dayjs.utc(fechaUTC).tz("America/Mexico_City").format("D [de] MMMM [de] YYYY [a las] hh:mm A")
-        : "Fecha no registrada";
-    },
-    []
-  );
+  const obtenerHoraExacta = useMemo(() => (fechaUTC) => {
+    if (!fechaUTC) return "Fecha no registrada";
+    // Simplemente devuelve la fecha tal como viene del backend
+    return fechaUTC;
+  }, []);
 
   const handleGoBack = () => {
     navigate(-1);
   };
 
   const handleScheduleNewAppointment = () => {
-    navigate("/agendar-cita"); // Ajusta esta ruta según tu aplicación
+    navigate("/agendar-cita");
   };
 
   return (
@@ -150,7 +147,7 @@ const MisCitas = () => {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        background: "linear-gradient(135deg, #f5f7fa 0%, #e6f7ff 100%)", // Fondo más suave
+        background: "linear-gradient(135deg, #f5f7fa 0%, #e6f7ff 100%)",
       }}
     >
       {/* Back Button */}
@@ -175,7 +172,7 @@ const MisCitas = () => {
           variant="h5"
           sx={{
             fontWeight: 600,
-            fontSize: { xs: "1.25rem", md: "1.5rem" }, // Tamaño de letra más discreto
+            fontSize: { xs: "1.25rem", md: "1.5rem" },
             fontFamily: "'Roboto', sans-serif",
           }}
         >
@@ -187,7 +184,7 @@ const MisCitas = () => {
       <Box
         sx={{
           width: "100%",
-          maxWidth: "1200px", // Aumentado para hacer el formulario más largo en los lados
+          maxWidth: "1200px",
           backgroundColor: "#ffffff",
           borderRadius: "0 0 12px 12px",
           padding: { xs: "1rem", md: "1.5rem" },
@@ -217,7 +214,7 @@ const MisCitas = () => {
                       variant="body1"
                       sx={{
                         fontWeight: 500,
-                        fontSize: { xs: "0.9rem", md: "1rem" }, // Letras más pequeñas
+                        fontSize: { xs: "0.9rem", md: "1rem" },
                         color: "#333",
                       }}
                     >
@@ -251,7 +248,7 @@ const MisCitas = () => {
                       size="small"
                       sx={{
                         fontWeight: 500,
-                        fontSize: { xs: "0.65rem", md: "0.75rem" }, // Letras más pequeñas
+                        fontSize: { xs: "0.65rem", md: "0.75rem" },
                         padding: "2px",
                       }}
                     />
@@ -263,7 +260,7 @@ const MisCitas = () => {
                       size="small"
                       sx={{
                         fontWeight: 500,
-                        fontSize: { xs: "0.65rem", md: "0.75rem" }, // Letras más pequeñas
+                        fontSize: { xs: "0.65rem", md: "0.75rem" },
                         padding: "2px",
                       }}
                     />
@@ -278,7 +275,7 @@ const MisCitas = () => {
               variant="body1"
               sx={{
                 color: "#666",
-                fontSize: { xs: "0.9rem", md: "1rem" }, // Letras más pequeñas
+                fontSize: { xs: "0.9rem", md: "1rem" },
                 mb: 2,
               }}
             >
@@ -292,7 +289,7 @@ const MisCitas = () => {
                 backgroundColor: "#0288d1",
                 borderRadius: "8px",
                 textTransform: "none",
-                fontSize: { xs: "0.85rem", md: "0.9rem" }, // Letras más pequeñas
+                fontSize: { xs: "0.85rem", md: "0.9rem" },
                 fontFamily: "'Roboto', sans-serif",
                 fontWeight: 500,
                 padding: { xs: "8px 16px", md: "10px 20px" },
@@ -317,7 +314,7 @@ const MisCitas = () => {
               sx={{
                 "& .MuiPaginationItem-root": {
                   fontFamily: "'Roboto', sans-serif",
-                  fontSize: { xs: "0.75rem", md: "0.85rem" }, // Letras más pequeñas
+                  fontSize: { xs: "0.75rem", md: "0.85rem" },
                   "&:hover": { backgroundColor: "rgba(2, 136, 209, 0.1)" },
                 },
               }}
@@ -339,7 +336,7 @@ const MisCitas = () => {
           sx={{
             width: "100%",
             fontFamily: "'Roboto', sans-serif",
-            fontSize: { xs: "0.85rem", md: "0.9rem" }, // Letras más pequeñas
+            fontSize: { xs: "0.85rem", md: "0.9rem" },
             borderRadius: "8px",
             boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
           }}

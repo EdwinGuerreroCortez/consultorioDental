@@ -54,7 +54,7 @@ const FooterPublico = () => {
           Deslinde Legal
         </Link>
         <Link
-          href="https://drive.google.com/file/d/16dwTH7sIyEYtWbRuis-I94y4imh4SZb-/view?usp=drive_link"
+          href="https://drive.google.com/file/d/1d2XZ7qsKoQcjTBqBPn3yC1iwXYIhwLuq/view?usp=drive_link"
           target="_blank"  // Abre el enlace en una nueva pestaña
           rel="noopener noreferrer"  // Mejora la seguridad
           underline="hover"

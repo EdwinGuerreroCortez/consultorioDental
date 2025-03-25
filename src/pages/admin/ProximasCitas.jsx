@@ -37,7 +37,6 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { es } from "date-fns/locale";
-import { obtenerCitasOcupadas, obtenerHorasDisponibles } from "../../utils/citas";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -93,6 +92,11 @@ const formats = {
   dayHeaderFormat: (date) => `${diasSemana[date.getDay()]} ${date.getDate()} de ${meses[date.getMonth()]}`,
 };
 
+const disponibilidadBase = [
+  "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM",
+  "03:00 PM", "04:00 PM", "05:00 PM", "06:00 PM"
+];
+
 const ProximasCitas = () => {
   const [citas, setCitas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -102,24 +106,13 @@ const ProximasCitas = () => {
   const [openReagendar, setOpenReagendar] = useState(false);
   const [nuevaFecha, setNuevaFecha] = useState(null);
   const [nuevaHora, setNuevaHora] = useState("");
-  const [horasDisponibles, setHorasDisponibles] = useState([
-    "09:00 AM",
-    "10:00 AM",
-    "11:00 AM",
-    "12:00 PM",
-    "01:00 PM",
-    "03:00 PM",
-    "04:00 PM",
-    "05:00 PM",
-    "06:00 PM",
-  ]);
+  const [horasDisponibles, setHorasDisponibles] = useState([]);
   const [citasOcupadas, setCitasOcupadas] = useState([]);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
+  const [csrfToken, setCsrfToken] = useState(null);
 
-  // Obtener el token CSRF al montar el componente
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
@@ -127,7 +120,7 @@ const ProximasCitas = () => {
           credentials: "include",
         });
         const data = await response.json();
-        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+        setCsrfToken(data.csrfToken);
       } catch (error) {
         console.error("Error obteniendo el token CSRF:", error);
         setSnackbarMessage("Error al obtener el token CSRF");
@@ -138,13 +131,17 @@ const ProximasCitas = () => {
     obtenerTokenCSRF();
   }, []);
 
+  const axiosInstance = axios.create({
+    baseURL: "https://backenddent.onrender.com/api",
+    withCredentials: true,
+  });
+
   const fetchCitas = async () => {
-    if (!csrfToken) return; // Esperar a que el token esté disponible
+    if (!csrfToken) return;
 
     try {
-      const response = await axios.get("https://backenddent.onrender.com/api/citas/proximas", {
+      const response = await axiosInstance.get("/citas/proximas", {
         headers: { "X-XSRF-TOKEN": csrfToken },
-        withCredentials: true,
       });
       const citasFiltradas = response.data.filter(
         (cita) => !(cita.estado_cita === "completada" && cita.estado_pago === "Pagado")
@@ -160,10 +157,25 @@ const ProximasCitas = () => {
       }));
 
       setCitas(citasFormateadas);
-      const citasOcupadasData = await obtenerCitasOcupadas(); // Asegúrate de que esta función también use el token si es necesario
-      setCitasOcupadas(citasOcupadasData);
+
+      const citasOcupadasData = await axiosInstance.get("/citas/activas", {
+        headers: { "X-XSRF-TOKEN": csrfToken },
+      });
+      const citasConHoraFormateada = citasOcupadasData.data.map(cita => {
+        const fechaUTC = new Date(cita.fecha_hora);
+        let horas = fechaUTC.getUTCHours();
+        const minutos = fechaUTC.getUTCMinutes().toString().padStart(2, "0");
+        const periodo = horas >= 12 ? "PM" : "AM";
+        horas = horas % 12 || 12;
+        const horaFormateada = `${horas.toString().padStart(2, "0")}:${minutos} ${periodo}`;
+        return { ...cita, hora_formateada: horaFormateada };
+      });
+      setCitasOcupadas(citasConHoraFormateada);
     } catch (error) {
       console.error("Error al obtener las próximas citas", error);
+      setSnackbarMessage("Error al cargar las citas");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     } finally {
       setLoading(false);
     }
@@ -177,16 +189,29 @@ const ProximasCitas = () => {
 
   useEffect(() => {
     if (nuevaFecha) {
-      setHorasDisponibles(obtenerHorasDisponibles(nuevaFecha, citasOcupadas));
+      const fechaFormateada = nuevaFecha.toISOString().split("T")[0];
+      const horasOcupadas = citasOcupadas
+        .filter(cita => new Date(cita.fecha_hora).toISOString().split("T")[0] === fechaFormateada)
+        .map(cita => cita.hora_formateada);
+
+      const nuevasHoras = disponibilidadBase.map(hora => ({
+        value: hora,
+        isOccupied: horasOcupadas.includes(hora),
+      }));
+      setHorasDisponibles(nuevasHoras);
+    } else {
+      setHorasDisponibles(disponibilidadBase.map(hora => ({ value: hora, isOccupied: false })));
     }
   }, [nuevaFecha, citasOcupadas]);
 
   const handleReagendar = () => {
     setOpenReagendar(true);
+    setNuevaFecha(null);
+    setNuevaHora("");
   };
 
   const handleConfirmReagendar = async () => {
-    if (!csrfToken) return; // Esperar a que el token esté disponible
+    if (!csrfToken) return;
 
     if (!nuevaFecha || !nuevaHora) {
       setSnackbarMessage("Por favor, selecciona una fecha y hora.");
@@ -195,26 +220,28 @@ const ProximasCitas = () => {
       return;
     }
 
-    const fechaFormateada = nuevaFecha.toISOString().split("T")[0];
-    const [hora, minutos, periodo] = nuevaHora.match(/(\d+):(\d+)\s?(AM|PM)/i).slice(1);
-    let hora24 = parseInt(hora, 10);
-
-    if (periodo.toUpperCase() === "PM" && hora24 !== 12) {
-      hora24 += 12;
-    } else if (periodo.toUpperCase() === "AM" && hora24 === 12) {
-      hora24 = 0;
+    const selectedHourObj = horasDisponibles.find(h => h.value === nuevaHora);
+    if (selectedHourObj.isOccupied) {
+      setSnackbarMessage("Esta hora ya está ocupada. Por favor, selecciona otra.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+      return;
     }
 
-    const horaFormateada = `${hora24.toString().padStart(2, "0")}:${minutos}:00`;
-    const nuevaFechaHora = `${fechaFormateada}T${horaFormateada}`;
+    const fechaFormateada = nuevaFecha.toISOString().split("T")[0];
+    const [hora, minutos] = nuevaHora.replace(/( AM| PM)/, "").split(":").map(Number);
+    const esPM = nuevaHora.includes("PM");
+    let horaFinal = esPM && hora !== 12 ? hora + 12 : hora;
+    if (!esPM && hora === 12) horaFinal = 0;
+    const horaFormateada = `${horaFinal.toString().padStart(2, "0")}:${minutos.toString().padStart(2, "0")}:00`;
+    const nuevaFechaHoraUTC = new Date(`${fechaFormateada}T${horaFormateada}Z`).toISOString();
 
     try {
-      await axios.put(
-        `https://backenddent.onrender.com/api/citas/actualizar-fecha-hora/${selectedCita.cita_id}`,
-        { fechaHora: nuevaFechaHora },
+      await axiosInstance.put(
+        `/citas/actualizar-fecha-hora/${selectedCita.cita_id}`,
+        { fechaHora: nuevaFechaHoraUTC },
         {
           headers: { "X-XSRF-TOKEN": csrfToken },
-          withCredentials: true,
         }
       );
       setSnackbarMessage("¡Cita reagendada exitosamente!");
@@ -236,7 +263,7 @@ const ProximasCitas = () => {
   };
 
   const handleConfirmCompletion = async () => {
-    if (!csrfToken) return; // Esperar a que el token esté disponible
+    if (!csrfToken) return;
 
     if (!comentario.trim()) {
       setSnackbarMessage("Por favor, ingresa un comentario.");
@@ -246,12 +273,11 @@ const ProximasCitas = () => {
     }
 
     try {
-      await axios.put(
-        `https://backenddent.onrender.com/api/citas/completar/${selectedCita.cita_id}`,
+      await axiosInstance.put(
+        `/citas/completar/${selectedCita.cita_id}`,
         { comentario },
         {
           headers: { "X-XSRF-TOKEN": csrfToken },
-          withCredentials: true,
         }
       );
       setSnackbarMessage("¡Cita marcada como completada exitosamente!");
@@ -308,7 +334,6 @@ const ProximasCitas = () => {
         fontFamily: "'Roboto', sans-serif",
       }}
     >
-      {/* Calendar Section */}
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "500px" }}>
           <CircularProgress size={60} sx={{ color: "#003087" }} />
@@ -338,7 +363,6 @@ const ProximasCitas = () => {
         </Paper>
       )}
 
-      {/* Details Dialog */}
       <Dialog
         open={!!selectedCita}
         onClose={handleCloseDialog}
@@ -394,7 +418,11 @@ const ProximasCitas = () => {
                   <Box display="flex" alignItems="center">
                     <AccessTimeIcon sx={{ color: "#003087", mr: 1.5, fontSize: 28 }} />
                     <Typography sx={{ fontSize: "1.1rem" }}>
-                      {new Date(selectedCita.fecha_hora).toLocaleTimeString("es-ES")}
+                      {new Date(selectedCita.fecha_hora).toLocaleTimeString("es-ES", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      })}
                     </Typography>
                   </Box>
                 </Grid>
@@ -521,9 +549,10 @@ const ProximasCitas = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Reagendar Dialog */}
       <Dialog open={openReagendar} onClose={() => setOpenReagendar(false)}>
-        <DialogTitle sx={{ color: "#003087", fontFamily: "'Roboto', sans-serif" }}>Reagendar Cita</DialogTitle>
+        <DialogTitle sx={{ color: "#003087", fontFamily: "'Roboto', sans-serif'" }}>
+          Reagendar Cita
+        </DialogTitle>
         <DialogContent>
           <LocalizationProvider dateAdapter={AdapterDateFns} locale={es}>
             <DatePicker
@@ -544,12 +573,20 @@ const ProximasCitas = () => {
               displayEmpty
               sx={{ borderRadius: "8px" }}
             >
-              <MenuItem disabled value="">
+              <MenuItem value="" disabled>
                 Selecciona una hora
               </MenuItem>
-              {horasDisponibles.map((hora, index) => (
-                <MenuItem key={index} value={hora}>
-                  {hora}
+              {horasDisponibles.map((horaObj, index) => (
+                <MenuItem
+                  key={index}
+                  value={horaObj.value}
+                  disabled={horaObj.isOccupied}
+                  sx={{
+                    color: horaObj.isOccupied ? "#d32f2f" : "inherit",
+                    fontStyle: horaObj.isOccupied ? "italic" : "normal",
+                  }}
+                >
+                  {horaObj.value} {horaObj.isOccupied && "(Ocupada)"}
                 </MenuItem>
               ))}
             </Select>
@@ -565,7 +602,6 @@ const ProximasCitas = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar para alertas */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}

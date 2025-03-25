@@ -46,6 +46,8 @@ const AgendarCitaAdmin = () => {
   const [csrfToken, setCsrfToken] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const ultimaFechaConsultada = useRef(null);
+
   const inputStyle = {
     "& .MuiOutlinedInput-root": {
       borderRadius: "12px",
@@ -92,6 +94,11 @@ const AgendarCitaAdmin = () => {
     },
   };
 
+  const axiosInstance = useMemo(() => axios.create({
+    baseURL: 'https://backenddent.onrender.com/api',
+    withCredentials: true,
+  }), []);
+
   useEffect(() => {
     if (alerta.mostrar) {
       const timer = setTimeout(() => setAlerta({ mostrar: false, mensaje: '', tipo: '' }), 3000);
@@ -108,76 +115,6 @@ const AgendarCitaAdmin = () => {
     obtenerUsuario();
   }, []);
 
-  const axiosInstance = axios.create({
-    baseURL: 'https://backenddent.onrender.com/api',
-    withCredentials: true,
-  });
-
-  useEffect(() => {
-    if (usuarioEncontrado) {
-      verificarTratamientoActivo();
-      obtenerTratamientos();
-    }
-  }, [usuarioEncontrado]);
-
-  const obtenerCitasOcupadas = async () => {
-    try {
-      const response = await axiosInstance.get('/citas/activas');
-      const citas = response.data.map(cita => ({
-        ...cita,
-        fecha_hora_mx: new Intl.DateTimeFormat('es-MX', {
-          timeZone: 'America/Mexico_City',
-          year: 'numeric', month: '2-digit', day: '2-digit',
-          hour: '2-digit', minute: '2-digit', second: '2-digit',
-          hour12: true
-        }).format(new Date(cita.fecha_hora)),
-      }));
-      setCitasOcupadas(citas);
-    } catch (error) {
-      setAlerta({ mostrar: true, mensaje: 'Error al obtener citas ocupadas.', tipo: 'error' });
-    }
-  };
-
-  const ultimaFechaConsultada = useRef(null);
-  useEffect(() => {
-    if (fechaSeleccionada && ultimaFechaConsultada.current !== fechaSeleccionada) {
-      obtenerCitasOcupadas();
-      ultimaFechaConsultada.current = fechaSeleccionada;
-    }
-  }, [fechaSeleccionada]);
-
-  const verificarTratamientoActivo = async () => {
-    if (!usuarioEncontrado?.id || !usuarioEncontrado?.tipo) return;
-    try {
-      const response = await axiosInstance.get(`/tratamientos-pacientes/verificar/${usuarioEncontrado.tipo}/${usuarioEncontrado.id}`);
-      setTratamientoActivo(response.data.tieneTratamientoActivo);
-      if (response.data.tieneTratamientoActivo) {
-        setAlerta({ mostrar: true, mensaje: 'El paciente ya tiene un tratamiento activo.', tipo: 'warning' });
-      }
-    } catch (error) {
-      setAlerta({ mostrar: true, mensaje: 'Error al verificar tratamiento.', tipo: 'error' });
-    }
-  };
-
-  const obtenerHorasDisponibles = () => {
-    if (!fechaSeleccionada) return disponibilidad;
-    const fechaFormateada = fechaSeleccionada.toISOString().split('T')[0];
-    const horasOcupadas = citasOcupadas
-      .filter(cita => new Date(cita.fecha_hora).toISOString().split('T')[0] === fechaFormateada)
-      .map(cita => new Date(cita.fecha_hora).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase().replace(/\./g, ""));
-    return disponibilidad.filter(hora => !horasOcupadas.includes(hora));
-  };
-
-  const obtenerTratamientos = async () => {
-    if (!usuarioId) return;
-    try {
-      const response = await axiosInstance.get('/tratamientos');
-      setServicios(response.data.filter(t => t.estado === 1));
-    } catch (error) {
-      setAlerta({ mostrar: true, mensaje: 'Error al cargar tratamientos.', tipo: 'error' });
-    }
-  };
-
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
@@ -191,13 +128,100 @@ const AgendarCitaAdmin = () => {
     obtenerTokenCSRF();
   }, []);
 
+  useEffect(() => {
+    if (usuarioEncontrado) {
+      verificarTratamientoActivo();
+      obtenerTratamientos();
+    }
+  }, [usuarioEncontrado]);
+
+  useEffect(() => {
+    if (fechaSeleccionada && ultimaFechaConsultada.current !== fechaSeleccionada && csrfToken) {
+      obtenerCitasOcupadas();
+      ultimaFechaConsultada.current = fechaSeleccionada;
+    }
+  }, [fechaSeleccionada, csrfToken]);
+
+  const obtenerCitasOcupadas = async () => {
+    try {
+      const response = await axiosInstance.get('/citas/activas', {
+        headers: { "X-XSRF-TOKEN": csrfToken },
+      });
+      const citas = response.data || [];
+      console.log("📌 Citas ocupadas desde la API:", citas);
+
+      const citasConHoraFormateada = citas.map(cita => {
+        const fechaUTC = new Date(cita.fecha_hora); // Ejemplo: '2025-03-25T16:00:00.000Z'
+        let horas = fechaUTC.getUTCHours(); // 16
+        const minutos = fechaUTC.getUTCMinutes().toString().padStart(2, '0'); // 00
+        const periodo = horas >= 12 ? 'PM' : 'AM';
+        horas = horas % 12 || 12; // Convierte 16 a 4
+        const horaFormateada = `${horas.toString().padStart(2, '0')}:${minutos} ${periodo}`; // '04:00 PM'
+        return { ...cita, hora_formateada: horaFormateada };
+      });
+
+      console.log("📌 Citas ocupadas con hora ajustada:", citasConHoraFormateada);
+      setCitasOcupadas(citasConHoraFormateada);
+    } catch (error) {
+      console.error('❌ Error al obtener las citas ocupadas:', error);
+      setAlerta({
+        mostrar: true,
+        mensaje: 'Error al obtener citas ocupadas.',
+        tipo: 'error',
+      });
+    }
+  };
+
+  const verificarTratamientoActivo = async () => {
+    if (!usuarioEncontrado?.id || !usuarioEncontrado?.tipo) return;
+    try {
+      const response = await axiosInstance.get(`/tratamientos-pacientes/verificar/${usuarioEncontrado.tipo}/${usuarioEncontrado.id}`, {
+        headers: { "X-XSRF-TOKEN": csrfToken },
+      });
+      setTratamientoActivo(response.data.tieneTratamientoActivo);
+      if (response.data.tieneTratamientoActivo) {
+        setAlerta({ mostrar: true, mensaje: 'El paciente ya tiene un tratamiento activo.', tipo: 'warning' });
+      }
+    } catch (error) {
+      setAlerta({ mostrar: true, mensaje: 'Error al verificar tratamiento.', tipo: 'error' });
+    }
+  };
+
+  const obtenerTratamientos = async () => {
+    if (!usuarioId || !csrfToken) return;
+    try {
+      const response = await axiosInstance.get('/tratamientos', {
+        headers: { "X-XSRF-TOKEN": csrfToken },
+      });
+      setServicios(response.data.filter(t => t.estado === 1));
+    } catch (error) {
+      setAlerta({ mostrar: true, mensaje: 'Error al cargar tratamientos.', tipo: 'error' });
+    }
+  };
+
+  const obtenerHorasDisponibles = useMemo(() => {
+    if (!fechaSeleccionada) return disponibilidad.map(hora => ({ value: hora, isOccupied: false }));
+
+    const fechaFormateada = fechaSeleccionada.toISOString().split('T')[0];
+    const horasOcupadas = citasOcupadas
+      .filter(cita => new Date(cita.fecha_hora).toISOString().split('T')[0] === fechaFormateada)
+      .map(cita => cita.hora_formateada);
+
+    console.log("📌 Horas ocupadas para esta fecha:", horasOcupadas);
+
+    return disponibilidad.map(hora => ({
+      value: hora,
+      isOccupied: horasOcupadas.includes(hora),
+    }));
+  }, [fechaSeleccionada, citasOcupadas]);
+
   const buscarUsuario = async () => {
     const datosEnvio = {
       ...busquedaUsuario,
       fecha_nacimiento: busquedaUsuario.fecha_nacimiento ? busquedaUsuario.fecha_nacimiento.toISOString().split('T')[0] : "",
     };
     try {
-      const response = await axios.post('https://backenddent.onrender.com/api/usuarios/buscar', datosEnvio, {
+      const response = await axiosInstance.post('/usuarios/buscar', datosEnvio, {
         headers: { 'X-XSRF-TOKEN': csrfToken },
         withCredentials: true,
       });
@@ -219,6 +243,16 @@ const AgendarCitaAdmin = () => {
   const handleAgendarCita = async () => {
     if (!servicioSeleccionado || !fechaSeleccionada || !horaSeleccionada) {
       setAlerta({ mostrar: true, mensaje: 'Completa todos los campos.', tipo: 'error' });
+      return;
+    }
+
+    const selectedHourObj = obtenerHorasDisponibles.find(h => h.value === horaSeleccionada);
+    if (selectedHourObj.isOccupied) {
+      setAlerta({
+        mostrar: true,
+        mensaje: 'Esta hora ya está ocupada. Por favor, selecciona otra.',
+        tipo: 'error',
+      });
       return;
     }
 
@@ -254,7 +288,10 @@ const AgendarCitaAdmin = () => {
         precio: tratamientoSeleccionado.precio,
         requiereEvaluacion: tratamientoSeleccionado.requiere_evaluacion
       };
-      await axiosInstance.post('/tratamientos-pacientes/crear', datosEnvio, { headers: { 'X-XSRF-TOKEN': csrfToken } });
+      await axiosInstance.post('/tratamientos-pacientes/crear', datosEnvio, {
+        headers: { 'X-XSRF-TOKEN': csrfToken },
+        withCredentials: true,
+      });
       setAlerta({
         mostrar: true,
         mensaje: tratamientoSeleccionado.requiere_evaluacion ? 'Tratamiento pendiente de evaluación.' : 'Cita agendada correctamente.',
@@ -264,13 +301,14 @@ const AgendarCitaAdmin = () => {
         window.location.reload();
       }, 2000);
     } catch (error) {
+      console.error('❌ Error al agendar la cita:', error);
       setAlerta({ mostrar: true, mensaje: 'Error al agendar la cita.', tipo: 'error' });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const horasDisponibles = useMemo(() => obtenerHorasDisponibles(), [fechaSeleccionada, citasOcupadas]);
+  const horasDisponibles = obtenerHorasDisponibles;
 
   return (
     <Box
@@ -496,7 +534,7 @@ const AgendarCitaAdmin = () => {
                     value={horaSeleccionada}
                     onChange={(e) => setHoraSeleccionada(e.target.value)}
                     sx={selectStyle}
-                    disabled={!fechaSeleccionada || horasDisponibles.length === 0}
+                    disabled={!fechaSeleccionada}
                     MenuProps={{
                       PaperProps: {
                         sx: {
@@ -507,13 +545,21 @@ const AgendarCitaAdmin = () => {
                       },
                     }}
                   >
-                    {horasDisponibles.length > 0 ? (
-                      horasDisponibles.map((hora, index) => (
-                        <MenuItem key={index} value={hora} sx={menuItemStyle}>{hora}</MenuItem>
-                      ))
-                    ) : (
-                      <MenuItem disabled sx={menuItemStyle}>No hay horarios disponibles</MenuItem>
-                    )}
+                    <MenuItem value="" disabled sx={menuItemStyle}>Selecciona una hora</MenuItem>
+                    {horasDisponibles.map((horaObj, index) => (
+                      <MenuItem
+                        key={index}
+                        value={horaObj.value}
+                        disabled={horaObj.isOccupied}
+                        sx={{
+                          ...menuItemStyle,
+                          color: horaObj.isOccupied ? "#d32f2f" : "inherit",
+                          fontStyle: horaObj.isOccupied ? "italic" : "normal",
+                        }}
+                      >
+                        {horaObj.value} {horaObj.isOccupied && "(Ocupada)"}
+                      </MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               </Grid>
