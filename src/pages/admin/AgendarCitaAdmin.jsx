@@ -95,7 +95,7 @@ const AgendarCitaAdmin = () => {
   };
 
   const axiosInstance = useMemo(() => axios.create({
-    baseURL: 'https://backenddent.onrender.com/api',
+    baseURL: 'http://localhost:4000/api',
     withCredentials: true,
   }), []);
 
@@ -118,7 +118,7 @@ const AgendarCitaAdmin = () => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", { credentials: "include" });
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", { credentials: "include" });
         const data = await response.json();
         setCsrfToken(data.csrfToken);
       } catch (error) {

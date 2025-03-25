@@ -51,7 +51,7 @@ const MisCatalogos = () => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -68,7 +68,7 @@ const MisCatalogos = () => {
     if (!csrfToken) return; // Esperar a que el token esté disponible
 
     try {
-      const response = await fetch("https://backenddent.onrender.com/api/tratamientos", {
+      const response = await fetch("http://localhost:4000/api/tratamientos", {
         headers: {
           "X-XSRF-TOKEN": csrfToken,
         },
@@ -89,7 +89,7 @@ const MisCatalogos = () => {
 
     try {
       const nuevoEstado = estadoActual === 1 ? 0 : 1;
-      await fetch(`https://backenddent.onrender.com/api/tratamientos/${id}/estado`, {
+      await fetch(`http://localhost:4000/api/tratamientos/${id}/estado`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -163,7 +163,7 @@ const MisCatalogos = () => {
     }
 
     try {
-      await fetch(`https://backenddent.onrender.com/api/tratamientos/${tratamientoSeleccionado.id}`, {
+      await fetch(`http://localhost:4000/api/tratamientos/${tratamientoSeleccionado.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

@@ -96,7 +96,7 @@ const MisCitas = () => {
     const obtenerCitas = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`https://backenddent.onrender.com/api/citas/usuario/${usuarioId}`, {
+        const response = await axios.get(`http://localhost:4000/api/citas/usuario/${usuarioId}`, {
           withCredentials: true,
         });
         setCitas(response.data);

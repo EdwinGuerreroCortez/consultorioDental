@@ -26,7 +26,7 @@ const TratamientosEnCurso = () => {
 
   useEffect(() => {
     axios
-      .get("https://backenddent.onrender.com/api/tratamientos-pacientes/en-progreso")
+      .get("http://localhost:4000/api/tratamientos-pacientes/en-progreso")
       .then((response) => {
         const tratamientosEnProgreso = response.data.map((tratamiento) => ({
           ...tratamiento,
