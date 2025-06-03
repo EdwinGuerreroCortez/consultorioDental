@@ -585,7 +585,7 @@ const NavbarPaciente = () => {
                     </ListItem>
                     <ListItem disablePadding>
                       <ListItemButton
-                        href="/facturacion"
+                        href="/pagos"
                         sx={{
                           padding: "12px 20px",
                           "&:hover": {
@@ -597,7 +597,7 @@ const NavbarPaciente = () => {
                       >
                         <AttachMoneyIcon sx={{ marginRight: "14px", color: "#0077b6" }} />
                         <ListItemText
-                          primary="Facturación"
+                          primary="Pagos"
                           sx={{
                             "& .MuiListItemText-primary": {
                               fontSize: "1rem",
@@ -885,7 +885,7 @@ const NavbarPaciente = () => {
                 </ListItem>
                 <ListItem disablePadding>
                   <ListItemButton
-                    href="/facturacion"
+                    href="/pago"
                     sx={{
                       paddingLeft: 4,
                       padding: "14px 20px",
@@ -899,7 +899,7 @@ const NavbarPaciente = () => {
                   >
                     <AttachMoneyIcon sx={{ marginRight: "14px", color: "#0077b6" }} />
                     <ListItemText
-                      primary="Facturación"
+                      primary="Pago"
                       sx={{
                         "& .MuiListItemText-primary": {
                           fontSize: "1rem",

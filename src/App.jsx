@@ -25,6 +25,7 @@ import TratamientosActivos from "./pages/pacientes/TratamientosActivos";
 import CitasAgendadas from "./pages/pacientes/CitasAgendadas";
 import Perfil from "./pages/pacientes/Perfil";
 import HistorialTratamientoPaciente from "./pages/pacientes/HistorialTratamientoPaciente";
+import Pagos from "./pages/pacientes/Pagos";
 
 // Admin
 import LayoutAdmin from "./components/navs/admin/LayoutAdmin";
@@ -344,6 +345,16 @@ const App = () => {
                   <RutaProtegida tiposPermitidos={['paciente']}>
                     <LayoutPaciente>
                       <HistorialTratamientoPaciente />
+                    </LayoutPaciente>
+                  </RutaProtegida>
+                }
+              />
+               <Route
+                path="/Pagos"
+                element={
+                  <RutaProtegida tiposPermitidos={['paciente']}>
+                    <LayoutPaciente>
+                      <Pagos />
                     </LayoutPaciente>
                   </RutaProtegida>
                 }
