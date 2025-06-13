@@ -31,6 +31,7 @@ const FooterPublico = () => {
         >
           Políticas de Privacidad
         </Link>
+
         <Link
           href="/terminos-condiciones"
           underline="hover"
@@ -42,6 +43,7 @@ const FooterPublico = () => {
         >
           Términos y Condiciones
         </Link>
+
         <Link
           href="/deslinde-legal"
           underline="hover"
@@ -53,10 +55,23 @@ const FooterPublico = () => {
         >
           Deslinde Legal
         </Link>
+
+        <Link
+          href="/mision-vision"
+          underline="hover"
+          sx={{
+            color: "#ffffff",
+            marginRight: "15px",
+            textDecoration: "none",
+          }}
+        >
+          Misión y Visión
+        </Link>
+
         <Link
           href="https://drive.google.com/file/d/1d2XZ7qsKoQcjTBqBPn3yC1iwXYIhwLuq/view?usp=drive_link"
-          target="_blank"  // Abre el enlace en una nueva pestaña
-          rel="noopener noreferrer"  // Mejora la seguridad
+          target="_blank"
+          rel="noopener noreferrer"
           underline="hover"
           sx={{
             color: "#ffffff",

@@ -13,17 +13,42 @@ const FooterPaciente = () => {
         boxShadow: "0 -2px 5px rgba(0, 0, 0, 0.1)",
       }}
     >
-      <Typography variant="body2" color="textSecondary" sx={{ marginBottom: "8px" }}>
+      <Typography
+        variant="body2"
+        color="textSecondary"
+        sx={{ marginBottom: "8px" }}
+      >
         © 2025 Consultorio Dental. Todos los derechos reservados.
       </Typography>
 
       <Box>
-        <Link href="/politicas-privacidad" color="inherit" underline="hover" sx={{ marginRight: "10px" }}>
+        <Link
+          href="/politicas-privacidad"
+          color="inherit"
+          underline="hover"
+          sx={{ marginRight: "10px" }}
+        >
           Políticas de Privacidad
         </Link>
-        <Link href="/terminos-condiciones" color="inherit" underline="hover" sx={{ marginRight: "10px" }}>
+
+        <Link
+          href="/terminos-condiciones"
+          color="inherit"
+          underline="hover"
+          sx={{ marginRight: "10px" }}
+        >
           Términos y Condiciones
         </Link>
+
+        <Link
+          href="/paciente/mision-vision"
+          color="inherit"
+          underline="hover"
+          sx={{ marginRight: "10px" }}
+        >
+          Misión y Visión
+        </Link>
+
         <Link
           href="https://drive.google.com/file/d/1d2XZ7qsKoQcjTBqBPn3yC1iwXYIhwLuq/view?usp=drive_link"
           target="_blank"

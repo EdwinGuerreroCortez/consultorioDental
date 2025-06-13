@@ -267,6 +267,14 @@ const App = () => {
                   </LayoutPublico>
                 }
               />
+              <Route
+                path="/mision-vision"
+                element={
+                  <LayoutPublico>
+                    <MisionVision />
+                  </LayoutPublico>
+                }
+              />
 
               {/**************************************************** Rutas paciente *******************************************************/}
               <Route
