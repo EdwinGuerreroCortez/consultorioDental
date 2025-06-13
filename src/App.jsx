@@ -26,7 +26,7 @@ import CitasAgendadas from "./pages/pacientes/CitasAgendadas";
 import Perfil from "./pages/pacientes/Perfil";
 import HistorialTratamientoPaciente from "./pages/pacientes/HistorialTratamientoPaciente";
 import Pagos from "./pages/pacientes/Pagos";
-import MisionVision from "./pages/admin/ConfGeneral/MisionVision";
+import MisionVision from "./pages/pacientes/MisionVision";
 // Admin
 import LayoutAdmin from "./components/navs/admin/LayoutAdmin";
 import BienvenidaAdmin from "./pages/admin/BienvenidaAdmin";
