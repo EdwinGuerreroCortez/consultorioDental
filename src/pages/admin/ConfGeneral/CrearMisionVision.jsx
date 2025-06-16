@@ -1,10 +1,29 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
-  Box, Button, Card, CardContent, Typography, TextField, Divider,
-  FormControl, InputLabel, Select, MenuItem, Snackbar, Alert,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Pagination
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Divider,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Snackbar,
+  Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Pagination,
+  Tooltip,
 } from "@mui/material";
+import { CheckCircle, History, Edit } from "@mui/icons-material";
 import { motion } from "framer-motion";
 
 const primaryColor = "#006d77";
@@ -20,7 +39,11 @@ const CrearMisionVision = () => {
   const [vigentes, setVigentes] = useState([]);
   const [historial, setHistorial] = useState([]);
   const [pageHistorial, setPageHistorial] = useState(1);
+  const [editMode, setEditMode] = useState(null);
+  const [editContent, setEditContent] = useState("");
   const rowsPerPage = 5;
+  const editInputRef = useRef(null);
+  const formInputRef = useRef(null);
 
   useEffect(() => {
     const obtenerToken = async () => {
@@ -63,11 +86,19 @@ const CrearMisionVision = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormulario({ ...formulario, [name]: value });
-    if (name === "contenido" && value.length < 10) {
-      setErrores({ ...errores, contenido: "El contenido debe tener al menos 10 caracteres." });
-    } else {
-      setErrores({ ...errores, [name]: "" });
+    const input = formInputRef.current;
+    const cursorPosition = input ? input.selectionStart : value.length;
+    setFormulario((prev) => {
+      const newForm = { ...prev, [name]: value };
+      if (name === "contenido" && value.length < 10) {
+        setErrores({ ...errores, contenido: "El contenido debe tener al menos 10 caracteres." });
+      } else {
+        setErrores({ ...errores, [name]: "" });
+      }
+      return newForm;
+    });
+    if (input) {
+      input.selectionStart = input.selectionEnd = cursorPosition;
     }
   };
 
@@ -83,7 +114,7 @@ const CrearMisionVision = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-XSRF-TOKEN": csrfToken
+          "X-XSRF-TOKEN": csrfToken,
         },
         credentials: "include",
         body: JSON.stringify(formulario),
@@ -111,32 +142,108 @@ const CrearMisionVision = () => {
     setPageHistorial(newPage);
   };
 
-  const cellStyle = {
-    textAlign: "center",
-    color: "#03445e",
-    fontFamily: "'Poppins', sans-serif",
-    fontSize: "1rem",
-    py: "20px",
-    px: "16px",
+  const handleEditChange = (e) => {
+    const value = e.target.value;
+    const input = editInputRef.current;
+    const cursorPosition = input ? input.selectionStart : value.length;
+    setEditContent(value);
+    if (input) {
+      input.selectionStart = input.selectionEnd = cursorPosition;
+    }
   };
 
-  const TablaVersiones = ({ titulo, datos, paginar = false }) => {
+  const handleEditClick = (id, currentContent) => {
+    setEditMode(id);
+    setEditContent(currentContent);
+  };
+
+  useEffect(() => {
+    if (editMode && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.selectionStart = editInputRef.current.selectionEnd = editContent.length;
+    }
+  }, [editMode, editContent]);
+
+  const handleSaveEdit = async (id) => {
+    if (editContent.length < 10) {
+      setAlerta({
+        open: true,
+        message: "El contenido debe tener al menos 10 caracteres.",
+        severity: "error",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:4000/api/mision-vision/editar/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-XSRF-TOKEN": csrfToken,
+        },
+        credentials: "include",
+        body: JSON.stringify({ contenido: editContent }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setAlerta({
+          open: true,
+          message: data.mensaje || "Contenido actualizado correctamente.",
+          severity: "success",
+        });
+        setEditMode(null);
+        setEditContent("");
+        cargarDatos();
+      } else {
+        setAlerta({ open: true, message: data.mensaje || "Error al actualizar", severity: "error" });
+      }
+    } catch (error) {
+      setAlerta({ open: true, message: "Error en la solicitud", severity: "error" });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditMode(null);
+    setEditContent("");
+  };
+
+  const TablaVersiones = ({ titulo, datos, paginar = false, esVigente = false }) => {
     const datosPaginados = paginar
       ? datos.slice((pageHistorial - 1) * rowsPerPage, pageHistorial * rowsPerPage)
       : datos;
 
     const totalPages = paginar ? Math.ceil(datos.length / rowsPerPage) : 1;
 
+    const cellStyle = {
+      fontFamily: "'Poppins', sans-serif",
+      fontSize: "0.95rem",
+      padding: "16px",
+      borderBottom: `1px solid ${accentColor}`,
+      verticalAlign: "middle",
+      color: "#2d3748",
+    };
+
+    const headerStyle = {
+      ...cellStyle,
+      color: "#ffffff",
+      fontWeight: 700,
+      textAlign: "center",
+      backgroundColor: primaryColor,
+    };
+
     return (
-      <Box sx={{ mt: 6 }}>
+      <Box sx={{ mt: 6, mb: 4 }}>
         <Typography
           variant="h5"
           sx={{
             fontWeight: 600,
-            mb: 2,
-            color: "#03445e",
-            textAlign: "center",
+            mb: 3,
+            color: primaryColor,
             fontFamily: "'Poppins', sans-serif",
+            textAlign: "left",
+            letterSpacing: "0.02em",
           }}
         >
           {titulo}
@@ -145,38 +252,118 @@ const CrearMisionVision = () => {
           component={Paper}
           sx={{
             borderRadius: "16px",
-            boxShadow: "0 6px 24px rgba(0, 0, 0, 0.08)",
-            overflow: "hidden",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
             background: "#ffffff",
-            border: "1px solid #78c1c8",
+            border: `1px solid ${accentColor}`,
+            transition: "all 0.3s ease",
+            "&:hover": { boxShadow: "0 6px 24px rgba(0,0,0,0.15)" },
           }}
         >
           <Table>
             <TableHead
-              sx={{ background: "linear-gradient(90deg, #006d77 0%, #78c1c8 100%)" }}
+              sx={{ background: `linear-gradient(90deg, ${primaryColor} 0%, ${secondaryColor} 100%)` }}
             >
               <TableRow>
-                <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700 }}>Tipo</TableCell>
-                <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700 }}>Versión</TableCell>
-                <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700 }}>Contenido</TableCell>
-                <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700 }}>Fecha</TableCell>
+                <TableCell sx={{ ...headerStyle, width: "15%" }}>Tipo</TableCell>
+                <TableCell sx={{ ...headerStyle, width: "10%" }}>Versión</TableCell>
+                <TableCell sx={{ ...headerStyle, width: "45%", textAlign: "left" }}>
+                  Contenido
+                </TableCell>
+                <TableCell sx={{ ...headerStyle, width: "20%" }}>Fecha</TableCell>
+                <TableCell sx={{ ...headerStyle, width: "10%" }}>Acción</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {datosPaginados.length > 0 ? (
-                datosPaginados.map((item, index) => (
-                  <TableRow key={index} sx={{ "&:hover": { backgroundColor: "#e0f7fa" } }}>
-                    <TableCell sx={cellStyle}>{item.tipo}</TableCell>
-                    <TableCell sx={cellStyle}>{item.version}</TableCell>
-                    <TableCell sx={{ ...cellStyle, textAlign: "left" }}>{item.contenido}</TableCell>
-                    <TableCell sx={cellStyle}>
-                      {new Date(item.fecha_creacion).toLocaleDateString("es-MX")}
+                datosPaginados.map((item) => (
+                  <TableRow
+                    key={item.id}
+                    component={motion.tr}
+                    whileHover={{ backgroundColor: accentColor, transition: { duration: 0.2 } }}
+                  >
+                    <TableCell sx={{ ...cellStyle, textAlign: "center" }}>{item.tipo}</TableCell>
+                    <TableCell sx={{ ...cellStyle, textAlign: "center" }}>{item.version}</TableCell>
+                    <TableCell sx={{ ...cellStyle, textAlign: "justify", wordBreak: "break-word" }}>
+                      {editMode === item.id ? (
+                        <TextField
+                          value={editContent}
+                          onChange={handleEditChange}
+                          fullWidth
+                          multiline
+                          rows={2}
+                          inputRef={editInputRef}
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              "& fieldset": { borderColor: accentColor },
+                              "&:hover fieldset": { borderColor: secondaryColor },
+                              "&.Mui-focused fieldset": { borderColor: primaryColor },
+                            },
+                          }}
+                        />
+                      ) : (
+                        item.contenido
+                      )}
+                    </TableCell>
+                    <TableCell sx={{ ...cellStyle, textAlign: "center" }}>
+                      {new Date(item.fecha_creacion).toLocaleDateString("es-MX", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </TableCell>
+                    <TableCell sx={{ ...cellStyle, textAlign: "center" }}>
+                      {esVigente ? (
+                        <>
+                          <CheckCircle
+                            sx={{ color: primaryColor, fontSize: "1.5rem", marginRight: "8px" }}
+                            titleAccess="Vigente"
+                          />
+                          {editMode === item.id ? (
+                            <>
+                              <Button
+                                onClick={() => handleSaveEdit(item.id)}
+                                sx={{
+                                  color: primaryColor,
+                                  "&:hover": { color: secondaryColor },
+                                  marginRight: "8px",
+                                }}
+                              >
+                                Guardar
+                              </Button>
+                              <Button
+                                onClick={handleCancelEdit}
+                                sx={{
+                                  color: primaryColor,
+                                  "&:hover": { color: secondaryColor },
+                                }}
+                              >
+                                Cancelar
+                              </Button>
+                            </>
+                          ) : (
+                            <Tooltip title="Editar" arrow>
+                              <Edit
+                                sx={{ color: primaryColor, fontSize: "1.5rem", cursor: "pointer" }}
+                                onClick={() => handleEditClick(item.id, item.contenido)}
+                              />
+                            </Tooltip>
+                          )}
+                        </>
+                      ) : (
+                        <History
+                          sx={{ color: primaryColor, fontSize: "1.5rem" }}
+                          titleAccess="Histórico"
+                        />
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} sx={{ ...cellStyle, color: "#999" }}>
+                  <TableCell
+                    colSpan={5}
+                    sx={{ ...cellStyle, color: "#999", textAlign: "center", py: 4 }}
+                  >
                     No hay registros disponibles.
                   </TableCell>
                 </TableRow>
@@ -186,35 +373,20 @@ const CrearMisionVision = () => {
         </TableContainer>
 
         {paginar && totalPages > 1 && (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+          <Box sx={{ display: "flex", justifyContent: "flex-start", mt: 3 }}>
             <Pagination
               count={totalPages}
               page={pageHistorial}
               onChange={handleChangePageHistorial}
-              color="primary"
-              size="large"
               sx={{
                 "& .MuiPaginationItem-root": {
-                  fontSize: "1.1rem",
-                  padding: "10px 18px",
-                  margin: "0 6px",
-                  borderRadius: "10px",
-                  backgroundColor: "#ffffff",
-                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-                  color: "#006d77",
+                  color: primaryColor,
                   fontFamily: "'Poppins', sans-serif",
-                  "&:hover": {
-                    backgroundColor: "#78c1c8",
+                  "&:hover": { backgroundColor: accentColor },
+                  "&.Mui-selected": {
+                    backgroundColor: primaryColor,
                     color: "#ffffff",
-                    transition: "all 0.3s ease",
-                  },
-                },
-                "& .Mui-selected": {
-                  backgroundColor: "#006d77",
-                  color: "#e0f7fa",
-                  "&:hover": {
-                    backgroundColor: "#004d57",
-                    transition: "all 0.3s ease",
+                    "&:hover": { backgroundColor: secondaryColor },
                   },
                 },
               }}
@@ -226,14 +398,21 @@ const CrearMisionVision = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: "md", margin: "2rem auto", padding: "1rem" }}>
+    <Box
+      sx={{
+        maxWidth: "1200px",
+        margin: "4rem auto",
+        padding: "0 1.5rem",
+        minHeight: "100vh",
+      }}
+    >
       <Card
         component={motion.div}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.7 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
         sx={{
-          boxShadow: 10,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
           borderRadius: "24px",
           padding: "2.5rem",
           background: bgGradient,
@@ -243,34 +422,53 @@ const CrearMisionVision = () => {
         <CardContent>
           <Typography
             variant="h4"
-            align="center"
-            gutterBottom
             sx={{
               fontWeight: 700,
               color: primaryColor,
               mb: 3,
-              letterSpacing: "2px",
-              textTransform: "uppercase",
-              fontSize: "1.75rem",
               fontFamily: "'Poppins', sans-serif",
+              textAlign: "left",
+              letterSpacing: "-0.02em",
             }}
           >
             Registrar Misión o Visión
           </Typography>
 
-          <Divider sx={{ mb: 4, borderColor: accentColor }} />
+          <Divider sx={{ mb: 4, borderColor: accentColor, opacity: 0.6 }} />
 
           <form onSubmit={handleSubmit}>
-            <FormControl fullWidth sx={{ mb: 4 }}>
+            <FormControl
+              fullWidth
+              sx={{
+                mb: 3,
+                "& .MuiInputLabel-root": {
+                  color: primaryColor,
+                  fontFamily: "'Poppins', sans-serif",
+                },
+                "& .Mui-focused": {
+                  color: primaryColor,
+                },
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": { borderColor: accentColor },
+                  "&:hover fieldset": { borderColor: secondaryColor },
+                  "&.Mui-focused fieldset": { borderColor: primaryColor },
+                },
+              }}
+            >
               <InputLabel>Tipo</InputLabel>
               <Select
                 name="tipo"
                 value={formulario.tipo}
                 onChange={handleChange}
                 label="Tipo"
+                sx={{ fontFamily: "'Poppins', sans-serif" }}
               >
-                <MenuItem value="mision">Misión</MenuItem>
-                <MenuItem value="vision">Visión</MenuItem>
+                <MenuItem value="mision" sx={{ fontFamily: "'Poppins', sans-serif" }}>
+                  Misión
+                </MenuItem>
+                <MenuItem value="vision" sx={{ fontFamily: "'Poppins', sans-serif" }}>
+                  Visión
+                </MenuItem>
               </Select>
             </FormControl>
 
@@ -285,23 +483,48 @@ const CrearMisionVision = () => {
               required
               error={!!errores.contenido}
               helperText={errores.contenido}
+              inputRef={formInputRef}
+              sx={{
+                mb: 3,
+                fontFamily: "'Poppins', sans-serif",
+                "& .MuiInputLabel-root": {
+                  color: primaryColor,
+                  fontFamily: "'Poppins', sans-serif",
+                },
+                "& .Mui-focused": {
+                  color: primaryColor,
+                },
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": { borderColor: accentColor },
+                  "&:hover fieldset": { borderColor: secondaryColor },
+                  "&.Mui-focused fieldset": { borderColor: primaryColor },
+                },
+              }}
+              InputProps={{
+                sx: { fontFamily: "'Poppins', sans-serif", fontSize: "0.95rem" },
+              }}
             />
 
-            <Box mt={4}>
+            <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
               <Button
                 type="submit"
-                fullWidth
                 variant="contained"
+                component={motion.button}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 sx={{
                   backgroundColor: primaryColor,
                   color: "#fff",
                   fontWeight: 600,
-                  padding: "14px 30px",
-                  borderRadius: "16px",
+                  px: 5,
+                  py: 1.5,
+                  borderRadius: "12px",
                   textTransform: "none",
                   fontFamily: "'Poppins', sans-serif",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                   "&:hover": {
                     backgroundColor: secondaryColor,
+                    boxShadow: "0 6px 16px rgba(0,0,0,0.2)",
                   },
                 }}
               >
@@ -312,7 +535,7 @@ const CrearMisionVision = () => {
         </CardContent>
       </Card>
 
-      <TablaVersiones titulo="Misión y Visión Vigentes" datos={vigentes} />
+      <TablaVersiones titulo="Misión y Visión Vigentes" datos={vigentes} esVigente />
       <TablaVersiones titulo="Historial de Versiones" datos={historial} paginar />
 
       <Snackbar
@@ -321,7 +544,14 @@ const CrearMisionVision = () => {
         onClose={() => setAlerta({ ...alerta, open: false })}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert severity={alerta.severity} onClose={() => setAlerta({ ...alerta, open: false })}>
+        <Alert
+          severity={alerta.severity}
+          onClose={() => setAlerta({ ...alerta, open: false })}
+          sx={{
+            fontFamily: "'Poppins', sans-serif",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+          }}
+        >
           {alerta.message}
         </Alert>
       </Snackbar>
