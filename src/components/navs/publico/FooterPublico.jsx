@@ -23,11 +23,7 @@ const FooterPublico = () => {
         <Link
           href="/politicas-privacidad"
           underline="hover"
-          sx={{
-            color: "#ffffff",
-            marginRight: "15px",
-            textDecoration: "none",
-          }}
+          sx={{ color: "#ffffff", marginRight: "15px", textDecoration: "none" }}
         >
           Políticas de Privacidad
         </Link>
@@ -35,11 +31,7 @@ const FooterPublico = () => {
         <Link
           href="/terminos-condiciones"
           underline="hover"
-          sx={{
-            color: "#ffffff",
-            marginRight: "15px",
-            textDecoration: "none",
-          }}
+          sx={{ color: "#ffffff", marginRight: "15px", textDecoration: "none" }}
         >
           Términos y Condiciones
         </Link>
@@ -47,11 +39,7 @@ const FooterPublico = () => {
         <Link
           href="/deslinde-legal"
           underline="hover"
-          sx={{
-            color: "#ffffff",
-            marginRight: "15px",
-            textDecoration: "none",
-          }}
+          sx={{ color: "#ffffff", marginRight: "15px", textDecoration: "none" }}
         >
           Deslinde Legal
         </Link>
@@ -59,11 +47,7 @@ const FooterPublico = () => {
         <Link
           href="/mision-vision"
           underline="hover"
-          sx={{
-            color: "#ffffff",
-            marginRight: "15px",
-            textDecoration: "none",
-          }}
+          sx={{ color: "#ffffff", marginRight: "15px", textDecoration: "none" }}
         >
           Misión y Visión
         </Link>
@@ -73,14 +57,19 @@ const FooterPublico = () => {
           target="_blank"
           rel="noopener noreferrer"
           underline="hover"
-          sx={{
-            color: "#ffffff",
-            textDecoration: "none",
-          }}
+          sx={{ color: "#ffffff", textDecoration: "none" }}
         >
           Mapa de Sitio
         </Link>
       </Box>
+
+      {/* 🆕 Versión del sistema */}
+      <Typography
+        variant="caption"
+        sx={{ display: "block", marginTop: "12px", fontSize: "0.75rem", opacity: 0.8 }}
+      >
+        Versión del sistema: <strong>1.0.0</strong>
+      </Typography>
     </Box>
   );
 };

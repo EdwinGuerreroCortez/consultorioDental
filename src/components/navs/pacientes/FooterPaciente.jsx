@@ -59,6 +59,14 @@ const FooterPaciente = () => {
           Mapa de Sitio
         </Link>
       </Box>
+
+      {/* 🆕 Versión del sistema */}
+      <Typography
+        variant="caption"
+        sx={{ display: "block", marginTop: "10px", fontSize: "0.75rem", opacity: 0.6 }}
+      >
+        Versión del sistema: <strong>1.0.0</strong>
+      </Typography>
     </Box>
   );
 };
