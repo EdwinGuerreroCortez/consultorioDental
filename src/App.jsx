@@ -42,6 +42,7 @@ import ListaPacientes from "./pages/admin/ListaPacientes";
 import ListaPacientesSinCuenta from "./pages/admin/ListaPacientesSinCuenta";
 import CrearPacienteSinCuenta from "./pages/admin/CrearPacienteSinCuenta";
 import CrearMisionVision from "./pages/admin/ConfGeneral/CrearMisionVision";
+import CrearPoliticas from "./pages/admin/ConfGeneral/CrearPoliticas";
 
 // Errores
 import Error404 from "./components/Errors/Error404";
@@ -516,6 +517,16 @@ const App = () => {
                   <RutaProtegida tiposPermitidos={['admin']}>
                     <LayoutAdmin title={"Misión y Visión"}>
                       <CrearMisionVision />
+                    </LayoutAdmin>
+                  </RutaProtegida>
+                }
+              />
+              <Route
+                path="/admin/configuracion/politicas"
+                element={
+                  <RutaProtegida tiposPermitidos={['admin']}>
+                    <LayoutAdmin title={"Politicas de privacidad"}>
+                      <CrearPoliticas />
                     </LayoutAdmin>
                   </RutaProtegida>
                 }
