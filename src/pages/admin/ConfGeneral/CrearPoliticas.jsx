@@ -17,8 +17,13 @@ import {
   Paper,
   Pagination,
   Tooltip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
-import { Edit } from "@mui/icons-material";
+import { Edit, Delete } from "@mui/icons-material";
 
 const primaryColor = "#006d77";
 const secondaryColor = "#78c1c8";
@@ -35,6 +40,8 @@ const CrearPoliticas = () => {
   const [pageHistorial, setPageHistorial] = useState(1);
   const [editMode, setEditMode] = useState(null);
   const [editData, setEditData] = useState({ titulo: "", descripcion: "" });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [politicaToDelete, setPoliticaToDelete] = useState(null);
   const rowsPerPage = 5;
 
   useEffect(() => {
@@ -134,6 +141,42 @@ const CrearPoliticas = () => {
     }
   };
 
+  // Abrir diálogo de confirmación para eliminar
+  const handleEliminarClick = (id) => {
+    setPoliticaToDelete(id);
+    setDialogOpen(true);
+  };
+
+  // Confirmar eliminación
+  const handleConfirmEliminar = async () => {
+    try {
+      const res = await fetch(`http://localhost:4000/api/politicas/eliminarPolitica/${politicaToDelete}`, {
+        method: "DELETE",
+        headers: {
+          "X-XSRF-TOKEN": csrfToken,
+        },
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAlerta({ open: true, message: data.mensaje || "Eliminado correctamente", severity: "success" });
+        cargarDatos();
+      } else {
+        setAlerta({ open: true, message: data.mensaje || "Error al eliminar", severity: "error" });
+      }
+    } catch {
+      setAlerta({ open: true, message: "Error en la eliminación", severity: "error" });
+    }
+    setDialogOpen(false);
+    setPoliticaToDelete(null);
+  };
+
+  // Cancelar eliminación
+  const handleCancelEliminar = () => {
+    setDialogOpen(false);
+    setPoliticaToDelete(null);
+  };
+
   const paginarHistorial = historial.slice((pageHistorial - 1) * rowsPerPage, pageHistorial * rowsPerPage);
 
   return (
@@ -185,7 +228,7 @@ const CrearPoliticas = () => {
               {new Date(ultima.fecha_creacion).toLocaleDateString("es-MX", {
                 year: "numeric",
                 month: "long",
-                day: "numeric"
+                day: "numeric",
               })}
             </Typography>
             <Typography variant="body1">{ultima.descripcion}</Typography>
@@ -240,19 +283,31 @@ const CrearPoliticas = () => {
                       )}
                     </TableCell>
                     <TableCell>{new Date(item.fecha_creacion).toLocaleDateString("es-MX")}</TableCell>
-                    <TableCell>
+                    <TableCell sx={{ display: "flex", gap: 1 }}>
                       {editMode === item.id ? (
                         <>
-                          <Button onClick={() => handleSaveEdit(item.id)}>Guardar</Button>
-                          <Button onClick={() => setEditMode(null)}>Cancelar</Button>
+                          <Button onClick={() => handleSaveEdit(item.id)} size="small" variant="outlined">
+                            Guardar
+                          </Button>
+                          <Button onClick={() => setEditMode(null)} size="small" color="secondary">
+                            Cancelar
+                          </Button>
                         </>
                       ) : (
-                        <Tooltip title="Editar">
-                          <Edit
-                            onClick={() => handleEditClick(item)}
-                            sx={{ cursor: "pointer", color: primaryColor }}
-                          />
-                        </Tooltip>
+                        <>
+                          <Tooltip title="Editar">
+                            <Edit
+                              onClick={() => handleEditClick(item)}
+                              sx={{ cursor: "pointer", color: primaryColor }}
+                            />
+                          </Tooltip>
+                          <Tooltip title="Eliminar">
+                            <Delete
+                              onClick={() => handleEliminarClick(item.id)}
+                              sx={{ cursor: "pointer", color: "#d32f2f" }}
+                            />
+                          </Tooltip>
+                        </>
                       )}
                     </TableCell>
                   </TableRow>
@@ -280,6 +335,24 @@ const CrearPoliticas = () => {
           {alerta.message}
         </Alert>
       </Snackbar>
+
+      {/* Dialogo confirmación eliminar */}
+      <Dialog open={dialogOpen} onClose={handleCancelEliminar}>
+        <DialogTitle>Confirmar eliminación</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Estás seguro de que deseas eliminar esta política? Esta acción no se puede deshacer.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelEliminar} color="primary">
+            Cancelar
+          </Button>
+          <Button onClick={handleConfirmEliminar} color="error" variant="contained">
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
