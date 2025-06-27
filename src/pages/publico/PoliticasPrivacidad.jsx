@@ -152,7 +152,7 @@ const PoliticasPrivacidad = () => {
 
               <Box mt={4} textAlign="center">
                 <Typography variant="body2" color="text.secondary">
-                  Para más información, contáctanos:{" "}
+                  Para más información, contáctanos con el siguiente correo:{" "}
                   <Link
                   href="https://mail.google.com/mail/?view=cm&fs=1&to=leninvelang120381@gmail.com"
                   target="_blank"
