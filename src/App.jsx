@@ -43,6 +43,7 @@ import ListaPacientesSinCuenta from "./pages/admin/ListaPacientesSinCuenta";
 import CrearPacienteSinCuenta from "./pages/admin/CrearPacienteSinCuenta";
 import CrearMisionVision from "./pages/admin/ConfGeneral/CrearMisionVision";
 import CrearPoliticas from "./pages/admin/ConfGeneral/CrearPoliticas";
+import RegistroPago from "./pages/admin/pagos/RegistroPago";
 
 // Errores
 import Error404 from "./components/Errors/Error404";
@@ -359,7 +360,7 @@ const App = () => {
                   </RutaProtegida>
                 }
               />
-               <Route
+              <Route
                 path="/Pagos"
                 element={
                   <RutaProtegida tiposPermitidos={['paciente']}>
@@ -531,6 +532,17 @@ const App = () => {
                   </RutaProtegida>
                 }
               />
+              <Route
+                path="/admin/pagos/registrar"
+                element={
+                  <RutaProtegida tiposPermitidos={['admin']}>
+                    <LayoutAdmin title={"Registro de Pagos"}>
+                      <RegistroPago />
+                    </LayoutAdmin>
+                  </RutaProtegida>
+                }
+              />
+
 
               {/* Rutas Errores */}
               <Route path="/400" element={<Error400 />} />
