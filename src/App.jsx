@@ -44,6 +44,7 @@ import CrearPacienteSinCuenta from "./pages/admin/CrearPacienteSinCuenta";
 import CrearMisionVision from "./pages/admin/ConfGeneral/CrearMisionVision";
 import CrearPoliticas from "./pages/admin/ConfGeneral/CrearPoliticas";
 import RegistroPago from "./pages/admin/pagos/RegistroPago";
+import HistorialPagos from "./pages/admin/pagos/HistorialPagos";
 
 // Errores
 import Error404 from "./components/Errors/Error404";
@@ -538,6 +539,16 @@ const App = () => {
                   <RutaProtegida tiposPermitidos={['admin']}>
                     <LayoutAdmin title={"Registro de Pagos"}>
                       <RegistroPago />
+                    </LayoutAdmin>
+                  </RutaProtegida>
+                }
+              />
+               <Route
+                path="/admin/pagos/historial"
+                element={
+                  <RutaProtegida tiposPermitidos={['admin']}>
+                    <LayoutAdmin title={"Historial de Pagos"}>
+                      <HistorialPagos />
                     </LayoutAdmin>
                   </RutaProtegida>
                 }
