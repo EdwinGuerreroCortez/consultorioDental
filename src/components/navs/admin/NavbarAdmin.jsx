@@ -227,9 +227,8 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
       text: "Pagos",
       icon: <AttachMoneyIcon />,
       submenu: [
-        { text: "Historial de Pagos", href: "/admin/pagos/historial" },
-        { text: "Registrar Pago Manual", href: "/admin/pagos/registrar" },
-        { text: "Comprobantes de Pago", href: "/admin/pagos/comprobantes" },
+        { text: "Historial de Pagos", href: "/admin/pagos-historial" },
+        { text: "Registrar Pago Manual", href: "/admin/pagos-registrar" },
       ],
     },
     {

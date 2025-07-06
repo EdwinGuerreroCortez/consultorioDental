@@ -534,7 +534,7 @@ const App = () => {
                 }
               />
               <Route
-                path="/admin/pagos/registrar"
+                path="/admin/pagos-registrar"
                 element={
                   <RutaProtegida tiposPermitidos={['admin']}>
                     <LayoutAdmin title={"Registro de Pagos"}>
@@ -544,7 +544,7 @@ const App = () => {
                 }
               />
                <Route
-                path="/admin/pagos/historial"
+                path="/admin/pagos-historial"
                 element={
                   <RutaProtegida tiposPermitidos={['admin']}>
                     <LayoutAdmin title={"Historial de Pagos"}>

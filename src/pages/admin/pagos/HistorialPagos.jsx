@@ -26,17 +26,18 @@ const agruparPorMes = (pagos) => {
     agrupados[claveCapitalizada].push(pago);
   });
 
-  // Ordenar los meses cronológicamente
+  // 🔁 Ordenar meses del más reciente al más antiguo
   const resultadoOrdenado = Object.entries(agrupados)
     .map(([mes, pagos]) => {
       const fechaReferencia = new Date(pagos[0].fecha_pago);
       return { mes, fechaReferencia, pagos };
     })
-    .sort((a, b) => a.fechaReferencia - b.fechaReferencia)
+    .sort((a, b) => b.fechaReferencia - a.fechaReferencia) // ← Aquí está el cambio
     .map(({ mes, pagos }) => ({ mes, pagos }));
 
   return resultadoOrdenado;
 };
+
 
 const HistorialPagos = () => {
   const [pagos, setPagos] = useState([]);
