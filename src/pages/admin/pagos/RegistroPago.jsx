@@ -103,10 +103,10 @@ const ListaPacientesTratamiento = () => {
       });
       const citasOrdenadas = res.data.citas
         ? [...res.data.citas].sort((a, b) => {
-            if (!a.fecha_hora) return 1;
-            if (!b.fecha_hora) return -1;
-            return new Date(a.fecha_hora) - new Date(b.fecha_hora);
-          })
+          if (!a.fecha_hora) return 1;
+          if (!b.fecha_hora) return -1;
+          return new Date(a.fecha_hora) - new Date(b.fecha_hora);
+        })
         : [];
       setTratamientoSeleccionado({ ...res.data, citas: citasOrdenadas });
       setOpenDialog(true);
@@ -119,10 +119,11 @@ const ListaPacientesTratamiento = () => {
   };
 
   const handleToggleCita = (id) => {
-    setCitasSeleccionadas((prev) =>
-      prev.includes(id) ? prev.filter((cita) => cita !== id) : [...prev, id]
-    );
-  };
+  setCitasSeleccionadas((prev) =>
+    prev.includes(id) ? prev.filter((cita) => cita !== id) : [...prev, id]
+  );
+};
+
 
   const totalSeleccionado = tratamientoSeleccionado?.citas
     ?.filter((cita) => citasSeleccionadas.includes(cita.cita_id))
@@ -136,8 +137,12 @@ const ListaPacientesTratamiento = () => {
     }
     setPaymentLoading(true);
     try {
+      const pagosSeleccionados = tratamientoSeleccionado?.citas
+        ?.filter((cita) => citasSeleccionadas.includes(cita.cita_id))
+        ?.map((cita) => cita.pago_id); // ✅ Aquí tomas el ID del pago
+
       const paymentData = {
-        ids: citasSeleccionadas,
+        ids: pagosSeleccionados,
         metodo: metodoPago,
         fecha_pago: new Date().toISOString().split("T")[0], // Ejemplo: "2025-06-29"
       };
