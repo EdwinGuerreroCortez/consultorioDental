@@ -56,8 +56,31 @@ const PagosPendientes = () => {
   const [alerta, setAlerta] = useState({ open: false, message: "", severity: "success" });
   const elementosPorPagina = 5;
   const [usuarioId, setUsuarioId] = useState(null);
+  const [csrfToken, setCsrfToken] = useState(null);
   const navigate = useNavigate();
 
+  // Obtener token CSRF
+  useEffect(() => {
+    const obtenerCsrf = async () => {
+      try {
+        const res = await fetch("http://localhost:4000/api/get-csrf-token", {
+          credentials: "include",
+        });
+        const data = await res.json();
+        setCsrfToken(data.csrfToken);
+      } catch (error) {
+        console.error("Error al obtener CSRF token:", error);
+        setAlerta({
+          open: true,
+          message: "Error al obtener el token CSRF.",
+          severity: "error",
+        });
+      }
+    };
+    obtenerCsrf();
+  }, []);
+
+  // Obtener usuario autenticado
   useEffect(() => {
     const obtenerUsuario = async () => {
       try {
@@ -82,6 +105,7 @@ const PagosPendientes = () => {
     obtenerUsuario();
   }, []);
 
+  // Obtener pagos pendientes del usuario
   useEffect(() => {
     if (!usuarioId) return;
     const obtenerPagos = async () => {
@@ -116,6 +140,84 @@ const PagosPendientes = () => {
 
   const handleGoBack = () => {
     navigate(-1);
+  };
+
+  const handlePagarTodos = async () => {
+    try {
+      const pagosIds = pagosPaginados.map(p => p.id);
+
+      if (!csrfToken || pagosIds.length === 0) {
+        return setAlerta({
+          open: true,
+          message: "No hay pagos en esta página o token inválido.",
+          severity: "warning",
+        });
+      }
+
+      const response = await axios.post("http://localhost:4000/api/pagos/pagar-por-ids", {
+        pagosIds
+      }, {
+        withCredentials: true,
+        headers: {
+          "X-XSRF-TOKEN": csrfToken
+        }
+      });
+
+      setAlerta({
+        open: true,
+        message: response.data.mensaje,
+        severity: "success",
+      });
+
+      const pagosRestantes = pagos.filter(p => !pagosIds.includes(p.id));
+      setPagos(pagosRestantes);
+    } catch (error) {
+      console.error("Error al pagar todos:", error);
+      setAlerta({
+        open: true,
+        message: "No se pudo procesar el pago.",
+        severity: "error",
+      });
+    }
+  };
+
+  const handlePagarUno = async () => {
+    try {
+      if (!csrfToken || pagosPaginados.length === 0) {
+        return setAlerta({
+          open: true,
+          message: "No hay pagos para procesar o token inválido.",
+          severity: "warning",
+        });
+      }
+
+      const primerPagoId = pagosPaginados[0].id;
+
+      const response = await axios.post("http://localhost:4000/api/pagos/pagar-por-ids", {
+        pagosIds: [primerPagoId]
+      }, {
+        withCredentials: true,
+        headers: {
+          "X-XSRF-TOKEN": csrfToken
+        }
+      });
+
+      setAlerta({
+        open: true,
+        message: response.data.mensaje,
+        severity: "success",
+      });
+
+      const pagosRestantes = pagos.filter(p => p.id !== primerPagoId);
+      setPagos(pagosRestantes);
+    } catch (error) {
+      console.error("Error al pagar uno:", error);
+      setAlerta({
+        open: true,
+        message: "No se pudo pagar la cita actual.",
+        severity: "error",
+      });
+    }
   };
 
   return (
@@ -163,10 +265,22 @@ const PagosPendientes = () => {
       >
         {/* Botones de acción */}
         <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mb: 2 }}>
-          <Button variant="contained" color="primary" startIcon={<ReceiptLongIcon />} sx={{ textTransform: "none" }}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<ReceiptLongIcon />}
+            sx={{ textTransform: "none" }}
+            onClick={handlePagarTodos}
+          >
             Pagar todo el tratamiento
           </Button>
-          <Button variant="outlined" color="primary" startIcon={<PaymentIcon />} sx={{ textTransform: "none" }}>
+          <Button
+            variant="outlined"
+            color="primary"
+            startIcon={<PaymentIcon />}
+            sx={{ textTransform: "none" }}
+            onClick={handlePagarUno}
+          >
             Pagar cita actual
           </Button>
         </Box>
