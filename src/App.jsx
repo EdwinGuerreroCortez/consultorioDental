@@ -28,6 +28,8 @@ import HistorialTratamientoPaciente from "./pages/pacientes/HistorialTratamiento
 import Pagos from "./pages/pacientes/Pagos";
 import MisionVision from "./pages/pacientes/MisionVision";
 import HistorialPagosPaciente from "./pages/pacientes/HistorialPagosPaciente";
+import PagosExito from "./pages/pacientes/PagosExito";
+import PagosCancelado from "./pages/pacientes/PagosCancelado";
 // Admin
 import LayoutAdmin from "./components/navs/admin/LayoutAdmin";
 import BienvenidaAdmin from "./pages/admin/BienvenidaAdmin";
@@ -393,6 +395,26 @@ const App = () => {
                 }
               />
 
+              <Route
+                path="/pagos-exito" 
+                element={
+                  <RutaProtegida tiposPermitidos={['paciente']}>
+                    <LayoutPaciente>
+                      <PagosExito />
+                    </LayoutPaciente>
+                  </RutaProtegida>
+                }
+              />
+              <Route
+                path="/pagos-cancelado"
+                element={
+                  <RutaProtegida tiposPermitidos={['paciente']}>
+                    <LayoutPaciente>
+                      <PagosCancelado />
+                    </LayoutPaciente>
+                  </RutaProtegida>
+                }
+              />
               {/**************************************************** Rutas admin *******************************************************/}
               <Route
                 path="/admin"

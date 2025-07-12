@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import axios from "axios";
 import { verificarAutenticacion } from "../../utils/auth";
 import {
@@ -59,26 +59,46 @@ const PagosPendientes = () => {
   const [csrfToken, setCsrfToken] = useState(null);
   const navigate = useNavigate();
 
-  // Obtener token CSRF
-  useEffect(() => {
-    const obtenerCsrf = async () => {
+  // Crear instancia de Axios reutilizable
+  const axiosInstance = useMemo(() => axios.create({
+    baseURL: 'http://localhost:4000/api',
+    withCredentials: true,
+  }), []);
+
+  // Obtener token CSRF con reintento
+  const obtenerCsrf = useCallback(async (reintentos = 3, delay = 1000) => {
+    for (let intento = 1; intento <= reintentos; intento++) {
       try {
-        const res = await fetch("http://localhost:4000/api/get-csrf-token", {
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
-        const data = await res.json();
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        const data = await response.json();
+        if (!data.csrfToken) {
+          throw new Error("Token CSRF no recibido");
+        }
         setCsrfToken(data.csrfToken);
+        return;
       } catch (error) {
-        console.error("Error al obtener CSRF token:", error);
-        setAlerta({
-          open: true,
-          message: "Error al obtener el token CSRF.",
-          severity: "error",
-        });
+        console.error(`Intento ${intento} - Error al obtener CSRF token:`, error);
+        if (intento === reintentos) {
+          setAlerta({
+            open: true,
+            message: "No se pudo obtener el token CSRF tras varios intentos. Por favor, intenta de nuevo más tarde.",
+            severity: "error",
+          });
+        } else {
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
       }
-    };
-    obtenerCsrf();
+    }
   }, []);
+
+  useEffect(() => {
+    obtenerCsrf();
+  }, [obtenerCsrf]);
 
   // Obtener usuario autenticado
   useEffect(() => {
@@ -95,6 +115,7 @@ const PagosPendientes = () => {
           });
         }
       } catch (error) {
+        console.error("Error al verificar la autenticación:", error);
         setAlerta({
           open: true,
           message: "Error al verificar la autenticación. Intenta nuevamente.",
@@ -106,28 +127,34 @@ const PagosPendientes = () => {
   }, []);
 
   // Obtener pagos pendientes del usuario
-  useEffect(() => {
-    if (!usuarioId) return;
-    const obtenerPagos = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(`http://localhost:4000/api/pagos/pendientes/${usuarioId}`, {
-          withCredentials: true,
-        });
-        setPagos(response.data);
-      } catch (error) {
-        console.error("Error al obtener pagos:", error);
-        setAlerta({
-          open: true,
-          message: "Error al cargar los pagos. Intenta nuevamente.",
-          severity: "error",
-        });
-      } finally {
-        setLoading(false);
+  const obtenerPagos = useCallback(async () => {
+    if (!usuarioId || !csrfToken) return;
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(`/pagos/pendientes/${usuarioId}`, {
+        headers: { "X-XSRF-TOKEN": csrfToken },
+      });
+      setPagos(response.data);
+    } catch (error) {
+      console.error("Error al obtener pagos:", error);
+      let message = "Error al cargar los pagos. Intenta nuevamente.";
+      if (error.response?.status === 403) {
+        message = "Acceso denegado. Verifica tu sesión o el token CSRF.";
+        obtenerCsrf(); // Reintentar obtener el token CSRF
       }
-    };
+      setAlerta({
+        open: true,
+        message,
+        severity: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [usuarioId, csrfToken, axiosInstance, obtenerCsrf]);
+
+  useEffect(() => {
     obtenerPagos();
-  }, [usuarioId]);
+  }, [obtenerPagos]);
 
   const pagosPaginados = useMemo(
     () => pagos.slice((pagina - 1) * elementosPorPagina, pagina * elementosPorPagina),
@@ -138,87 +165,84 @@ const PagosPendientes = () => {
     setPagina(value);
   };
 
-  const handleGoBack = () => {
+  const handleGoBack = useCallback(() => {
     navigate(-1);
-  };
+  }, [navigate]);
 
-  const handlePagarTodos = async () => {
+  const handlePagarTodos = useCallback(async () => {
+    if (!csrfToken || pagosPaginados.length === 0) {
+      setAlerta({
+        open: true,
+        message: "No hay pagos en esta página o token inválido.",
+        severity: "warning",
+      });
+      return;
+    }
+
     try {
-      const pagosIds = pagosPaginados.map(p => p.id);
-
-      if (!csrfToken || pagosIds.length === 0) {
-        return setAlerta({
-          open: true,
-          message: "No hay pagos en esta página o token inválido.",
-          severity: "warning",
-        });
-      }
-
-      const response = await axios.post("http://localhost:4000/api/pagos/pagar-por-ids", {
-        pagosIds
-      }, {
-        withCredentials: true,
-        headers: {
-          "X-XSRF-TOKEN": csrfToken
+      setLoading(true);
+      const response = await axiosInstance.post(
+        "/pagos/crear-checkout",
+        { pagos: pagosPaginados },
+        {
+          headers: { "X-XSRF-TOKEN": csrfToken },
         }
-      });
-
-      setAlerta({
-        open: true,
-        message: response.data.mensaje,
-        severity: "success",
-      });
-
-      const pagosRestantes = pagos.filter(p => !pagosIds.includes(p.id));
-      setPagos(pagosRestantes);
+      );
+      window.location.href = response.data.url;
     } catch (error) {
-      console.error("Error al pagar todos:", error);
+      console.error("Error al iniciar pago con Stripe:", error);
+      let message = "No se pudo iniciar el pago con Stripe.";
+      if (error.response?.status === 403) {
+        message = "Acceso denegado. Verifica el token CSRF.";
+        obtenerCsrf(); // Reintentar obtener el token CSRF
+      }
       setAlerta({
         open: true,
-        message: "No se pudo procesar el pago.",
+        message,
         severity: "error",
       });
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [csrfToken, pagosPaginados, axiosInstance, obtenerCsrf]);
 
-  const handlePagarUno = async () => {
+  const handlePagarUno = useCallback(async () => {
+    if (!csrfToken || pagosPaginados.length === 0) {
+      setAlerta({
+        open: true,
+        message: "No hay pagos para procesar o token inválido.",
+        severity: "warning",
+      });
+      return;
+    }
+
     try {
-      if (!csrfToken || pagosPaginados.length === 0) {
-        return setAlerta({
-          open: true,
-          message: "No hay pagos para procesar o token inválido.",
-          severity: "warning",
-        });
-      }
-
-      const primerPagoId = pagosPaginados[0].id;
-
-      const response = await axios.post("http://localhost:4000/api/pagos/pagar-por-ids", {
-        pagosIds: [primerPagoId]
-      }, {
-        withCredentials: true,
-        headers: {
-          "X-XSRF-TOKEN": csrfToken
+      setLoading(true);
+      const primerPago = pagosPaginados[0];
+      const response = await axiosInstance.post(
+        "/pagos/crear-checkout",
+        { pagos: [primerPago] },
+        {
+          headers: { "X-XSRF-TOKEN": csrfToken },
         }
-      });
-
-      setAlerta({
-        open: true,
-        message: response.data.mensaje,
-        severity: "success",
-      });
-
-      const pagosRestantes = pagos.filter(p => p.id !== primerPagoId);
-      setPagos(pagosRestantes);
+      );
+      window.location.href = response.data.url;
     } catch (error) {
-      console.error("Error al pagar uno:", error);
+      console.error("Error al iniciar pago con Stripe:", error);
+      let message = "No se pudo iniciar el pago con Stripe.";
+      if (error.response?.status === 403) {
+        message = "Acceso denegado. Verifica el token CSRF.";
+        obtenerCsrf(); // Reintentar obtener el token CSRF
+      }
       setAlerta({
         open: true,
-        message: "No se pudo pagar la cita actual.",
+        message,
         severity: "error",
       });
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [csrfToken, pagosPaginados, axiosInstance, obtenerCsrf]);
 
   return (
     <Box
@@ -232,6 +256,25 @@ const PagosPendientes = () => {
         background: "linear-gradient(135deg, #f5f7fa 0%, #e6f7ff 100%)",
       }}
     >
+      {loading && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 9999,
+          }}
+        >
+          <CircularProgress sx={{ color: "#0288d1" }} size={40} />
+        </Box>
+      )}
+
       <IconButton
         onClick={handleGoBack}
         sx={{
@@ -271,6 +314,7 @@ const PagosPendientes = () => {
             startIcon={<ReceiptLongIcon />}
             sx={{ textTransform: "none" }}
             onClick={handlePagarTodos}
+            disabled={loading}
           >
             Pagar todo el tratamiento
           </Button>
@@ -280,6 +324,7 @@ const PagosPendientes = () => {
             startIcon={<PaymentIcon />}
             sx={{ textTransform: "none" }}
             onClick={handlePagarUno}
+            disabled={loading}
           >
             Pagar cita actual
           </Button>
