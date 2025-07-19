@@ -48,6 +48,9 @@ import CrearMisionVision from "./pages/admin/ConfGeneral/CrearMisionVision";
 import CrearPoliticas from "./pages/admin/ConfGeneral/CrearPoliticas";
 import RegistroPago from "./pages/admin/pagos/RegistroPago";
 import HistorialPagos from "./pages/admin/pagos/HistorialPagos";
+import Valores from "./pages/admin/ConfGeneral/Valores";
+import QuienesSomos from "./pages/admin/ConfGeneral/QuienesSomos";
+import Configuraciones from "./pages/admin/ConfGeneral/Configuraciones";
 
 // Errores
 import Error404 from "./components/Errors/Error404";
@@ -582,6 +585,36 @@ const App = () => {
                   <RutaProtegida tiposPermitidos={['admin']}>
                     <LayoutAdmin title={"Historial de Pagos"}>
                       <HistorialPagos />
+                    </LayoutAdmin>
+                  </RutaProtegida>
+                }
+              />
+              <Route
+                path="/admin/configuracion/valores"
+                element={
+                  <RutaProtegida tiposPermitidos={['admin']}>
+                    <LayoutAdmin title={"Valores"}>
+                      <Valores />
+                    </LayoutAdmin>
+                  </RutaProtegida>
+                }
+              />
+              <Route
+                path="/admin/configuracion/quienes-somos"
+                element={
+                  <RutaProtegida tiposPermitidos={['admin']}>
+                    <LayoutAdmin title={"¿Quiénes Somos?"}>
+                      <QuienesSomos />
+                    </LayoutAdmin>
+                  </RutaProtegida>
+                }
+              />
+              <Route
+                path="/admin/configuracion/sistema"
+                element={
+                  <RutaProtegida tiposPermitidos={['admin']}>
+                    <LayoutAdmin title={"Configuración de Seguridad"}>
+                      <Configuraciones />
                     </LayoutAdmin>
                   </RutaProtegida>
                 }
