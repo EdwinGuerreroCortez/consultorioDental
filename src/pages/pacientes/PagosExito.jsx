@@ -13,7 +13,7 @@ const PagosExito = () => {
 
   // Crear instancia de Axios reutilizable
   const axiosInstance = useMemo(() => axios.create({
-    baseURL: "http://localhost:4000/api",
+    baseURL: "http://localhost:4000/api/pagos",
     withCredentials: true,
   }), []);
 
@@ -88,7 +88,7 @@ const PagosExito = () => {
 
     try {
       const response = await axiosInstance.post(
-        "/pagos/pagar-por-ids",
+        "/pagar-por-ids",
         { pagosIds },
         {
           headers: { "X-XSRF-TOKEN": csrfToken },
