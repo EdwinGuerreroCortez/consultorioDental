@@ -221,6 +221,8 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
         { text: "Lista de Pacientes (Con Cuenta)", href: "/admin/pacientes/con-cuenta" },
         { text: "Lista de Pacientes (Sin Cuenta)", href: "/admin/pacientes/sin-cuenta" },
         { text: "Registrar Paciente Manualmente", href: "/admin/pacientes/registrar" },
+        { text: "Prediccion", href: "/admin/pacientes/prediccion" },
+
       ],
     },
     {
