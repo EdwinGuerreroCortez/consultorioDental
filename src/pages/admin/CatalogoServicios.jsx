@@ -53,7 +53,7 @@ const CrearServicioOdontologia = () => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -190,7 +190,7 @@ const CrearServicioOdontologia = () => {
       );
       formData.append("imagen", formulario.imagen);
 
-      const response = await fetch("http://localhost:4000/api/tratamientos/crear", {
+      const response = await fetch("https://backenddent.onrender.com/api/tratamientos/crear", {
         method: "POST",
         body: formData,
         headers: { "X-XSRF-TOKEN": csrfToken }, // Usar el token del estado

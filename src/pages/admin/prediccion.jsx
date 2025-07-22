@@ -24,7 +24,7 @@ const Prediccion = () => {
   useEffect(() => {
     const obtenerPacientes = async () => {
       try {
-        const res = await axios.get("http://localhost:4000/api/usuarios/prediccion-pacientes");
+        const res = await axios.get("https://backenddent.onrender.com/api/usuarios/prediccion-pacientes");
         setPacientes(res.data);
       } catch (err) {
         console.error("Error al cargar pacientes:", err);

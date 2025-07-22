@@ -70,7 +70,7 @@ export default function EvaluarCitasPendientes() {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -88,7 +88,7 @@ export default function EvaluarCitasPendientes() {
   }, []);
 
   const axiosInstance = axios.create({
-    baseURL: "http://localhost:4000/api",
+    baseURL: "https://backenddent.onrender.com/api",
     withCredentials: true,
   });
 

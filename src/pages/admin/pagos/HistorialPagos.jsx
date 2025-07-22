@@ -51,7 +51,7 @@ const HistorialPagosDiseño = () => {
   useEffect(() => {
     const obtenerPagos = async () => {
       try {
-        const res = await axios.get("http://localhost:4000/api/pagos/historial");
+        const res = await axios.get("https://backenddent.onrender.com/api/pagos/historial");
         setPagos(res.data);
         setFilteredPagos(res.data);
       } catch (error) {

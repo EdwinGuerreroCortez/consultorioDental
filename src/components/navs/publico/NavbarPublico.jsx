@@ -55,7 +55,7 @@ const NavbarPublico = () => {
 
     if (term.length > 0) {
       try {
-        const response = await fetch(`http://localhost:4000/api/tratamientos/buscar?search=${term}`);
+        const response = await fetch(`https://backenddent.onrender.com/api/tratamientos/buscar?search=${term}`);
         const results = await response.json();
         const filteredResults = results.filter((result) =>
           new RegExp(term, "i").test(result.nombre)

@@ -81,7 +81,7 @@ const InactivityHandler = ({ children }) => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -141,7 +141,7 @@ const InactivityHandler = ({ children }) => {
     }
 
     try {
-      const response = await fetch("http://localhost:4000/api/usuarios/logout", {
+      const response = await fetch("https://backenddent.onrender.com/api/usuarios/logout", {
         method: "POST",
         credentials: "include",
         headers: {

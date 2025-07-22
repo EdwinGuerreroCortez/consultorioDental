@@ -62,7 +62,7 @@ const PoliticasPrivacidad = () => {
   useEffect(() => {
     const obtenerPoliticas = async () => {
       try {
-        const res = await fetch("http://localhost:4000/api/politicas/listar", {
+        const res = await fetch("https://backenddent.onrender.com/api/politicas/listar", {
           credentials: "include",
         });
         if (!res.ok) throw new Error("Error al obtener políticas");

@@ -82,7 +82,7 @@ const Perfil = () => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -129,7 +129,7 @@ const Perfil = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:4000/api/usuarios/cambiar-password/${perfil.id}`, {
+      const response = await fetch(`https://backenddent.onrender.com/api/usuarios/cambiar-password/${perfil.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -163,7 +163,7 @@ const Perfil = () => {
         const usuario = await verificarAutenticacion();
         if (!usuario || !usuario.id) throw new Error("No se encontró el usuario autenticado");
 
-        const response = await fetch(`http://localhost:4000/api/usuarios/perfil/${usuario.id}`, {
+        const response = await fetch(`https://backenddent.onrender.com/api/usuarios/perfil/${usuario.id}`, {
           headers: {
             "X-XSRF-TOKEN": csrfToken,
           },
