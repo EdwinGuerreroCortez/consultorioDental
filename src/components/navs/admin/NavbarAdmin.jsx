@@ -256,10 +256,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
       text: "Reportes",
       icon: <BarChartIcon />,
       submenu: [
-        { text: "Reporte de Citas", href: "/admin/reportes/citas" },
-        { text: "Reporte de Pagos", href: "/admin/reportes/pagos" },
-        { text: "Reporte de Tratamientos", href: "/admin/reportes/tratamientos" },
-        { text: "Reporte de Evaluaciones Médicas", href: "/admin/reportes/evaluaciones" },
+        { text: "Reportes", href: "/admin/reportes" },
       ],
     },
     { text: "Cerrar Sesión", icon: <LogoutIcon />, action: cerrarSesion },

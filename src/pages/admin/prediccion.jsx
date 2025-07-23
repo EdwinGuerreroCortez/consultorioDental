@@ -17,7 +17,7 @@ import { motion } from "framer-motion";
 
 const Prediccion = () => {
   const [pacientes, setPacientes] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loadingStates, setLoadingStates] = useState({});
   const [resultado, setResultado] = useState(null);
   const [alerta, setAlerta] = useState({ open: false, message: "", severity: "info" });
 
@@ -25,7 +25,11 @@ const Prediccion = () => {
     const obtenerPacientes = async () => {
       try {
         const res = await axios.get("https://backenddent.onrender.com/api/usuarios/prediccion-pacientes");
-        setPacientes(res.data);
+        const updatedPacientes = res.data.map(p => ({
+          ...p,
+          monto_ultimo_pago: p.monto_ultimo_pago || "$0.00"
+        }));
+        setPacientes(updatedPacientes);
       } catch (err) {
         console.error("Error al cargar pacientes:", err);
         setAlerta({
@@ -37,50 +41,53 @@ const Prediccion = () => {
     };
     obtenerPacientes();
   }, []);
-const obtenerPrediccion = async (paciente) => {
-  setLoading(true);
-  setResultado(null);
-  try {
-    console.log("📤 Enviando a Flask:", paciente); // 🔍 Log del paciente que se envía
 
-    const res = await axios.post("https://predicciondentista.onrender.com/predict", paciente);
+  const extraerDatosParaPrediccion = (paciente) => ({
+    edad: paciente.edad,
+    citas_totales: paciente.citas_totales,
+    citas_asistidas: paciente.citas_asistidas,
+    monto_ultimo_pago: paciente.monto_ultimo_pago,
+    dia_semana: paciente.dia_semana,
+  });
 
-    console.log("📥 Respuesta de Flask:", res.data); // 🔍 Log de la respuesta
+  const obtenerPrediccion = async (paciente, index) => {
+    setLoadingStates((prev) => ({ ...prev, [index]: true }));
+    setResultado(null);
+    try {
+      const datos = extraerDatosParaPrediccion(paciente);
+      console.log("📤 Enviando a Flask:", datos);
 
-    setResultado(res.data.asistira);
-   setAlerta({
-  open: true,
-  message: `Predicción: ${res.data.asistira === 1 ? "Sí asistirá" : "No asistirá"}`,
-  severity: res.data.asistira === 1 ? "success" : "warning",
-});
-  } catch (err) {
-    console.error("❌ Error en la predicción:", err);
-    setAlerta({
-      open: true,
-      message: "Error al obtener predicción",
-      severity: "error",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+      const res = await axios.post("https://predicciondentista.onrender.com/predict", datos);
 
+      console.log("📥 Respuesta de Flask:", res.data);
+
+      setResultado(res.data.asistira);
+      setAlerta({
+        open: true,
+        message: `Predicción: ${res.data.asistira === 1 ? "✅ Sí asistirá" : "⚠️ No asistirá"}`,
+        severity: res.data.asistira === 1 ? "success" : "warning",
+      });
+    } catch (err) {
+      console.error("❌ Error en la predicción:", err);
+      setAlerta({
+        open: true,
+        message: "Error al obtener predicción",
+        severity: "error",
+      });
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, [index]: false }));
+    }
+  };
 
   const cerrarAlerta = () => setAlerta({ ...alerta, open: false });
 
   return (
     <Box sx={{ p: 3, backgroundColor: "#f5f9fa", minHeight: "100vh", fontFamily: "'Poppins', sans-serif" }}>
-      <Typography variant="h5" sx={{ fontWeight: "bold", color: "#006d77", mb: 3 }}>
+      <Typography variant="h5" sx={{ fontWeight: "bold", color: "#006d77", mb: 4, textAlign: "center" }}>
         Predicción de Asistencia a Citas
       </Typography>
 
-      {loading && (
-        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
-          <CircularProgress sx={{ color: "#006d77" }} />
-        </Box>
-      )}
-
-      <Grid container spacing={3}>
+      <Grid container spacing={3} sx={{ alignItems: "stretch" }}>
         {pacientes.map((p, index) => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
             <motion.div
@@ -90,61 +97,109 @@ const obtenerPrediccion = async (paciente) => {
             >
               <Card
                 sx={{
-                  borderRadius: 3,
-                  boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+                  borderRadius: 12,
+                  boxShadow: "0 6px 12px rgba(0,0,0,0.1)",
                   border: "1px solid #e0f2f1",
                   backgroundColor: "#ffffff",
-                  height: "100%",
+                  height: 420, // Altura fija para todas las cartas
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",
+                  alignItems: "stretch",
                 }}
               >
-                <CardContent>
-                  <Avatar
-                    sx={{
-                      bgcolor: "#e0f7fa",
-                      width: 56,
-                      height: 56,
-                      mb: 2,
-                    }}
-                  >
-                    <Person sx={{ color: "#006d77" }} />
-                  </Avatar>
-                  <Typography variant="h6" sx={{ fontWeight: "bold", color: "#006d77" }}>
-                    {p.nombre_completo}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "#555", mt: 1 }}>
-                    Edad: <strong>{p.edad}</strong>
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "#555" }}>
-                    Citas Totales: <strong>{p.citas_totales}</strong>
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "#555" }}>
-                    Asistidas: <strong>{p.citas_asistidas}</strong>
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "#555" }}>
-                    Día de la semana: <strong>{p.dia_semana}</strong>
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: "#555" }}>
-                    Último pago: <strong>${p.monto_ultimo_pago}</strong>
-                  </Typography>
+                <CardContent
+                  sx={{
+                    flexGrow: 1,
+                    p: 2,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between",
+                    "&:last-child": {
+                      pb: 2,
+                    },
+                    overflow: "hidden", // Evita desbordamiento
+                  }}
+                >
+                  <Box>
+                    <Avatar
+                      sx={{
+                        bgcolor: "#e0f7fa",
+                        width: 60,
+                        height: 60,
+                        mb: 3,
+                        mx: "auto",
+                        my: "auto",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Person sx={{ color: "#006d77", fontSize: 30 }} />
+                    </Avatar>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: "bold",
+                        color: "#006d77",
+                        textAlign: "center",
+                        mb: 2,
+                        fontSize: "1.1rem",
+                        wordBreak: "break-word", // Evita desbordamiento de nombres largos
+                      }}
+                    >
+                      {p.nombre_completo}
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "#555", mb: 1.5, textAlign: "center" }}>
+                      Tratamiento: <strong>{p.nombre_tratamiento}</strong>
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "#555", mb: 1.5, textAlign: "center" }}>
+                      Edad: <strong>{p.edad}</strong>
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "#555", mb: 1.5, textAlign: "center" }}>
+                      Citas Totales: <strong>{p.citas_totales}</strong>
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "#555", mb: 1.5, textAlign: "center" }}>
+                      Asistidas: <strong>{p.citas_asistidas}</strong>
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "#555", mb: 1.5, textAlign: "center" }}>
+                      Día de la semana: <strong>{p.dia_semana}</strong>
+                    </Typography>
+                    {p.monto_ultimo_pago && (
+                      <Typography variant="body2" sx={{ color: "#555", mb: 3, textAlign: "center" }}>
+                        Último pago: <strong>${p.monto_ultimo_pago}</strong>
+                      </Typography>
+                    )}
+                  </Box>
                 </CardContent>
-                <Box sx={{ p: 2 }}>
+                <Box sx={{ p: 2, pt: 0 }}>
                   <Button
                     fullWidth
                     variant="contained"
-                    startIcon={<Psychology />}
+                    startIcon={
+                      loadingStates[index] ? (
+                        <CircularProgress size={24} sx={{ color: "#fff", mx: "auto", display: "flex", alignItems: "center" }} />
+                      ) : (
+                        <Psychology sx={{ fontSize: 24, mx: "auto", display: "flex", alignItems: "center" }} />
+                      )
+                    }
                     sx={{
                       bgcolor: "#006d77",
                       ":hover": { bgcolor: "#005c66" },
-                      borderRadius: 2,
+                      borderRadius: 8,
                       fontWeight: "bold",
+                      textTransform: "none",
+                      py: 1,
+                      minHeight: 48,
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      textAlign: "center",
                     }}
-                    onClick={() => obtenerPrediccion(p)}
-                    disabled={loading}
+                    onClick={() => obtenerPrediccion(p, index)}
+                    disabled={loadingStates[index]}
                   >
-                    Predecir asistencia
+                    {loadingStates[index] ? "Cargando..." : "Predecir asistencia"}
                   </Button>
                 </Box>
               </Card>

@@ -52,6 +52,7 @@ import Valores from "./pages/admin/ConfGeneral/Valores";
 import QuienesSomos from "./pages/admin/ConfGeneral/QuienesSomos";
 import Configuraciones from "./pages/admin/ConfGeneral/Configuraciones";
 import Prediccion from "./pages/admin/prediccion";
+import Reportes from "./pages/admin/Reportes";
 // Errores
 import Error404 from "./components/Errors/Error404";
 import Error400 from "./components/Errors/Error400";
@@ -629,7 +630,16 @@ const App = () => {
                   </RutaProtegida>
                 }
               />
-
+              <Route
+                path="/admin/reportes"
+                element={
+                  <RutaProtegida tiposPermitidos={['admin']}>
+                    <LayoutAdmin title={"Reportes"}>
+                      <Reportes />
+                    </LayoutAdmin>
+                  </RutaProtegida>
+                }
+              />
 
               {/* Rutas Errores */}
               <Route path="/400" element={<Error400 />} />
