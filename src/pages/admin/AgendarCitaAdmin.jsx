@@ -19,6 +19,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { es } from 'date-fns/locale';
 import { motion } from "framer-motion";
+import { parseISO, format } from 'date-fns'; // Importa funciones de date-fns para parsear y formatear fechas
 
 const AgendarCitaAdmin = () => {
   const [usuarioId, setUsuarioId] = useState(null);
@@ -28,7 +29,7 @@ const AgendarCitaAdmin = () => {
   const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
   const [horaSeleccionada, setHoraSeleccionada] = useState('');
   const [disponibilidad] = useState([
-    '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM',
+    '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM','02:00 PM',
     '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM'
   ]);
   const [citasOcupadas, setCitasOcupadas] = useState([]);
@@ -95,7 +96,7 @@ const AgendarCitaAdmin = () => {
   };
 
   const axiosInstance = useMemo(() => axios.create({
-    baseURL: 'https://backenddent.onrender.com/api',
+    baseURL: 'http://localhost:4000/api',
     withCredentials: true,
   }), []);
 
@@ -118,7 +119,7 @@ const AgendarCitaAdmin = () => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", { credentials: "include" });
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", { credentials: "include" });
         const data = await response.json();
         setCsrfToken(data.csrfToken);
       } catch (error) {
@@ -151,12 +152,12 @@ const AgendarCitaAdmin = () => {
       console.log("📌 Citas ocupadas desde la API:", citas);
 
       const citasConHoraFormateada = citas.map(cita => {
-        const fechaUTC = new Date(cita.fecha_hora); // Ejemplo: '2025-03-25T16:00:00.000Z'
-        let horas = fechaUTC.getUTCHours(); // 16
-        const minutos = fechaUTC.getUTCMinutes().toString().padStart(2, '0'); // 00
+        const fechaUTC = new Date(cita.fecha_hora);
+        let horas = fechaUTC.getUTCHours();
+        const minutos = fechaUTC.getUTCMinutes().toString().padStart(2, '0');
         const periodo = horas >= 12 ? 'PM' : 'AM';
-        horas = horas % 12 || 12; // Convierte 16 a 4
-        const horaFormateada = `${horas.toString().padStart(2, '0')}:${minutos} ${periodo}`; // '04:00 PM'
+        horas = horas % 12 || 12;
+        const horaFormateada = `${horas.toString().padStart(2, '0')}:${minutos} ${periodo}`;
         return { ...cita, hora_formateada: horaFormateada };
       });
 
@@ -227,7 +228,15 @@ const AgendarCitaAdmin = () => {
       });
       if (response.data.length > 0) {
         const usuario = response.data[0];
-        setUsuarioEncontrado({ ...usuario, tipo: usuario.tipo, fecha_nacimiento: usuario.fecha_nacimiento ? new Date(usuario.fecha_nacimiento) : null });
+        // Parsear la fecha de nacimiento como una cadena YYYY-MM-DD para evitar problemas de zona horaria
+        const fechaNacimiento = usuario.fecha_nacimiento
+          ? parseISO(usuario.fecha_nacimiento.split('T')[0]) // Toma solo la parte de la fecha
+          : null;
+        setUsuarioEncontrado({
+          ...usuario,
+          tipo: usuario.tipo,
+          fecha_nacimiento: fechaNacimiento,
+        });
         setAlerta({ mostrar: true, mensaje: 'Usuario encontrado correctamente.', tipo: 'success' });
         setPasoActual(2);
       } else {
@@ -480,7 +489,7 @@ const AgendarCitaAdmin = () => {
                   Paciente: {usuarioEncontrado.nombre.toUpperCase()} {usuarioEncontrado.apellido_paterno.toUpperCase()} {usuarioEncontrado.apellido_materno.toUpperCase()}
                 </Typography>
                 <Typography sx={{ color: "#03445e", fontFamily: "'Poppins', sans-serif" }}>
-                  Fecha de Nacimiento: {new Date(usuarioEncontrado.fecha_nacimiento).toLocaleDateString()}
+                  Fecha de Nacimiento: {usuarioEncontrado.fecha_nacimiento ? format(usuarioEncontrado.fecha_nacimiento, 'dd/MM/yyyy') : 'N/A'}
                 </Typography>
               </Box>
             )}

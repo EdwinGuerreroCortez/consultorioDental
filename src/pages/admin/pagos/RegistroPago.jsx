@@ -25,9 +25,29 @@ import {
   IconButton,
   TextField,
   Snackbar,
+  Pagination,
 } from "@mui/material";
 import { Person, MonetizationOn, AccountBalance, Close } from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Función para formatear la fecha sin ajustar la zona horaria
+const convertirFecha = (fechaISO) => {
+  if (!fechaISO) return "Sin definir";
+  const fecha = new Date(fechaISO);
+  const dia = fecha.getUTCDate();
+  const mes = fecha.getUTCMonth() + 1;
+  const anio = fecha.getUTCFullYear();
+  let horas = fecha.getUTCHours();
+  const minutos = fecha.getUTCMinutes().toString().padStart(2, "0");
+  const periodo = horas >= 12 ? "PM" : "AM";
+  horas = horas % 12 || 12;
+  const meses = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+  ];
+  const mesNombre = meses[mes - 1];
+  return `${dia} de ${mesNombre} de ${anio}, ${horas}:${minutos} ${periodo}`;
+};
 
 const ListaPacientesTratamiento = () => {
   const [pacientes, setPacientes] = useState([]);
@@ -42,12 +62,14 @@ const ListaPacientesTratamiento = () => {
   const [sortOrder, setSortOrder] = useState("a-z");
   const [csrfToken, setCsrfToken] = useState(null);
   const [alerta, setAlerta] = useState({ open: false, message: "", severity: "success" });
+  const [currentPage, setCurrentPage] = useState(1);
+  const pacientesPorPagina = 12;
 
   // Fetch CSRF token
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -65,7 +87,7 @@ const ListaPacientesTratamiento = () => {
     const obtenerPacientes = async () => {
       if (!csrfToken) return;
       try {
-        const response = await axios.get("https://backenddent.onrender.com/api/pagos/pacientes-con-tratamiento", {
+        const response = await axios.get("http://localhost:4000/api/pagos/pacientes-con-tratamiento", {
           headers: { "X-XSRF-TOKEN": csrfToken },
           withCredentials: true,
         });
@@ -88,8 +110,15 @@ const ListaPacientesTratamiento = () => {
       const nameB = b.nombre_completo.toLowerCase();
       return sortOrder === "a-z"
         ? nameA.localeCompare(nameB)
-        : nameB.localeCompare(nameA);
+        : nameB.localeCompare(nameA); // Corregido el error en el ordenamiento
     });
+
+  // Paginación
+  const totalPaginas = Math.ceil(filteredAndSortedPacientes.length / pacientesPorPagina);
+  const pacientesPaginados = filteredAndSortedPacientes.slice(
+    (currentPage - 1) * pacientesPorPagina,
+    currentPage * pacientesPorPagina
+  );
 
   const manejarClickPaciente = async (id) => {
     setLoadingDetalle(true);
@@ -97,16 +126,16 @@ const ListaPacientesTratamiento = () => {
     setMetodoPago("");
     setPaymentStatus(null);
     try {
-      const res = await axios.get(`https://backenddent.onrender.com/api/tratamientos-pacientes/citas-por-tratamiento/${id}`, {
+      const res = await axios.get(`http://localhost:4000/api/tratamientos-pacientes/citas-por-tratamiento/${id}`, {
         headers: { "X-XSRF-TOKEN": csrfToken },
         withCredentials: true,
       });
       const citasOrdenadas = res.data.citas
         ? [...res.data.citas].sort((a, b) => {
-          if (!a.fecha_hora) return 1;
-          if (!b.fecha_hora) return -1;
-          return new Date(a.fecha_hora) - new Date(b.fecha_hora);
-        })
+            if (!a.fecha_hora) return 1;
+            if (!b.fecha_hora) return -1;
+            return new Date(a.fecha_hora) - new Date(b.fecha_hora);
+          })
         : [];
       setTratamientoSeleccionado({ ...res.data, citas: citasOrdenadas });
       setOpenDialog(true);
@@ -119,11 +148,10 @@ const ListaPacientesTratamiento = () => {
   };
 
   const handleToggleCita = (id) => {
-  setCitasSeleccionadas((prev) =>
-    prev.includes(id) ? prev.filter((cita) => cita !== id) : [...prev, id]
-  );
-};
-
+    setCitasSeleccionadas((prev) =>
+      prev.includes(id) ? prev.filter((cita) => cita !== id) : [...prev, id]
+    );
+  };
 
   const totalSeleccionado = tratamientoSeleccionado?.citas
     ?.filter((cita) => citasSeleccionadas.includes(cita.cita_id))
@@ -139,28 +167,25 @@ const ListaPacientesTratamiento = () => {
     try {
       const pagosSeleccionados = tratamientoSeleccionado?.citas
         ?.filter((cita) => citasSeleccionadas.includes(cita.cita_id))
-        ?.map((cita) => cita.pago_id); // ✅ Aquí tomas el ID del pago
+        ?.map((cita) => cita.pago_id);
 
       const paymentData = {
         ids: pagosSeleccionados,
         metodo: metodoPago,
-        fecha_pago: new Date().toISOString().split("T")[0], // Ejemplo: "2025-06-29"
+        fecha_pago: new Date().toISOString().split("T")[0],
       };
-      console.log("Datos enviados al servidor:", paymentData); // Depuración
-      console.log("Token CSRF:", csrfToken); // Depuración
-      const response = await axios.put("https://backenddent.onrender.com/api/pagos/actualizar-pagos", paymentData, {
+      const response = await axios.put("http://localhost:4000/api/pagos/actualizar-pagos", paymentData, {
         headers: {
           "Content-Type": "application/json",
           "X-XSRF-TOKEN": csrfToken,
         },
         withCredentials: true,
       });
-      console.log("Respuesta del servidor:", response.data); // Depuración
       setPaymentStatus("success");
       setAlerta({ open: true, message: "Pago registrado exitosamente", severity: "success" });
 
       // Actualiza la lista de pacientes
-      const refreshResponse = await axios.get("https://backenddent.onrender.com/api/pagos/pacientes-con-tratamiento", {
+      const refreshResponse = await axios.get("http://localhost:4000/api/pagos/pacientes-con-tratamiento", {
         headers: { "X-XSRF-TOKEN": csrfToken },
         withCredentials: true,
       });
@@ -184,14 +209,18 @@ const ListaPacientesTratamiento = () => {
   return (
     <Box sx={{ p: 3, fontFamily: "'Poppins', sans-serif", backgroundColor: "#f9fdfd" }}>
       {/* Search and Sort Controls */}
-      <Box sx={{ mb: 3, display: "flex", gap: 2, alignItems: "center" }}>
+      <Box sx={{ mb: 3, display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
         <TextField
           label="Buscar paciente"
           variant="outlined"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1); // Resetear a la primera página al buscar
+          }}
           sx={{
             flex: 1,
+            minWidth: 200,
             "& .MuiOutlinedInput-root": {
               borderRadius: 2,
               "& fieldset": { borderColor: "#006d77" },
@@ -243,59 +272,78 @@ const ListaPacientesTratamiento = () => {
           </Typography>
         </Box>
       ) : (
-        <Grid container spacing={3}>
-          {filteredAndSortedPacientes.map((paciente, index) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={paciente.tratamiento_paciente_id}>
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: "easeOut", delay: index * 0.1 }}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => manejarClickPaciente(paciente.tratamiento_paciente_id)}
-                style={{ cursor: "pointer" }}
-              >
-                <Card
-                  sx={{
-                    borderRadius: 4,
-                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-                    p: 2,
-                    background: "#ffffff",
-                    border: "1px solid #e0f7fa",
-                    height: 200,
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
+        <>
+          <Grid container spacing={3}>
+            {pacientesPaginados.map((paciente, index) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={paciente.tratamiento_paciente_id}>
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, ease: "easeOut", delay: index * 0.1 }}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => manejarClickPaciente(paciente.tratamiento_paciente_id)}
+                  style={{ cursor: "pointer" }}
                 >
-                  <CardContent sx={{ textAlign: "center" }}>
-                    <Avatar
-                      sx={{
-                        bgcolor: "#e0f7fa",
-                        width: 56,
-                        height: 56,
-                        mx: "auto",
-                        mb: 2,
-                      }}
-                    >
-                      <Person sx={{ fontSize: 30, color: "#006d77" }} />
-                    </Avatar>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: "bold", color: "#006d77" }}
-                    >
-                      {paciente.nombre_completo}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: "#78909c", mt: 0.5 }}>
-                      Tipo de paciente: <strong>{paciente.tipo_paciente}</strong>
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </Grid>
-          ))}
-        </Grid>
+                  <Card
+                    sx={{
+                      borderRadius: 4,
+                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+                      p: 2,
+                      background: "#ffffff",
+                      border: "1px solid #e0f7fa",
+                      height: 200,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <CardContent sx={{ textAlign: "center" }}>
+                      <Avatar
+                        sx={{
+                          bgcolor: "#e0f7fa",
+                          width: 56,
+                          height: 56,
+                          mx: "auto",
+                          mb: 2,
+                        }}
+                      >
+                        <Person sx={{ fontSize: 30, color: "#006d77" }} />
+                      </Avatar>
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: "bold", color: "#006d77" }}
+                      >
+                        {paciente.nombre_completo}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: "#78909c", mt: 0.5 }}>
+                        Tipo de paciente: <strong>{paciente.tipo_paciente}</strong>
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </Grid>
+            ))}
+          </Grid>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+            <Pagination
+              count={totalPaginas}
+              page={currentPage}
+              onChange={(event, value) => setCurrentPage(value)}
+              color="primary"
+              sx={{
+                "& .MuiPaginationItem-root": {
+                  color: "#006d77",
+                  "&.Mui-selected": {
+                    backgroundColor: "#006d77",
+                    color: "#fff",
+                  },
+                },
+              }}
+            />
+          </Box>
+        </>
       )}
 
       <Dialog
@@ -379,7 +427,7 @@ const ListaPacientesTratamiento = () => {
                       <ListItemText
                         primary={
                           <Typography sx={{ fontWeight: "bold", color: "#03445e" }}>
-                            Fecha: {cita.fecha_hora ? new Date(cita.fecha_hora).toLocaleString() : "Sin definir"}
+                            Fecha: {convertirFecha(cita.fecha_hora)}
                           </Typography>
                         }
                         secondary={

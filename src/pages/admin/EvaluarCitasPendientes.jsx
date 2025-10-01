@@ -38,6 +38,7 @@ import {
   MonetizationOn,
   AddCircleOutline,
   Close,
+  Search as SearchIcon,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -61,6 +62,9 @@ export default function EvaluarCitasPendientes() {
   const [csrfToken, setCsrfToken] = useState(null);
   const [horasDisponibles, setHorasDisponibles] = useState([]);
   const [alerta, setAlerta] = useState({ mostrar: false, mensaje: "", tipo: "" });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [tratamientosPage, setTratamientosPage] = useState(1);
+  const tratamientosPorPagina = 12; // Ajustado para mostrar 12 tarjetas por página
 
   const disponibilidadBase = [
     "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM",
@@ -70,7 +74,7 @@ export default function EvaluarCitasPendientes() {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -88,7 +92,7 @@ export default function EvaluarCitasPendientes() {
   }, []);
 
   const axiosInstance = axios.create({
-    baseURL: "https://backenddent.onrender.com/api",
+    baseURL: "http://localhost:4000/api",
     withCredentials: true,
   });
 
@@ -344,17 +348,32 @@ export default function EvaluarCitasPendientes() {
   }, [csrfToken]);
 
   const convertirHoraLocal = (fechaISO) => {
-    if (!fechaISO) return "Sin asignar";
-    const fecha = new Date(fechaISO);
-    return fecha.toLocaleString("es-ES", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  if (!fechaISO) return "Sin asignar";
+  
+  // Crear un objeto Date a partir de la cadena ISO
+  const fecha = new Date(fechaISO);
+  
+  // Extraer componentes de la fecha y hora manualmente
+  const dia = fecha.getUTCDate();
+  const mes = fecha.getUTCMonth() + 1; // Los meses son 0-based en JavaScript
+  const anio = fecha.getUTCFullYear();
+  let horas = fecha.getUTCHours();
+  const minutos = fecha.getUTCMinutes().toString().padStart(2, "0");
+  const periodo = horas >= 12 ? "PM" : "AM";
+  
+  // Convertir a formato de 12 horas
+  horas = horas % 12 || 12;
+  
+  // Obtener el nombre del mes en español
+  const meses = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+  ];
+  const mesNombre = meses[mes - 1];
+
+  // Formatear la fecha y hora manualmente
+  return `${dia} de ${mesNombre} de ${anio}, ${horas}:${minutos} ${periodo}`;
+};
 
   const handleOpenDialog = (tratamiento) => {
     setSelectedTratamiento(tratamiento);
@@ -396,9 +415,87 @@ export default function EvaluarCitasPendientes() {
     return tratamiento.tratamiento || "Valorar cita";
   };
 
+  // Filtrar tratamientos según el término de búsqueda
+  const filteredTratamientos = tratamientos.filter((tratamiento) =>
+    `${tratamiento.nombre} ${tratamiento.apellido_paterno} ${tratamiento.apellido_materno}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
+  // Paginación de tratamientos
+  const totalTratamientosPaginas = Math.ceil(filteredTratamientos.length / tratamientosPorPagina);
+  const tratamientosPaginados = filteredTratamientos.slice(
+    (tratamientosPage - 1) * tratamientosPorPagina,
+    tratamientosPage * tratamientosPorPagina
+  );
+
   return (
     <Box sx={{ p: 3, fontFamily: "'Poppins', sans-serif" }}>
-      {tratamientos.length === 0 ? (
+      {/* Controles de búsqueda y paginación */}
+      <Box sx={{ mb: 3, display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
+        <TextField
+          label="Buscar paciente"
+          variant="outlined"
+          value={searchTerm}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+            setTratamientosPage(1); // Reiniciar a la primera página al buscar
+          }}
+          sx={{
+            flex: 1,
+            minWidth: 200,
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "12px",
+              "& fieldset": { borderColor: "#006d77" },
+              "&:hover fieldset": { borderColor: "#005c66" },
+              "&.Mui-focused fieldset": { borderColor: "#006d77", borderWidth: "2px" },
+            },
+            "& .MuiInputLabel-root": {
+              color: "#03445e",
+              "&.Mui-focused": { color: "#006d77" },
+            },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: "#006d77" }} />
+              </InputAdornment>
+            ),
+            sx: { color: "#006d77", fontFamily: "'Poppins', sans-serif" },
+          }}
+        />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Tooltip title="Página anterior">
+            <IconButton
+              onClick={() => setTratamientosPage((prev) => Math.max(prev - 1, 1))}
+              disabled={tratamientosPage === 1}
+              sx={{
+                color: tratamientosPage === 1 ? "#b0bec5" : "#006d77",
+                "&:hover": { backgroundColor: "#e0f7fa" },
+              }}
+            >
+              <ArrowBack />
+            </IconButton>
+          </Tooltip>
+          <Typography sx={{ fontWeight: "bold", fontSize: 14, color: "#006d77" }}>
+            Página {tratamientosPage} de {totalTratamientosPaginas}
+          </Typography>
+          <Tooltip title="Página siguiente">
+            <IconButton
+              onClick={() => setTratamientosPage((prev) => Math.min(prev + 1, totalTratamientosPaginas))}
+              disabled={tratamientosPage === totalTratamientosPaginas}
+              sx={{
+                color: tratamientosPage === totalTratamientosPaginas ? "#b0bec5" : "#006d77",
+                "&:hover": { backgroundColor: "#e0f7fa" },
+              }}
+            >
+              <ArrowForward />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Box>
+
+      {filteredTratamientos.length === 0 ? (
         <Box
           sx={{
             display: "flex",
@@ -425,7 +522,7 @@ export default function EvaluarCitasPendientes() {
         </Box>
       ) : (
         <Grid container spacing={3}>
-          {tratamientos.map((tratamiento, index) => (
+          {tratamientosPaginados.map((tratamiento, index) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={tratamiento.id}>
               <motion.div
                 initial={{ opacity: 0, y: 30 }}

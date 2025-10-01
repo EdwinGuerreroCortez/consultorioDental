@@ -76,7 +76,7 @@ const HistorialPagosPaciente = () => {
     if (!usuarioId) return;
     const obtenerPagos = async () => {
       try {
-        const { data } = await axios.get(`https://backenddent.onrender.com/api/pagos/historial/${usuarioId}`);
+        const { data } = await axios.get(`http://localhost:4000/api/pagos/historial/${usuarioId}`);
         setPagos(data);
       } catch (error) {
         setAlerta({

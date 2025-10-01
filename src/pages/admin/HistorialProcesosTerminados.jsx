@@ -15,7 +15,11 @@ import {
   Tab,
   Box,
   Paper,
+  Pagination,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import axios from "axios";
 
 const HistorialProcesosTerminados = () => {
@@ -25,10 +29,12 @@ const HistorialProcesosTerminados = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const [comentario, setComentario] = useState(null);
   const [openComentario, setOpenComentario] = useState(false);
+  const [pagina, setPagina] = useState(1);
+  const elementosPorPagina = 10;
 
   useEffect(() => {
     axios
-      .get("https://backenddent.onrender.com/api/tratamientos-pacientes/historial")
+      .get("http://localhost:4000/api/tratamientos-pacientes/historial")
       .then((response) => {
         console.log("Datos recibidos del historial:", response.data);
         setTratamientos(response.data);
@@ -64,15 +70,25 @@ const HistorialProcesosTerminados = () => {
     setComentario(null);
   };
 
-  // Estilo para las celdas, alineado con el tamaño más pequeño de TratamientosEnCurso
+  const handleChangePagina = (event, value) => {
+    setPagina(value);
+  };
+
+  const tratamientosPaginados = tratamientos.slice(
+    (pagina - 1) * elementosPorPagina,
+    pagina * elementosPorPagina
+  );
+
+  const filasFaltantes = elementosPorPagina - tratamientosPaginados.length;
+
   const cellStyle = {
     textAlign: "center",
     color: "#03445e",
     fontFamily: "'Poppins', sans-serif",
-    padding: "12px", // Reduced padding to match TratamientosEnCurso
-    fontSize: "0.9rem", // Smaller font size
-    whiteSpace: "normal", // Allow text wrapping to ensure visibility
-    wordWrap: "break-word", // Break long words if necessary
+    padding: "12px",
+    fontSize: "0.9rem",
+    whiteSpace: "normal",
+    wordWrap: "break-word",
   };
 
   return (
@@ -103,7 +119,7 @@ const HistorialProcesosTerminados = () => {
             border: "1px solid #78c1c8",
           }}
         >
-          <Table sx={{ tableLayout: "auto" }}> {/* Changed to "auto" to allow natural column sizing */}
+          <Table sx={{ tableLayout: "auto" }}>
             <TableHead
               sx={{
                 background: "linear-gradient(90deg, #006d77 0%, #78c1c8 100%)",
@@ -129,9 +145,9 @@ const HistorialProcesosTerminados = () => {
                       textAlign: "center",
                       fontFamily: "'Poppins', sans-serif",
                       borderBottom: "none",
-                      padding: "12px", // Reduced padding
-                      fontSize: "0.95rem", // Smaller font size
-                      whiteSpace: "normal", // Allow wrapping
+                      padding: "12px",
+                      fontSize: "0.95rem",
+                      whiteSpace: "normal",
                     }}
                   >
                     {header}
@@ -140,8 +156,8 @@ const HistorialProcesosTerminados = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {tratamientos.length > 0 ? (
-                tratamientos.map((tratamiento) => (
+              {tratamientosPaginados.length > 0 ? (
+                tratamientosPaginados.map((tratamiento) => (
                   <TableRow
                     key={tratamiento.tratamiento_id}
                     sx={{
@@ -162,25 +178,20 @@ const HistorialProcesosTerminados = () => {
                     <TableCell sx={cellStyle}>{`${tratamiento.citas_totales} / ${tratamiento.citas_asistidas}`}</TableCell>
                     <TableCell sx={cellStyle}>{tratamiento.fecha_inicio || "N/A"}</TableCell>
                     <TableCell sx={cellStyle}>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleVerDetalles(tratamiento)}
-                        sx={{
-                          textTransform: "none",
-                          borderRadius: "8px",
-                          background: "linear-gradient(45deg, #006d77, #78c1c8)",
-                          boxShadow: "0 2px 8px rgba(0, 109, 119, 0.3)",
-                          "&:hover": {
-                            background: "linear-gradient(45deg, #004d57, #48cae4)",
-                            boxShadow: "0 4px 12px rgba(0, 109, 119, 0.4)",
-                          },
-                          fontSize: "0.9rem", // Smaller font size
-                          padding: "6px 12px", // Reduced padding
-                        }}
-                      >
-                        Ver Detalles
-                      </Button>
+                      <Tooltip title="Ver Detalles" placement="top">
+                        <IconButton
+                          onClick={() => handleVerDetalles(tratamiento)}
+                          sx={{
+                            color: "#006d77",
+                            "&:hover": {
+                              color: "#004d57",
+                              backgroundColor: "#e0f7fa",
+                            },
+                          }}
+                        >
+                          <VisibilityIcon />
+                        </IconButton>
+                      </Tooltip>
                     </TableCell>
                   </TableRow>
                 ))
@@ -191,12 +202,74 @@ const HistorialProcesosTerminados = () => {
                   </TableCell>
                 </TableRow>
               )}
+              {filasFaltantes > 0 &&
+                Array.from({ length: filasFaltantes }).map((_, index) => (
+                  <TableRow key={`empty-${index}`}>
+                    {Array(9)
+                      .fill("-")
+                      .map((_, i) => (
+                        <TableCell
+                          key={i}
+                          sx={{
+                            textAlign: "center",
+                            color: "#999",
+                            fontFamily: "'Poppins', sans-serif",
+                            padding: "12px",
+                            fontSize: "0.9rem",
+                          }}
+                        >
+                          -
+                        </TableCell>
+                      ))}
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </TableContainer>
       </Box>
 
-      {/* Diálogo de Detalles */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          mt: "2rem",
+          mb: "4rem",
+        }}
+      >
+        <Pagination
+          count={Math.ceil(tratamientos.length / elementosPorPagina)}
+          page={pagina}
+          onChange={handleChangePagina}
+          color="primary"
+          size="medium"
+          sx={{
+            "& .MuiPaginationItem-root": {
+              fontSize: "1rem",
+              padding: "8px 16px",
+              margin: "0 4px",
+              borderRadius: "8px",
+              backgroundColor: "#ffffff",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+              color: "#006d77",
+              fontFamily: "'Poppins', sans-serif",
+              "&:hover": {
+                backgroundColor: "#78c1c8",
+                color: "#ffffff",
+                transition: "all 0.3s ease",
+              },
+            },
+            "& .Mui-selected": {
+              backgroundColor: "#006d77",
+              color: "#e0f7fa",
+              "&:hover": {
+                backgroundColor: "#004d57",
+                transition: "all 0.3s ease",
+              },
+            },
+          }}
+        />
+      </Box>
+
       <Dialog
         open={open}
         onClose={handleClose}
@@ -211,13 +284,13 @@ const HistorialProcesosTerminados = () => {
             fontFamily: "'Poppins', sans-serif",
             fontWeight: 600,
             borderRadius: "12px 12px 0 0",
-            padding: "16px", // Reduced padding
-            fontSize: "1.1rem", // Slightly smaller font
+            padding: "16px",
+            fontSize: "1.1rem",
           }}
         >
           Detalles del Tratamiento
         </DialogTitle>
-        <DialogContent sx={{ padding: "1.5rem", backgroundColor: "#ffffff" }}> {/* Reduced padding */}
+        <DialogContent sx={{ padding: "1.5rem", backgroundColor: "#ffffff" }}>
           {detalleSeleccionado ? (
             <>
               <Tabs
@@ -225,11 +298,11 @@ const HistorialProcesosTerminados = () => {
                 onChange={handleTabChange}
                 centered
                 sx={{
-                  mb: "1rem", // Reduced margin
+                  mb: "1rem",
                   "& .MuiTab-root": {
                     fontFamily: "'Poppins', sans-serif",
                     textTransform: "none",
-                    fontSize: "1rem", // Smaller font
+                    fontSize: "1rem",
                     "&.Mui-selected": {
                       color: "#006d77",
                     },
@@ -279,8 +352,8 @@ const HistorialProcesosTerminados = () => {
                                     backgroundColor: "#e0f7fa",
                                     borderColor: "#004d57",
                                   },
-                                  fontSize: "0.8rem", // Smaller font
-                                  padding: "4px 8px", // Reduced padding
+                                  fontSize: "0.8rem",
+                                  padding: "4px 8px",
                                 }}
                               >
                                 Ver Comentario
@@ -346,7 +419,6 @@ const HistorialProcesosTerminados = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Diálogo de Comentario */}
       <Dialog
         open={openComentario}
         onClose={handleCloseComentario}
@@ -361,18 +433,18 @@ const HistorialProcesosTerminados = () => {
             fontFamily: "'Poppins', sans-serif",
             fontWeight: 600,
             borderRadius: "12px 12px 0 0",
-            padding: "12px", // Reduced padding
-            fontSize: "1rem", // Smaller font
+            padding: "12px",
+            fontSize: "1rem",
           }}
         >
           Comentario
         </DialogTitle>
-        <DialogContent sx={{ padding: "1rem", backgroundColor: "#ffffff" }}> {/* Reduced padding */}
+        <DialogContent sx={{ padding: "1rem", backgroundColor: "#ffffff" }}>
           <Typography
             sx={{
               fontFamily: "'Poppins', sans-serif",
               color: "#03445e",
-              fontSize: "0.9rem", // Smaller font
+              fontSize: "0.9rem",
               textAlign: "center",
             }}
           >

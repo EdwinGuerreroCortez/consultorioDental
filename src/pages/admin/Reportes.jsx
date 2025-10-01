@@ -48,9 +48,9 @@ const Reportes = () => {
     try {
       setLoading(true);
       const [citasRes, ingresosRes, tratamientosRes] = await Promise.all([
-        axios.get(`https://backenddent.onrender.com/api/reportes/citas?desde=${desde}&hasta=${hasta}`),
-        axios.get(`https://backenddent.onrender.com/api/reportes/ingresos?desde=${desde}&hasta=${hasta}`),
-        axios.get(`https://backenddent.onrender.com/api/reportes/tratamientos?desde=${desde}&hasta=${hasta}`),
+        axios.get(`http://localhost:4000/api/reportes/citas?desde=${desde}&hasta=${hasta}`),
+        axios.get(`http://localhost:4000/api/reportes/ingresos?desde=${desde}&hasta=${hasta}`),
+        axios.get(`http://localhost:4000/api/reportes/tratamientos?desde=${desde}&hasta=${hasta}`),
       ]);
 
       // Línea: Ingresos por mes

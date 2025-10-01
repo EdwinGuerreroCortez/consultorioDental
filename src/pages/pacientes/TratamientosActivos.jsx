@@ -100,7 +100,7 @@ const TratamientosActivos = () => {
         const obtenerTratamientos = async () => {
             try {
                 console.log(`📡 Solicitando tratamientos activos para usuarioId: ${usuarioId}`);
-                const response = await axios.get(`https://backenddent.onrender.com/api/tratamientos-pacientes/activo/${usuarioId}`, {
+                const response = await axios.get(`http://localhost:4000/api/tratamientos-pacientes/activo/${usuarioId}`, {
                     withCredentials: true,
                 });
                 console.log("✅ Respuesta del backend:", response.data);

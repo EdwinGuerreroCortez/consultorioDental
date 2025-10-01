@@ -15,6 +15,7 @@ import {
   Snackbar,
   Alert,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import { CloudUpload, CheckCircle, Delete } from "@mui/icons-material";
 import { motion } from "framer-motion";
@@ -29,9 +30,9 @@ import {
 // Paleta de colores
 const primaryColor = "#006d77";
 const secondaryColor = "#78c1c8";
-const accentColor = "#e8f4f8";
-const bgGradient = "linear-gradient(135deg, #e8f4f8 0%, #ffffff 100%)";
-const textColor = "#1a3c40";
+const accentColor = "#e0f7fa";
+const bgGradient = "linear-gradient(90deg, #006d77 0%, #78c1c8 100%)";
+const textColor = "#03445e";
 
 const CrearServicioOdontologia = () => {
   const [formulario, setFormulario] = useState({
@@ -47,17 +48,18 @@ const CrearServicioOdontologia = () => {
   const [errores, setErrores] = useState({});
   const [alerta, setAlerta] = useState({ open: false, message: "", severity: "error" });
   const [imagenPrevia, setImagenPrevia] = useState(null);
-  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
+  const [csrfToken, setCsrfToken] = useState(null);
+  const [loading, setLoading] = useState(false); // Estado para controlar la carga
 
-  // Obtener el token CSRF al cargar el componente
+  // Obtener el token CSRF
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
-        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+        setCsrfToken(data.csrfToken);
       } catch (error) {
         console.error("Error obteniendo el token CSRF:", error);
         setAlerta({ open: true, message: "Error al obtener el token CSRF", severity: "error" });
@@ -174,6 +176,9 @@ const CrearServicioOdontologia = () => {
       return;
     }
 
+    setLoading(true); // Activar indicador de carga
+    setAlerta({ open: true, message: "Registrando servicio, por favor espere...", severity: "info" });
+
     try {
       const formData = new FormData();
       formData.append("nombre", formulario.nombre);
@@ -190,15 +195,24 @@ const CrearServicioOdontologia = () => {
       );
       formData.append("imagen", formulario.imagen);
 
-      const response = await fetch("https://backenddent.onrender.com/api/tratamientos/crear", {
+      const response = await fetch("http://localhost:4000/api/tratamientos/crear", {
         method: "POST",
         body: formData,
-        headers: { "X-XSRF-TOKEN": csrfToken }, // Usar el token del estado
+        headers: { "X-XSRF-TOKEN": csrfToken },
         credentials: "include",
       });
 
       if (response.ok) {
         setAlerta({ open: true, message: "Servicio registrado con éxito", severity: "success" });
+        setFormulario({
+          nombre: "",
+          descripcion: "",
+          duracion_minutos: "",
+          precio: "",
+          tipo_citas: "citas_requeridas",
+          citas_requeridas: "",
+          imagen: null,
+        });
         setImagenPrevia(null);
       } else {
         const errorData = await response.json();
@@ -211,17 +225,9 @@ const CrearServicioOdontologia = () => {
     } catch (error) {
       console.error("Error en la solicitud:", error);
       setAlerta({ open: true, message: "Error en la solicitud", severity: "error" });
+    } finally {
+      setLoading(false); // Desactivar indicador de carga
     }
-
-    setFormulario({
-      nombre: "",
-      descripcion: "",
-      duracion_minutos: "",
-      precio: "",
-      tipo_citas: "citas_requeridas",
-      citas_requeridas: "",
-      imagen: null,
-    });
   };
 
   const cerrarAlerta = () => {
@@ -245,9 +251,16 @@ const CrearServicioOdontologia = () => {
   return (
     <Box
       sx={{
-        maxWidth: "lg",
-        margin: "2rem auto",
-        padding: "1rem",
+        padding: "2rem",
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        width: "100%",
+        maxWidth: "1400px",
+        mx: "auto",
+        fontFamily: "'Poppins', sans-serif",
+        backgroundColor: "#f9fbfd",
       }}
     >
       <Card
@@ -256,13 +269,15 @@ const CrearServicioOdontologia = () => {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.7, ease: "easeOut" }}
         sx={{
-          boxShadow: 10,
-          borderRadius: "24px",
+          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+          borderRadius: "16px",
           padding: "2.5rem",
-          background: bgGradient,
-          border: `1px solid ${accentColor}`,
+          backgroundColor: "#fff",
+          border: `1px solid ${secondaryColor}`,
           transition: "all 0.3s ease-in-out",
           "&:hover": { boxShadow: "0 15px 50px rgba(0, 109, 119, 0.15)" },
+          width: "100%",
+          maxWidth: "800px",
         }}
       >
         <CardContent>
@@ -278,8 +293,7 @@ const CrearServicioOdontologia = () => {
               fontWeight: 700,
               color: primaryColor,
               mb: 3,
-              letterSpacing: "2px",
-              textTransform: "uppercase",
+              letterSpacing: "1px",
               fontSize: "1.75rem",
               fontFamily: "'Poppins', sans-serif",
               textShadow: "0 2px 4px rgba(0, 109, 119, 0.1)",
@@ -290,8 +304,8 @@ const CrearServicioOdontologia = () => {
           <Divider sx={{ marginBottom: "2rem", borderColor: accentColor }} />
 
           <form onSubmit={handleSubmit}>
-            <Grid container spacing={4}>
-              <Grid item xs={12} md={6}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
                 <motion.div custom={0} initial="hidden" animate="visible" variants={fieldVariants}>
                   <TextField
                     label="Nombre del Servicio"
@@ -302,34 +316,35 @@ const CrearServicioOdontologia = () => {
                     required
                     error={!!errores.nombre}
                     helperText={errores.nombre}
-                    sx={{
-                      backgroundColor: "#fff",
-                      borderRadius: "16px",
-                      "& .MuiOutlinedInput-root": {
-                        transition: "all 0.3s ease-in-out",
-                        "&:hover fieldset": { borderColor: secondaryColor },
-                        "&.Mui-focused fieldset": {
-                          borderColor: primaryColor,
-                          borderWidth: "2px",
-                        },
-                        boxShadow: "0 2px 8px rgba(0, 109, 119, 0.05)",
-                      },
-                      "& .MuiInputLabel-root": {
+                    variant="outlined"
+                    InputLabelProps={{
+                      shrink: true,
+                      sx: {
                         color: textColor,
                         fontFamily: "'Poppins', sans-serif",
-                        fontWeight: 500,
-                        "&.Mui-focused": { color: primaryColor },
+                        fontWeight: 400,
+                        fontSize: "0.9rem",
+                      },
+                    }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "8px",
+                        backgroundColor: "#ffffff",
+                        borderColor: "#ddd",
+                        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                        "&:hover fieldset": { borderColor: secondaryColor },
+                        "&.Mui-focused fieldset": { borderColor: primaryColor },
                       },
                       "& .MuiInputBase-input": {
                         fontFamily: "'Poppins', sans-serif",
                         color: textColor,
-                        fontSize: "1rem",
+                        fontSize: "0.9rem",
                       },
                     }}
                   />
                 </motion.div>
               </Grid>
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} sm={6}>
                 <motion.div custom={1} initial="hidden" animate="visible" variants={fieldVariants}>
                   <TextField
                     label="Duración (minutos)"
@@ -338,30 +353,32 @@ const CrearServicioOdontologia = () => {
                     onChange={handleChange}
                     fullWidth
                     required
+                    type="number"
                     error={!!errores.duracion_minutos}
                     helperText={errores.duracion_minutos}
-                    sx={{
-                      backgroundColor: "#fff",
-                      borderRadius: "16px",
-                      "& .MuiOutlinedInput-root": {
-                        transition: "all 0.3s ease-in-out",
-                        "&:hover fieldset": { borderColor: secondaryColor },
-                        "&.Mui-focused fieldset": {
-                          borderColor: primaryColor,
-                          borderWidth: "2px",
-                        },
-                        boxShadow: "0 2px 8px rgba(0, 109, 119, 0.05)",
-                      },
-                      "& .MuiInputLabel-root": {
+                    variant="outlined"
+                    InputLabelProps={{
+                      shrink: true,
+                      sx: {
                         color: textColor,
                         fontFamily: "'Poppins', sans-serif",
-                        fontWeight: 500,
-                        "&.Mui-focused": { color: primaryColor },
+                        fontWeight: 400,
+                        fontSize: "0.9rem",
+                      },
+                    }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "8px",
+                        backgroundColor: "#ffffff",
+                        borderColor: "#ddd",
+                        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                        "&:hover fieldset": { borderColor: secondaryColor },
+                        "&.Mui-focused fieldset": { borderColor: primaryColor },
                       },
                       "& .MuiInputBase-input": {
                         fontFamily: "'Poppins', sans-serif",
                         color: textColor,
-                        fontSize: "1rem",
+                        fontSize: "0.9rem",
                       },
                     }}
                   />
@@ -380,53 +397,57 @@ const CrearServicioOdontologia = () => {
                     required
                     error={!!errores.descripcion}
                     helperText={errores.descripcion}
-                    sx={{
-                      backgroundColor: "#fff",
-                      borderRadius: "16px",
-                      "& .MuiOutlinedInput-root": {
-                        transition: "all 0.3s ease-in-out",
-                        "&:hover fieldset": { borderColor: secondaryColor },
-                        "&.Mui-focused fieldset": {
-                          borderColor: primaryColor,
-                          borderWidth: "2px",
-                        },
-                        boxShadow: "0 2px 8px rgba(0, 109, 119, 0.05)",
-                      },
-                      "& .MuiInputLabel-root": {
+                    variant="outlined"
+                    InputLabelProps={{
+                      shrink: true,
+                      sx: {
                         color: textColor,
                         fontFamily: "'Poppins', sans-serif",
-                        fontWeight: 500,
-                        "&.Mui-focused": { color: primaryColor },
+                        fontWeight: 400,
+                        fontSize: "0.9rem",
+                      },
+                    }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "8px",
+                        backgroundColor: "#ffffff",
+                        borderColor: "#ddd",
+                        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                        "&:hover fieldset": { borderColor: secondaryColor },
+                        "&.Mui-focused fieldset": { borderColor: primaryColor },
                       },
                       "& .MuiInputBase-input": {
                         fontFamily: "'Poppins', sans-serif",
                         color: textColor,
-                        fontSize: "1rem",
+                        fontSize: "0.9rem",
                       },
                     }}
                   />
                 </motion.div>
               </Grid>
-
-              <Grid item xs={12} md={6}>
+              <Grid item xs={12} sm={6}>
                 <motion.div custom={3} initial="hidden" animate="visible" variants={fieldVariants}>
                   <FormControl
                     fullWidth
                     sx={{
-                      backgroundColor: "#fff",
-                      borderRadius: "16px",
                       "& .MuiOutlinedInput-root": {
-                        transition: "all 0.3s ease-in-out",
+                        borderRadius: "8px",
+                        backgroundColor: "#ffffff",
+                        borderColor: "#ddd",
+                        boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
                         "&:hover fieldset": { borderColor: secondaryColor },
-                        "&.Mui-focused fieldset": {
-                          borderColor: primaryColor,
-                          borderWidth: "2px",
-                        },
-                        boxShadow: "0 2px 8px rgba(0, 109, 119, 0.05)",
+                        "&.Mui-focused fieldset": { borderColor: primaryColor },
                       },
                     }}
                   >
-                    <InputLabel sx={{ color: textColor, fontFamily: "'Poppins', sans-serif" }}>
+                    <InputLabel
+                      sx={{
+                        color: textColor,
+                        fontFamily: "'Poppins', sans-serif",
+                        fontWeight: 400,
+                        fontSize: "0.9rem",
+                      }}
+                    >
                       Tipo de citas
                     </InputLabel>
                     <Select
@@ -434,7 +455,12 @@ const CrearServicioOdontologia = () => {
                       value={formulario.tipo_citas}
                       onChange={handleChange}
                       sx={{
-                        "& .MuiSelect-select": { padding: "16px", fontFamily: "'Poppins', sans-serif" },
+                        "& .MuiSelect-select": {
+                          padding: "12px",
+                          fontFamily: "'Poppins', sans-serif",
+                          fontSize: "0.9rem",
+                          color: textColor,
+                        },
                       }}
                     >
                       <MenuItem value="citas_requeridas" sx={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -447,9 +473,8 @@ const CrearServicioOdontologia = () => {
                   </FormControl>
                 </motion.div>
               </Grid>
-
               {formulario.tipo_citas !== "requiere_evaluacion" && (
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12} sm={6}>
                   <motion.div custom={4} initial="hidden" animate="visible" variants={fieldVariants}>
                     <TextField
                       label="Precio"
@@ -458,39 +483,40 @@ const CrearServicioOdontologia = () => {
                       onChange={handleChange}
                       fullWidth
                       required
+                      type="number"
                       error={!!errores.precio}
                       helperText={errores.precio}
-                      sx={{
-                        backgroundColor: "#fff",
-                        borderRadius: "16px",
-                        "& .MuiOutlinedInput-root": {
-                          transition: "all 0.3s ease-in-out",
-                          "&:hover fieldset": { borderColor: secondaryColor },
-                          "&.Mui-focused fieldset": {
-                            borderColor: primaryColor,
-                            borderWidth: "2px",
-                          },
-                          boxShadow: "0 2px 8px rgba(0, 109, 119, 0.05)",
-                        },
-                        "& .MuiInputLabel-root": {
+                      variant="outlined"
+                      InputLabelProps={{
+                        shrink: true,
+                        sx: {
                           color: textColor,
                           fontFamily: "'Poppins', sans-serif",
-                          fontWeight: 500,
-                          "&.Mui-focused": { color: primaryColor },
+                          fontWeight: 400,
+                          fontSize: "0.9rem",
+                        },
+                      }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: "8px",
+                          backgroundColor: "#ffffff",
+                          borderColor: "#ddd",
+                          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                          "&:hover fieldset": { borderColor: secondaryColor },
+                          "&.Mui-focused fieldset": { borderColor: primaryColor },
                         },
                         "& .MuiInputBase-input": {
                           fontFamily: "'Poppins', sans-serif",
                           color: textColor,
-                          fontSize: "1rem",
+                          fontSize: "0.9rem",
                         },
                       }}
                     />
                   </motion.div>
                 </Grid>
               )}
-
               {formulario.tipo_citas === "citas_requeridas" && (
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12} sm={6}>
                   <motion.div custom={5} initial="hidden" animate="visible" variants={fieldVariants}>
                     <TextField
                       label="Número de citas requeridas"
@@ -499,37 +525,38 @@ const CrearServicioOdontologia = () => {
                       onChange={handleChange}
                       fullWidth
                       required
+                      type="number"
                       error={!!errores.citas_requeridas}
                       helperText={errores.citas_requeridas}
-                      sx={{
-                        backgroundColor: "#fff",
-                        borderRadius: "16px",
-                        "& .MuiOutlinedInput-root": {
-                          transition: "all 0.3s ease-in-out",
-                          "&:hover fieldset": { borderColor: secondaryColor },
-                          "&.Mui-focused fieldset": {
-                            borderColor: primaryColor,
-                            borderWidth: "2px",
-                          },
-                          boxShadow: "0 2px 8px rgba(0, 109, 119, 0.05)",
-                        },
-                        "& .MuiInputLabel-root": {
+                      variant="outlined"
+                      InputLabelProps={{
+                        shrink: true,
+                        sx: {
                           color: textColor,
                           fontFamily: "'Poppins', sans-serif",
-                          fontWeight: 500,
-                          "&.Mui-focused": { color: primaryColor },
+                          fontWeight: 400,
+                          fontSize: "0.9rem",
+                        },
+                      }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: "8px",
+                          backgroundColor: "#ffffff",
+                          borderColor: "#ddd",
+                          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+                          "&:hover fieldset": { borderColor: secondaryColor },
+                          "&.Mui-focused fieldset": { borderColor: primaryColor },
                         },
                         "& .MuiInputBase-input": {
                           fontFamily: "'Poppins', sans-serif",
                           color: textColor,
-                          fontSize: "1rem",
+                          fontSize: "0.9rem",
                         },
                       }}
                     />
                   </motion.div>
                 </Grid>
               )}
-
               <Grid item xs={12}>
                 <motion.div custom={6} initial="hidden" animate="visible" variants={fieldVariants}>
                   <Typography
@@ -544,10 +571,13 @@ const CrearServicioOdontologia = () => {
                     fullWidth
                     startIcon={<CloudUpload />}
                     sx={{
-                      marginTop: "0.5rem",
                       padding: "12px",
                       borderColor: primaryColor,
                       color: primaryColor,
+                      borderRadius: "8px",
+                      fontFamily: "'Poppins', sans-serif",
+                      fontSize: "0.9rem",
+                      textTransform: "none",
                       "&:hover": { borderColor: secondaryColor, color: secondaryColor },
                     }}
                   >
@@ -555,7 +585,11 @@ const CrearServicioOdontologia = () => {
                     <input type="file" hidden onChange={handleImageChange} accept="image/*" />
                   </Button>
                   {errores.imagen && (
-                    <Typography color="error" variant="body2" sx={{ marginTop: "0.5rem" }}>
+                    <Typography
+                      color="error"
+                      variant="body2"
+                      sx={{ marginTop: "0.5rem", fontFamily: "'Poppins', sans-serif" }}
+                    >
                       {errores.imagen}
                     </Typography>
                   )}
@@ -594,7 +628,6 @@ const CrearServicioOdontologia = () => {
                   )}
                 </motion.div>
               </Grid>
-
               <Grid item xs={12}>
                 <motion.div
                   variants={buttonVariants}
@@ -607,24 +640,22 @@ const CrearServicioOdontologia = () => {
                     variant="contained"
                     size="large"
                     fullWidth
+                    disabled={loading}
                     sx={{
                       backgroundColor: primaryColor,
-                      color: "#ffffff",
+                      color: "#e0f7fa",
                       fontWeight: 600,
-                      padding: "14px 50px",
-                      borderRadius: "16px",
+                      padding: "12px",
+                      borderRadius: "8px",
                       fontFamily: "'Poppins', sans-serif",
-                      fontSize: "1.1rem",
+                      fontSize: "1rem",
                       textTransform: "none",
                       boxShadow: "0 4px 15px rgba(0, 109, 119, 0.2)",
                       transition: "all 0.3s ease-in-out",
                       "&:hover": {
-                        backgroundColor: secondaryColor,
+                        backgroundColor: "#004d57",
                         boxShadow: "0 6px 20px rgba(0, 109, 119, 0.3)",
                         transform: "scale(1.05)",
-                      },
-                      "&:active": {
-                        transform: "scale(0.95)",
                       },
                       "&:disabled": {
                         backgroundColor: "#b0bec5",
@@ -633,7 +664,11 @@ const CrearServicioOdontologia = () => {
                       },
                     }}
                   >
-                    Registrar Servicio
+                    {loading ? (
+                      <CircularProgress size={24} sx={{ color: accentColor }} />
+                    ) : (
+                      "Registrar Servicio"
+                    )}
                   </Button>
                 </motion.div>
               </Grid>
@@ -648,7 +683,11 @@ const CrearServicioOdontologia = () => {
         onClose={cerrarAlerta}
         anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
       >
-        <Alert onClose={cerrarAlerta} severity={alerta.severity} sx={{ width: "100%" }}>
+        <Alert
+          onClose={cerrarAlerta}
+          severity={alerta.severity}
+          sx={{ width: "100%", fontFamily: "'Poppins', sans-serif" }}
+        >
           {alerta.message}
         </Alert>
       </Snackbar>

@@ -18,8 +18,8 @@ import {
   DialogContent,
   DialogTitle,
   Button,
-  Card,
-  CardContent,
+  Tabs,
+  Tab,
   TextField,
 } from "@mui/material";
 import { CheckCircle, Cancel, Edit } from "@mui/icons-material";
@@ -31,12 +31,12 @@ import {
   validarCitasRequeridas,
 } from "../../utils/validations";
 
-// Paleta de colores ajustada para coincidir con la captura
-const primaryColor = "#006d77"; // Verde azulado para "Guardar"
-const secondaryColor = "#78c1c8"; // Cian claro para "Cancelar"
-const accentColor = "#e8f4f8";
-const bgGradient = "linear-gradient(135deg, #e8f4f8 0%, #ffffff 100%)";
-const textColor = "#1a3c40";
+// Paleta de colores
+const primaryColor = "#006d77";
+const secondaryColor = "#78c1c8";
+const accentColor = "#e0f7fa";
+const bgGradient = "linear-gradient(90deg, #006d77 0%, #78c1c8 100%)";
+const textColor = "#03445e";
 
 const MisCatalogos = () => {
   const [tratamientos, setTratamientos] = useState([]);
@@ -45,17 +45,18 @@ const MisCatalogos = () => {
   const [dialogoEdicionAbierto, setDialogoEdicionAbierto] = useState(false);
   const [loading, setLoading] = useState(true);
   const [errores, setErrores] = useState({});
-  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
+  const [csrfToken, setCsrfToken] = useState(null);
+  const [tabIndex, setTabIndex] = useState(0); // 0: Todos, 1: Con citas, 2: Requieren evaluación
 
-  // Obtener el token CSRF al montar el componente
+  // Obtener el token CSRF
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
-        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+        setCsrfToken(data.csrfToken);
       } catch (error) {
         console.error("Error obteniendo el token CSRF:", error);
         setAlerta({ open: true, message: "Error al obtener el token CSRF", severity: "error" });
@@ -64,11 +65,11 @@ const MisCatalogos = () => {
     obtenerTokenCSRF();
   }, []);
 
+  // Obtener tratamientos
   const obtenerTratamientos = async () => {
-    if (!csrfToken) return; // Esperar a que el token esté disponible
-
+    if (!csrfToken) return;
     try {
-      const response = await fetch("https://backenddent.onrender.com/api/tratamientos", {
+      const response = await fetch("http://localhost:4000/api/tratamientos", {
         headers: {
           "X-XSRF-TOKEN": csrfToken,
         },
@@ -84,12 +85,12 @@ const MisCatalogos = () => {
     }
   };
 
+  // Actualizar estado de un tratamiento
   const actualizarEstado = async (id, estadoActual) => {
-    if (!csrfToken) return; // Esperar a que el token esté disponible
-
+    if (!csrfToken) return;
     try {
       const nuevoEstado = estadoActual === 1 ? 0 : 1;
-      await fetch(`https://backenddent.onrender.com/api/tratamientos/${id}/estado`, {
+      await fetch(`http://localhost:4000/api/tratamientos/${id}/estado`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -116,6 +117,7 @@ const MisCatalogos = () => {
     }
   };
 
+  // Manejo del diálogo de edición
   const abrirDialogoEdicion = (tratamiento) => {
     setTratamientoSeleccionado(tratamiento);
     setErrores({});
@@ -154,8 +156,7 @@ const MisCatalogos = () => {
   };
 
   const guardarCambios = async () => {
-    if (!csrfToken) return; // Esperar a que el token esté disponible
-
+    if (!csrfToken) return;
     const camposValidos = Object.values(errores).every((error) => error === "");
     if (!camposValidos) {
       setAlerta({ open: true, message: "Corrige los errores antes de guardar.", severity: "error" });
@@ -163,7 +164,7 @@ const MisCatalogos = () => {
     }
 
     try {
-      await fetch(`https://backenddent.onrender.com/api/tratamientos/${tratamientoSeleccionado.id}`, {
+      await fetch(`http://localhost:4000/api/tratamientos/${tratamientoSeleccionado.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -198,43 +199,41 @@ const MisCatalogos = () => {
   const tratamientosConCitas = tratamientos.filter((t) => t.requiere_evaluacion === 0);
   const tratamientosRequierenEvaluacion = tratamientos.filter((t) => t.requiere_evaluacion === 1);
 
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: (i) => ({
-      opacity: 1,
-      y: 0,
-      transition: { delay: i * 0.2, duration: 0.5, ease: "easeOut" },
-    }),
+  const cellStyle = {
+    textAlign: "center",
+    color: textColor,
+    fontFamily: "'Poppins', sans-serif",
+    padding: "12px",
+    fontSize: "0.9rem",
+    whiteSpace: "normal",
+    wordWrap: "break-word",
   };
 
-  const titleVariants = {
-    hidden: { opacity: 0, y: -20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, delay: 0.2 } },
+  const handleTabChange = (event, newValue) => {
+    setTabIndex(newValue);
   };
 
   return (
     <Box
       sx={{
-        maxWidth: "lg",
-        margin: "2rem auto",
         padding: "2rem",
-        background: bgGradient,
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        borderRadius: "24px",
-        boxShadow: "0 10px 40px rgba(0, 109, 119, 0.1)",
-        border: `1px solid ${accentColor}`,
-        transition: "all 0.3s ease-in-out",
-        "&:hover": { boxShadow: "0 15px 50px rgba(0, 109, 119, 0.15)" },
+        alignItems: "center",
+        width: "100%",
+        maxWidth: "1400px",
+        mx: "auto",
+        fontFamily: "'Poppins', sans-serif",
+        backgroundColor: "#f9fbfd",
       }}
     >
       <Typography
         variant="h3"
         component={motion.div}
-        initial="hidden"
-        animate="visible"
-        variants={titleVariants}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
         sx={{
           marginBottom: "2rem",
           fontWeight: "bold",
@@ -247,7 +246,28 @@ const MisCatalogos = () => {
         Catálogo de Procesos
       </Typography>
 
-      <Box sx={{ flexGrow: 1 }}>
+      {/* Tabs para filtrar */}
+      <Tabs
+        value={tabIndex}
+        onChange={handleTabChange}
+        centered
+        sx={{
+          mb: "1rem",
+          "& .MuiTab-root": {
+            fontFamily: "'Poppins', sans-serif",
+            textTransform: "none",
+            fontSize: "1rem",
+            "&.Mui-selected": { color: primaryColor },
+          },
+          "& .MuiTabs-indicator": { backgroundColor: primaryColor },
+        }}
+      >
+        <Tab label="Todos" />
+        <Tab label="Con Citas Requeridas" />
+        <Tab label="Requieren Evaluación" />
+      </Tabs>
+
+      <Box sx={{ flexGrow: 1, width: "100%" }}>
         {loading ? (
           <Typography
             align="center"
@@ -256,140 +276,247 @@ const MisCatalogos = () => {
             Cargando tratamientos...
           </Typography>
         ) : (
-          [
-            { titulo: "Tratamientos con citas requeridas", data: tratamientosConCitas },
-            { titulo: "Tratamientos que requieren evaluación", data: tratamientosRequierenEvaluacion },
-          ].map(({ titulo, data }, index) => (
-            <Card
-              key={titulo}
-              component={motion.div}
-              custom={index}
-              initial="hidden"
-              animate="visible"
-              variants={cardVariants}
-              sx={{
-                marginBottom: "2rem",
-                boxShadow: 6,
-                borderRadius: "16px",
-                overflow: "hidden",
-                backgroundColor: "#fff",
-              }}
-            >
-              <CardContent>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    marginBottom: "1.5rem",
-                    fontWeight: "bold",
-                    color: primaryColor,
-                    borderBottom: `3px solid ${accentColor}`,
-                    paddingBottom: "0.5rem",
-                    fontFamily: "'Poppins', sans-serif",
-                  }}
-                >
-                  {titulo}
-                </Typography>
-
-                <TableContainer
-                  component={Paper}
-                  sx={{
-                    borderRadius: "12px",
-                    boxShadow: 3,
-                    minHeight: "300px",
-                    "& .MuiTableCell-root": {
-                      fontFamily: "'Poppins', sans-serif",
-                      color: textColor,
-                    },
-                  }}
-                >
-                  <Table>
-                    <TableHead sx={{ backgroundColor: accentColor }}>
+          <>
+            {(tabIndex === 0 || tabIndex === 1) && (
+              <TableContainer
+                component={Paper}
+                sx={{
+                  borderRadius: "16px",
+                  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+                  overflow: "hidden",
+                  mt: 3,
+                  maxWidth: "1400px",
+                  mx: "auto",
+                  border: `1px solid ${secondaryColor}`,
+                }}
+              >
+                <Table sx={{ tableLayout: "auto" }}>
+                  <TableHead sx={{ background: bgGradient }}>
+                    <TableRow>
+                      {[
+                        "Nombre",
+                        "Descripción",
+                        "Duración (min)",
+                        "Precio",
+                        "Citas requeridas",
+                        "Estado",
+                        "Acción",
+                      ].map((header) => (
+                        <TableCell
+                          key={header}
+                          sx={{
+                            color: "#e0f7fa",
+                            fontWeight: 700,
+                            textAlign: "center",
+                            fontFamily: "'Poppins', sans-serif",
+                            borderBottom: "none",
+                            padding: "12px",
+                            fontSize: "0.95rem",
+                            whiteSpace: "normal",
+                          }}
+                        >
+                          {header}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {tratamientosConCitas.length === 0 && tabIndex === 1 ? (
                       <TableRow>
-                        <TableCell><strong>Nombre</strong></TableCell>
-                        <TableCell><strong>Descripción</strong></TableCell>
-                        <TableCell><strong>Duración (min)</strong></TableCell>
-                        <TableCell><strong>Precio</strong></TableCell>
-                        <TableCell><strong>Citas requeridas</strong></TableCell>
-                        <TableCell><strong>Estado</strong></TableCell>
-                        <TableCell><strong>Acción</strong></TableCell>
+                        <TableCell colSpan={7} sx={{ ...cellStyle, color: "#999" }}>
+                          No hay tratamientos con citas requeridas.
+                        </TableCell>
                       </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {data.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={7} align="center">
-                            <Typography sx={{ color: textColor, fontFamily: "'Poppins', sans-serif" }}>
-                              No hay tratamientos disponibles.
-                            </Typography>
+                    ) : (
+                      tratamientosConCitas.map((tratamiento) => (
+                        <TableRow
+                          key={tratamiento.id}
+                          sx={{
+                            "&:hover": {
+                              backgroundColor: accentColor,
+                              transition: "background-color 0.3s ease",
+                              boxShadow: "inset 0 2px 10px rgba(0, 0, 0, 0.05)",
+                            },
+                            borderBottom: "1px solid #eef3f7",
+                          }}
+                        >
+                          <TableCell sx={cellStyle}>{tratamiento.nombre}</TableCell>
+                          <TableCell sx={cellStyle}>
+                            {tratamiento.descripcion.length > 50
+                              ? `${tratamiento.descripcion.substring(0, 50)}...`
+                              : tratamiento.descripcion}
+                            <Button
+                              size="small"
+                              onClick={() => abrirDialogoEdicion(tratamiento)}
+                              sx={{
+                                textTransform: "none",
+                                color: primaryColor,
+                                fontFamily: "'Poppins', sans-serif",
+                              }}
+                            >
+                              Ver más
+                            </Button>
+                          </TableCell>
+                          <TableCell sx={cellStyle}>{tratamiento.duracion_minutos}</TableCell>
+                          <TableCell sx={cellStyle}>${tratamiento.precio}</TableCell>
+                          <TableCell sx={cellStyle}>{tratamiento.citas_requeridas || "-"}</TableCell>
+                          <TableCell sx={cellStyle}>{tratamiento.estado === 1 ? "Activo" : "Inactivo"}</TableCell>
+                          <TableCell sx={cellStyle}>
+                            <Box sx={{ display: "flex", flexDirection: "row", gap: "0.5rem" }}>
+                              <Tooltip title="Editar tratamiento">
+                                <IconButton
+                                  color="primary"
+                                  onClick={() => abrirDialogoEdicion(tratamiento)}
+                                  sx={{ "&:hover": { color: secondaryColor } }}
+                                >
+                                  <Edit />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip
+                                title={
+                                  tratamiento.estado === 1 ? "Desactivar tratamiento" : "Activar tratamiento"
+                                }
+                              >
+                                <IconButton
+                                  color={tratamiento.estado === 1 ? "error" : "success"}
+                                  onClick={() => actualizarEstado(tratamiento.id, tratamiento.estado)}
+                                  sx={{ "&:hover": { color: secondaryColor } }}
+                                >
+                                  {tratamiento.estado === 1 ? <Cancel /> : <CheckCircle />}
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
                           </TableCell>
                         </TableRow>
-                      ) : (
-                        data.map((tratamiento) => (
-                          <TableRow
-                            key={tratamiento.id}
-                            sx={{ "&:hover": { backgroundColor: "#eef3ff" } }}
-                          >
-                            <TableCell>{tratamiento.nombre}</TableCell>
-                            <TableCell>
-                              {tratamiento.descripcion.length > 50
-                                ? `${tratamiento.descripcion.substring(0, 50)}...`
-                                : tratamiento.descripcion}
-                              <Button
-                                size="small"
-                                onClick={() => abrirDialogoEdicion(tratamiento)}
-                                sx={{
-                                  textTransform: "none",
-                                  color: primaryColor,
-                                  fontFamily: "'Poppins', sans-serif",
-                                }}
-                              >
-                                Ver más
-                              </Button>
-                            </TableCell>
-                            <TableCell>{tratamiento.duracion_minutos}</TableCell>
-                            <TableCell>${tratamiento.precio}</TableCell>
-                            <TableCell>{tratamiento.citas_requeridas || "-"}</TableCell>
-                            <TableCell>{tratamiento.estado === 1 ? "Activo" : "Inactivo"}</TableCell>
-                            <TableCell>
-                              <Box sx={{ display: "flex", flexDirection: "row", gap: "0.5rem" }}>
-                                <Tooltip title="Editar tratamiento">
-                                  <IconButton
-                                    color="primary"
-                                    onClick={() => abrirDialogoEdicion(tratamiento)}
-                                    sx={{ "&:hover": { color: secondaryColor } }}
-                                  >
-                                    <Edit />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip
-                                  title={
-                                    tratamiento.estado === 1
-                                      ? "Desactivar tratamiento"
-                                      : "Activar tratamiento"
-                                  }
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+
+            {(tabIndex === 0 || tabIndex === 2) && (
+              <TableContainer
+                component={Paper}
+                sx={{
+                  borderRadius: "16px",
+                  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
+                  overflow: "hidden",
+                  mt: tabIndex === 0 ? 3 : 0,
+                  maxWidth: "1400px",
+                  mx: "auto",
+                  border: `1px solid ${secondaryColor}`,
+                }}
+              >
+                <Table sx={{ tableLayout: "auto" }}>
+                  <TableHead sx={{ background: bgGradient }}>
+                    <TableRow>
+                      {[
+                        "Nombre",
+                        "Descripción",
+                        "Duración (min)",
+                        "Precio",
+                        "Citas requeridas",
+                        "Estado",
+                        "Acción",
+                      ].map((header) => (
+                        <TableCell
+                          key={header}
+                          sx={{
+                            color: "#e0f7fa",
+                            fontWeight: 700,
+                            textAlign: "center",
+                            fontFamily: "'Poppins', sans-serif",
+                            borderBottom: "none",
+                            padding: "12px",
+                            fontSize: "0.95rem",
+                            whiteSpace: "normal",
+                          }}
+                        >
+                          {header}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {tratamientosRequierenEvaluacion.length === 0 && tabIndex === 2 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} sx={{ ...cellStyle, color: "#999" }}>
+                          No hay tratamientos que requieran evaluación.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      tratamientosRequierenEvaluacion.map((tratamiento) => (
+                        <TableRow
+                          key={tratamiento.id}
+                          sx={{
+                            "&:hover": {
+                              backgroundColor: accentColor,
+                              transition: "background-color 0.3s ease",
+                              boxShadow: "inset 0 2px 10px rgba(0, 0, 0, 0.05)",
+                            },
+                            borderBottom: "1px solid #eef3f7",
+                          }}
+                        >
+                          <TableCell sx={cellStyle}>{tratamiento.nombre}</TableCell>
+                          <TableCell sx={cellStyle}>
+                            {tratamiento.descripcion.length > 50
+                              ? `${tratamiento.descripcion.substring(0, 50)}...`
+                              : tratamiento.descripcion}
+                            <Button
+                              size="small"
+                              onClick={() => abrirDialogoEdicion(tratamiento)}
+                              sx={{
+                                textTransform: "none",
+                                color: primaryColor,
+                                fontFamily: "'Poppins', sans-serif",
+                              }}
+                            >
+                              Ver más
+                            </Button>
+                          </TableCell>
+                          <TableCell sx={cellStyle}>{tratamiento.duracion_minutos}</TableCell>
+                          <TableCell sx={cellStyle}>${tratamiento.precio}</TableCell>
+                          <TableCell sx={cellStyle}>{tratamiento.citas_requeridas || "-"}</TableCell>
+                          <TableCell sx={cellStyle}>{tratamiento.estado === 1 ? "Activo" : "Inactivo"}</TableCell>
+                          <TableCell sx={cellStyle}>
+                            <Box sx={{ display: "flex", flexDirection: "row", gap: "0.5rem" }}>
+                              <Tooltip title="Editar tratamiento">
+                                <IconButton
+                                  color="primary"
+                                  onClick={() => abrirDialogoEdicion(tratamiento)}
+                                  sx={{ "&:hover": { color: secondaryColor } }}
                                 >
-                                  <IconButton
-                                    color={tratamiento.estado === 1 ? "error" : "success"}
-                                    onClick={() => actualizarEstado(tratamiento.id, tratamiento.estado)}
-                                    sx={{ "&:hover": { color: secondaryColor } }}
-                                  >
-                                    {tratamiento.estado === 1 ? <Cancel /> : <CheckCircle />}
-                                  </IconButton>
-                                </Tooltip>
-                              </Box>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          ))
+                                  <Edit />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip
+                                title={
+                                  tratamiento.estado === 1 ? "Desactivar tratamiento" : "Activar tratamiento"
+                                }
+                              >
+                                <IconButton
+                                  color={tratamiento.estado === 1 ? "error" : "success"}
+                                  onClick={() => actualizarEstado(tratamiento.id, tratamiento.estado)}
+                                  sx={{ "&:hover": { color: secondaryColor } }}
+                                >
+                                  {tratamiento.estado === 1 ? <Cancel /> : <CheckCircle />}
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </>
         )}
       </Box>
 
+      {/* Diálogo de edición */}
       <Dialog
         open={dialogoEdicionAbierto}
         onClose={cerrarDialogoEdicion}
@@ -401,16 +528,24 @@ const MisCatalogos = () => {
         transition={{ duration: 0.4, ease: "easeOut" }}
         sx={{
           "& .MuiDialog-paper": {
-            borderRadius: "10px",
-            boxShadow: "0 5px 15px rgba(0, 0, 0, 0.1)",
+            borderRadius: "12px",
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
             backgroundColor: "#f5f9fa",
           },
         }}
       >
-        <DialogTitle sx={{ backgroundColor: primaryColor, color: "#fff", padding: "1rem" }}>
-          <Typography variant="h6" sx={{ fontWeight: "bold", fontFamily: "'Poppins', sans-serif" }}>
-            Editar Tratamiento
-          </Typography>
+        <DialogTitle
+          sx={{
+            background: bgGradient,
+            color: "#e0f7fa",
+            fontFamily: "'Poppins', sans-serif",
+            fontWeight: 600,
+            borderRadius: "12px 12px 0 0",
+            padding: "16px",
+            fontSize: "1.1rem",
+          }}
+        >
+          Editar Tratamiento
         </DialogTitle>
         <DialogContent sx={{ padding: "2rem 1rem 1rem" }}>
           {tratamientoSeleccionado && (
@@ -591,7 +726,7 @@ const MisCatalogos = () => {
             sx={{
               borderColor: secondaryColor,
               color: secondaryColor,
-              borderRadius: "20px",
+              borderRadius: "8px",
               padding: "0.4rem 1.2rem",
               fontFamily: "'Poppins', sans-serif",
               fontWeight: 500,
@@ -607,15 +742,13 @@ const MisCatalogos = () => {
             sx={{
               backgroundColor: primaryColor,
               color: "#fff",
-              borderRadius: "20px",
+              borderRadius: "8px",
               padding: "0.4rem 1.2rem",
               fontFamily: "'Poppins', sans-serif",
               fontWeight: 500,
               fontSize: "0.9rem",
               textTransform: "none",
-              "&:hover": {
-                backgroundColor: "#005566",
-              },
+              "&:hover": { backgroundColor: "#004d57" },
             }}
           >
             Guardar
@@ -629,7 +762,11 @@ const MisCatalogos = () => {
         onClose={cerrarAlerta}
         anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
       >
-        <Alert onClose={cerrarAlerta} severity={alerta.severity} sx={{ width: "100%" }}>
+        <Alert
+          onClose={cerrarAlerta}
+          severity={alerta.severity}
+          sx={{ width: "100%", fontFamily: "'Poppins', sans-serif" }}
+        >
           {alerta.message}
         </Alert>
       </Snackbar>

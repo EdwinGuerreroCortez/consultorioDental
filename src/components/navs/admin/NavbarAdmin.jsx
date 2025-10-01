@@ -76,7 +76,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
     const obtenerTokenCSRF = async () => {
       try {
         setLoading(true);
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -108,7 +108,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
   const obtenerNotificacionesCitas = async () => {
     try {
       setLoading(true);
-      const response = await fetch("https://backenddent.onrender.com/api/citas/notificaciones", {
+      const response = await fetch("http://localhost:4000/api/citas/notificaciones", {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Error al obtener notificaciones");
@@ -146,7 +146,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
 
     try {
       setLoading(true);
-      const response = await fetch("https://backenddent.onrender.com/api/usuarios/logout", {
+      const response = await fetch("http://localhost:4000/api/usuarios/logout", {
         method: "POST",
         credentials: "include",
         headers: {
