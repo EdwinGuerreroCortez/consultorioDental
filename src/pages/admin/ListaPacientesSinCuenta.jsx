@@ -93,7 +93,7 @@ const ListaPacientesSinPlataforma = () => {
 
   const handleOpenHistorial = (paciente) => {
     if (!paciente || !paciente.id) {
-      console.error("❌ Error: paciente o paciente.id es undefined", paciente);
+      console.error(" Error: paciente o paciente.id es undefined", paciente);
       return;
     }
 

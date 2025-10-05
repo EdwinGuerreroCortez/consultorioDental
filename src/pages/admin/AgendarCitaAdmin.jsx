@@ -164,7 +164,7 @@ const AgendarCitaAdmin = () => {
       console.log("📌 Citas ocupadas con hora ajustada:", citasConHoraFormateada);
       setCitasOcupadas(citasConHoraFormateada);
     } catch (error) {
-      console.error('❌ Error al obtener las citas ocupadas:', error);
+      console.error(' Error al obtener las citas ocupadas:', error);
       setAlerta({
         mostrar: true,
         mensaje: 'Error al obtener citas ocupadas.',
@@ -310,7 +310,7 @@ const AgendarCitaAdmin = () => {
         window.location.reload();
       }, 2000);
     } catch (error) {
-      console.error('❌ Error al agendar la cita:', error);
+      console.error(' Error al agendar la cita:', error);
       setAlerta({ mostrar: true, mensaje: 'Error al agendar la cita.', tipo: 'error' });
     } finally {
       setIsLoading(false);

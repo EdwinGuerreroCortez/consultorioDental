@@ -7,7 +7,7 @@ const axiosInstance = axios.create({
 });
 
 /**
- * ✅ Obtiene las citas ocupadas desde el backend y las convierte a la zona horaria de México.
+ * Obtiene las citas ocupadas desde el backend y las convierte a la zona horaria de México.
  */
 export const obtenerCitasOcupadas = async () => {
   try {
@@ -29,13 +29,13 @@ export const obtenerCitasOcupadas = async () => {
 
     return citasConZonaHoraria;
   } catch (error) {
-    console.error("❌ Error al obtener las citas ocupadas:", error);
+    console.error(" Error al obtener las citas ocupadas:", error);
     return [];
   }
 };
 
 /**
- * ✅ Filtra las horas disponibles en función de las citas ocupadas.
+ * Filtra las horas disponibles en función de las citas ocupadas.
  * @param {Date} fechaSeleccionada - Fecha para la cual se buscan horas disponibles.
  * @param {Array} citasOcupadas - Lista de citas ocupadas obtenidas del backend.
  * @returns {Array} Horas disponibles para la fecha seleccionada.

@@ -45,6 +45,8 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { es } from "date-fns/locale";
+import CircularProgress from "@mui/material/CircularProgress";
+
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 
 export default function EvaluarCitasPendientes() {
@@ -65,6 +67,9 @@ export default function EvaluarCitasPendientes() {
   const [searchTerm, setSearchTerm] = useState("");
   const [tratamientosPage, setTratamientosPage] = useState(1);
   const tratamientosPorPagina = 12; // Ajustado para mostrar 12 tarjetas por página
+  const [loadingTratamientos, setLoadingTratamientos] = useState(true);
+  const [loadingCitas, setLoadingCitas] = useState(false);
+
 
   const disponibilidadBase = [
     "09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "01:00 PM",
@@ -215,7 +220,7 @@ export default function EvaluarCitasPendientes() {
     if (!proximaCitaId || !fechaSeleccionada || !horaSeleccionada) {
       setAlerta({
         mostrar: true,
-        mensaje: "⚠️ No se puede agendar la cita. Verifica los datos.",
+        mensaje: "No se puede agendar la cita. Verifica los datos.",
         tipo: "warning",
       });
       return;
@@ -269,11 +274,11 @@ export default function EvaluarCitasPendientes() {
         prevTratamientos.map((tratamiento) =>
           tratamiento.id === selectedTratamiento.id
             ? {
-                ...tratamiento,
-                citas_asistidas: (citasPorTratamiento[selectedTratamiento.id] || [])
-                  .filter((cita) => cita.estado === "completada" && cita.pagada === 1 && cita.fecha_hora !== null)
-                  .length,
-              }
+              ...tratamiento,
+              citas_asistidas: (citasPorTratamiento[selectedTratamiento.id] || [])
+                .filter((cita) => cita.estado === "completada" && cita.pagada === 1 && cita.fecha_hora !== null)
+                .length,
+            }
             : tratamiento
         )
       );
@@ -286,100 +291,92 @@ export default function EvaluarCitasPendientes() {
 
       setOpenAgendar(false);
     } catch (error) {
-      console.error("❌ Error al actualizar la cita:", error);
+      console.error(" Error al actualizar la cita:", error);
       setAlerta({
         mostrar: true,
-        mensaje: "❌ Ocurrió un error al agendar la cita.",
+        mensaje: " Ocurrió un error al agendar la cita.",
         tipo: "error",
       });
     }
   };
 
   useEffect(() => {
-    const obtenerDatos = async () => {
+    const obtenerTratamientos = async () => {
       if (!csrfToken) return;
+      setLoadingTratamientos(true);
       try {
-        const { data: tratamientos } = await axiosInstance.get("/tratamientos-pacientes/en-progreso", {
+        const { data } = await axiosInstance.get("/tratamientos-pacientes/en-progreso", {
           headers: { "X-XSRF-TOKEN": csrfToken },
         });
-
-        if (tratamientos.length === 0) {
-          setTratamientos([]);
-          return;
-        }
-
-        const peticionesCitas = tratamientos.map((tratamiento) =>
-          axiosInstance
-            .get(`/citas/tratamiento/${tratamiento.id}`, {
-              headers: { "X-XSRF-TOKEN": csrfToken },
-            })
-            .then((response) => ({ id: tratamiento.id, citas: response.data }))
-            .catch((error) => {
-              console.error(`Error al obtener citas para el tratamiento ${tratamiento.id}`, error);
-              return { id: tratamiento.id, citas: [] };
-            })
-        );
-
-        const citasObtenidas = await Promise.all(peticionesCitas);
-        const citasMap = {};
-        citasObtenidas.forEach(({ id, citas }) => {
-          citasMap[id] = citas;
-        });
-
-        const tratamientosActualizados = tratamientos.map((tratamiento) => {
-          const citas = citasMap[tratamiento.id] || [];
-          const citasAsistidas = citas.filter(
-            (cita) => cita.estado === "completada" && cita.pagada === 1 && cita.fecha_hora !== null
-          ).length;
-          return { ...tratamiento, citas_asistidas: citasAsistidas };
-        });
-
-        setTratamientos(tratamientosActualizados);
-        setCitasPorTratamiento(citasMap);
+        setTratamientos(data);
       } catch (error) {
-        console.error("Error al obtener tratamientos y citas", error);
+        console.error("Error al obtener tratamientos", error);
         setTratamientos([]);
+      } finally {
+        setLoadingTratamientos(false);
       }
     };
 
     if (csrfToken) {
-      obtenerDatos();
+      obtenerTratamientos();
     }
   }, [csrfToken]);
 
+
+
   const convertirHoraLocal = (fechaISO) => {
-  if (!fechaISO) return "Sin asignar";
-  
-  // Crear un objeto Date a partir de la cadena ISO
-  const fecha = new Date(fechaISO);
-  
-  // Extraer componentes de la fecha y hora manualmente
-  const dia = fecha.getUTCDate();
-  const mes = fecha.getUTCMonth() + 1; // Los meses son 0-based en JavaScript
-  const anio = fecha.getUTCFullYear();
-  let horas = fecha.getUTCHours();
-  const minutos = fecha.getUTCMinutes().toString().padStart(2, "0");
-  const periodo = horas >= 12 ? "PM" : "AM";
-  
-  // Convertir a formato de 12 horas
-  horas = horas % 12 || 12;
-  
-  // Obtener el nombre del mes en español
-  const meses = [
-    "enero", "febrero", "marzo", "abril", "mayo", "junio",
-    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
-  ];
-  const mesNombre = meses[mes - 1];
+    if (!fechaISO) return "Sin asignar";
 
-  // Formatear la fecha y hora manualmente
-  return `${dia} de ${mesNombre} de ${anio}, ${horas}:${minutos} ${periodo}`;
-};
+    // Crear un objeto Date a partir de la cadena ISO
+    const fecha = new Date(fechaISO);
 
-  const handleOpenDialog = (tratamiento) => {
-    setSelectedTratamiento(tratamiento);
-    setCitas(citasPorTratamiento[tratamiento.id] || []);
-    setOpen(true);
+    // Extraer componentes de la fecha y hora manualmente
+    const dia = fecha.getUTCDate();
+    const mes = fecha.getUTCMonth() + 1; // Los meses son 0-based en JavaScript
+    const anio = fecha.getUTCFullYear();
+    let horas = fecha.getUTCHours();
+    const minutos = fecha.getUTCMinutes().toString().padStart(2, "0");
+    const periodo = horas >= 12 ? "PM" : "AM";
+
+    // Convertir a formato de 12 horas
+    horas = horas % 12 || 12;
+
+    // Obtener el nombre del mes en español
+    const meses = [
+      "enero", "febrero", "marzo", "abril", "mayo", "junio",
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ];
+    const mesNombre = meses[mes - 1];
+
+    // Formatear la fecha y hora manualmente
+    return `${dia} de ${mesNombre} de ${anio}, ${horas}:${minutos} ${periodo}`;
   };
+  const handleOpenDialog = async (tratamiento) => {
+    setSelectedTratamiento(tratamiento);
+    setOpen(true);
+
+    // Si ya tiene las citas cargadas, no vuelvas a pedirlas
+    if (citasPorTratamiento[tratamiento.id]) {
+      setCitas(citasPorTratamiento[tratamiento.id]);
+      return;
+    }
+
+    setLoadingCitas(true);
+    try {
+      const { data } = await axiosInstance.get(`/citas/tratamiento/${tratamiento.id}`, {
+        headers: { "X-XSRF-TOKEN": csrfToken },
+      });
+      setCitas(data);
+      setCitasPorTratamiento((prev) => ({ ...prev, [tratamiento.id]: data }));
+    } catch (error) {
+      console.error(`Error al obtener citas para el tratamiento ${tratamiento.id}`, error);
+      setCitas([]);
+    } finally {
+      setLoadingCitas(false);
+    }
+  };
+
+
 
   const handleCloseDialog = () => {
     setOpen(false);
@@ -416,11 +413,15 @@ export default function EvaluarCitasPendientes() {
   };
 
   // Filtrar tratamientos según el término de búsqueda
-  const filteredTratamientos = tratamientos.filter((tratamiento) =>
-    `${tratamiento.nombre} ${tratamiento.apellido_paterno} ${tratamiento.apellido_materno}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  );
+ const filteredTratamientos = tratamientos.filter((tratamiento) => {
+  const nombreCompleto = `${tratamiento.nombre} ${tratamiento.apellido_paterno} ${tratamiento.apellido_materno}`
+    .toLowerCase()
+    .trim();
+
+  // Solo mostrar coincidencias que comiencen con las letras escritas
+  return nombreCompleto.startsWith(searchTerm.toLowerCase().trim());
+});
+
 
   // Paginación de tratamientos
   const totalTratamientosPaginas = Math.ceil(filteredTratamientos.length / tratamientosPorPagina);
@@ -494,8 +495,34 @@ export default function EvaluarCitasPendientes() {
           </Tooltip>
         </Box>
       </Box>
-
-      {filteredTratamientos.length === 0 ? (
+      {loadingTratamientos ? (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "70vh",
+            backgroundColor: "#ffffff",
+            borderRadius: "16px",
+            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
+            border: "1px solid #78c1c8",
+            flexDirection: "column",
+            gap: 2,
+          }}
+        >
+          <CircularProgress sx={{ color: "#006d77" }} />
+          <Typography
+            variant="h6"
+            sx={{
+              fontFamily: "'Poppins', sans-serif",
+              color: "#03445e",
+              fontWeight: 500,
+            }}
+          >
+            Cargando tratamientos...
+          </Typography>
+        </Box>
+      ) : filteredTratamientos.length === 0 ? (
         <Box
           sx={{
             display: "flex",
@@ -522,6 +549,7 @@ export default function EvaluarCitasPendientes() {
         </Box>
       ) : (
         <Grid container spacing={3}>
+
           {tratamientosPaginados.map((tratamiento, index) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={tratamiento.id}>
               <motion.div
@@ -582,8 +610,8 @@ export default function EvaluarCitasPendientes() {
                           ).slice(1).toLowerCase()} ${(tratamiento.apellido_materno || "")
                             .charAt(0)
                             .toUpperCase()}${(
-                            tratamiento.apellido_materno || ""
-                          ).slice(1).toLowerCase()}`}
+                              tratamiento.apellido_materno || ""
+                            ).slice(1).toLowerCase()}`}
                         </Typography>
                         <Box
                           sx={{
@@ -675,184 +703,207 @@ export default function EvaluarCitasPendientes() {
               backgroundColor: "#fafafa",
             }}
           >
-            <TableContainer
-              component={Paper}
-              sx={{
-                borderRadius: 12,
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
-                border: "1px solid #e0f7fa",
-                mt: 2,
-              }}
-            >
-              <Table sx={{ minWidth: 650 }}>
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: "#e0f7fa", borderBottom: "2px solid #78c1c8" }}>
-                    <TableCell
-                      sx={{ fontWeight: "bold", textAlign: "center", color: "#006d77", fontSize: "1.1rem", py: 2.5 }}
-                    >
-                      #
-                    </TableCell>
-                    <TableCell
-                      sx={{ fontWeight: "bold", textAlign: "center", color: "#006d77", fontSize: "1.1rem", py: 2.5 }}
-                    >
-                      Fecha
-                    </TableCell>
-                    <TableCell
-                      sx={{ fontWeight: "bold", textAlign: "center", color: "#006d77", fontSize: "1.1rem", py: 2.5 }}
-                    >
-                      Estado Cita
-                    </TableCell>
-                    <TableCell
-                      sx={{ fontWeight: "bold", textAlign: "center", color: "#006d77", fontSize: "1.1rem", py: 2.5 }}
-                    >
-                      Estado Pago
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {citasPaginadas.length > 0 ? (
-                    citasPaginadas.map((cita, index) => (
-                      <TableRow
-                        key={index}
-                        sx={{
-                          backgroundColor: index % 2 === 0 ? "#ffffff" : "#f5f5f5",
-                          "&:hover": { backgroundColor: "#e0f7fa" },
-                          transition: "background-color 0.3s ease",
-                          borderRadius: 8,
-                          height: "65px",
-                        }}
-                      >
+            {loadingCitas ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "100%",
+                  gap: 2,
+                }}
+              >
+                <CircularProgress sx={{ color: "#006d77" }} />
+                <Typography sx={{ color: "#03445e", fontFamily: "'Poppins', sans-serif" }}>
+                  Cargando citas...
+                </Typography>
+              </Box>
+            ) : (
+              <>
+                <TableContainer
+                  component={Paper}
+                  sx={{
+                    borderRadius: 12,
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
+                    border: "1px solid #e0f7fa",
+                    mt: 2,
+                  }}
+                >
+                  <Table sx={{ minWidth: 650 }}>
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: "#e0f7fa", borderBottom: "2px solid #78c1c8" }}>
                         <TableCell
-                          sx={{ textAlign: "center", fontWeight: "medium", color: "#455a64", fontSize: "1rem", py: 2 }}
+                          sx={{ fontWeight: "bold", textAlign: "center", color: "#006d77", fontSize: "1.1rem", py: 2.5 }}
                         >
-                          {index + 1 + currentPage * citasPorPagina}
+                          #
                         </TableCell>
-                        <TableCell sx={{ textAlign: "center", fontSize: "1rem", color: "#455a64", py: 2 }}>
-                          {cita.fecha_hora ? convertirHoraLocal(cita.fecha_hora) : "Sin Asignar"}
+                        <TableCell
+                          sx={{ fontWeight: "bold", textAlign: "center", color: "#006d77", fontSize: "1.1rem", py: 2.5 }}
+                        >
+                          Fecha
                         </TableCell>
-                        <TableCell sx={{ textAlign: "center", py: 2 }}>
-                          <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
-                            {cita.estado === "pendiente" ? (
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  bgcolor: "#fff3e0",
-                                  borderRadius: "50%",
-                                  width: 24,
-                                  height: 24,
-                                }}
-                              >
-                                <ErrorOutline sx={{ fontSize: 18, color: "#ff9800" }} />
-                              </Box>
-                            ) : (
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  bgcolor: "#e8f5e9",
-                                  borderRadius: "50%",
-                                  width: 24,
-                                  height: 24,
-                                }}
-                              >
-                                <AssignmentTurnedIn sx={{ fontSize: 18, color: "#4caf50" }} />
-                              </Box>
-                            )}
-                            <Typography
-                              sx={{
-                                fontSize: "1rem",
-                                fontWeight: "medium",
-                                color: cita.estado === "pendiente" ? "#ff9800" : "#4caf50",
-                                bgcolor: cita.estado === "pendiente" ? "#fff3e0" : "#e8f5e9",
-                                borderRadius: 12,
-                                px: 1.5,
-                                py: 0.5,
-                              }}
-                            >
-                              {cita.estado}
-                            </Typography>
-                          </Box>
+                        <TableCell
+                          sx={{ fontWeight: "bold", textAlign: "center", color: "#006d77", fontSize: "1.1rem", py: 2.5 }}
+                        >
+                          Estado Cita
                         </TableCell>
-                        <TableCell sx={{ textAlign: "center", py: 2 }}>
-                          <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                bgcolor: cita.pagada ? "#e8f5e9" : "#ffebee",
-                                borderRadius: "50%",
-                                width: 24,
-                                height: 24,
-                              }}
-                            >
-                              <MonetizationOn
-                                sx={{ fontSize: 18, color: cita.pagada ? "#4caf50" : "#f44336" }}
-                              />
-                            </Box>
-                            <Typography
-                              sx={{
-                                fontSize: "1rem",
-                                fontWeight: "medium",
-                                color: cita.pagada ? "#4caf50" : "#f44336",
-                                bgcolor: cita.pagada ? "#e8f5e9" : "#ffebee",
-                                borderRadius: 12,
-                                px: 1.5,
-                                py: 0.5,
-                              }}
-                            >
-                              {cita.pagada ? "Pagada" : "No Pagada"}
-                            </Typography>
-                          </Box>
+                        <TableCell
+                          sx={{ fontWeight: "bold", textAlign: "center", color: "#006d77", fontSize: "1.1rem", py: 2.5 }}
+                        >
+                          Estado Pago
                         </TableCell>
                       </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={4}
-                        sx={{ textAlign: "center", fontStyle: "italic", color: "#78909c", py: 4 }}
-                      >
-                        No hay citas registradas.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <Box display="flex" justifyContent="center" alignItems="center" gap={2} sx={{ mt: 3, mb: 2 }}>
-              <Tooltip title="Navegar a la página anterior">
-                <IconButton
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
-                  disabled={currentPage === 0}
-                  sx={{
-                    color: currentPage === 0 ? "#b0bec5" : "#006d77",
-                    "&:hover": { backgroundColor: "#e0f7fa" },
-                  }}
-                >
-                  <ArrowBack />
-                </IconButton>
-              </Tooltip>
-              <Typography sx={{ fontWeight: "bold", fontSize: 14, color: "#006d77" }}>
-                Página {currentPage + 1} de {totalPaginas}
-              </Typography>
-              <Tooltip title="Navegar a la página siguiente">
-                <IconButton
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPaginas - 1))}
-                  disabled={currentPage === totalPaginas - 1}
-                  sx={{
-                    color: currentPage === totalPaginas - 1 ? "#b0bec5" : "#006d77",
-                    "&:hover": { backgroundColor: "#e0f7fa" },
-                  }}
-                >
-                  <ArrowForward />
-                </IconButton>
-              </Tooltip>
-            </Box>
+                    </TableHead>
+                    <TableBody>
+                      {citasPaginadas.length > 0 ? (
+                        citasPaginadas.map((cita, index) => (
+                          <TableRow
+                            key={index}
+                            sx={{
+                              backgroundColor: index % 2 === 0 ? "#ffffff" : "#f5f5f5",
+                              "&:hover": { backgroundColor: "#e0f7fa" },
+                              transition: "background-color 0.3s ease",
+                              borderRadius: 8,
+                              height: "65px",
+                            }}
+                          >
+                            <TableCell
+                              sx={{ textAlign: "center", fontWeight: "medium", color: "#455a64", fontSize: "1rem", py: 2 }}
+                            >
+                              {index + 1 + currentPage * citasPorPagina}
+                            </TableCell>
+                            <TableCell sx={{ textAlign: "center", fontSize: "1rem", color: "#455a64", py: 2 }}>
+                              {cita.fecha_hora ? convertirHoraLocal(cita.fecha_hora) : "Sin Asignar"}
+                            </TableCell>
+                            <TableCell sx={{ textAlign: "center", py: 2 }}>
+                              <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
+                                {cita.estado === "pendiente" ? (
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      bgcolor: "#fff3e0",
+                                      borderRadius: "50%",
+                                      width: 24,
+                                      height: 24,
+                                    }}
+                                  >
+                                    <ErrorOutline sx={{ fontSize: 18, color: "#ff9800" }} />
+                                  </Box>
+                                ) : (
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      bgcolor: "#e8f5e9",
+                                      borderRadius: "50%",
+                                      width: 24,
+                                      height: 24,
+                                    }}
+                                  >
+                                    <AssignmentTurnedIn sx={{ fontSize: 18, color: "#4caf50" }} />
+                                  </Box>
+                                )}
+                                <Typography
+                                  sx={{
+                                    fontSize: "1rem",
+                                    fontWeight: "medium",
+                                    color: cita.estado === "pendiente" ? "#ff9800" : "#4caf50",
+                                    bgcolor: cita.estado === "pendiente" ? "#fff3e0" : "#e8f5e9",
+                                    borderRadius: 12,
+                                    px: 1.5,
+                                    py: 0.5,
+                                  }}
+                                >
+                                  {cita.estado}
+                                </Typography>
+                              </Box>
+                            </TableCell>
+                            <TableCell sx={{ textAlign: "center", py: 2 }}>
+                              <Box display="flex" justifyContent="center" alignItems="center" gap={1}>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    bgcolor: cita.pagada ? "#e8f5e9" : "#ffebee",
+                                    borderRadius: "50%",
+                                    width: 24,
+                                    height: 24,
+                                  }}
+                                >
+                                  <MonetizationOn
+                                    sx={{ fontSize: 18, color: cita.pagada ? "#4caf50" : "#f44336" }}
+                                  />
+                                </Box>
+                                <Typography
+                                  sx={{
+                                    fontSize: "1rem",
+                                    fontWeight: "medium",
+                                    color: cita.pagada ? "#4caf50" : "#f44336",
+                                    bgcolor: cita.pagada ? "#e8f5e9" : "#ffebee",
+                                    borderRadius: 12,
+                                    px: 1.5,
+                                    py: 0.5,
+                                  }}
+                                >
+                                  {cita.pagada ? "Pagada" : "No Pagada"}
+                                </Typography>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={4}
+                            sx={{ textAlign: "center", fontStyle: "italic", color: "#78909c", py: 4 }}
+                          >
+                            No hay citas registradas.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+
+                {/* paginación de citas */}
+                <Box display="flex" justifyContent="center" alignItems="center" gap={2} sx={{ mt: 3, mb: 2 }}>
+                  <Tooltip title="Navegar a la página anterior">
+                    <IconButton
+                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
+                      disabled={currentPage === 0}
+                      sx={{
+                        color: currentPage === 0 ? "#b0bec5" : "#006d77",
+                        "&:hover": { backgroundColor: "#e0f7fa" },
+                      }}
+                    >
+                      <ArrowBack />
+                    </IconButton>
+                  </Tooltip>
+                  <Typography sx={{ fontWeight: "bold", fontSize: 14, color: "#006d77" }}>
+                    Página {currentPage + 1} de {totalPaginas}
+                  </Typography>
+                  <Tooltip title="Navegar a la página siguiente">
+                    <IconButton
+                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPaginas - 1))}
+                      disabled={currentPage === totalPaginas - 1}
+                      sx={{
+                        color: currentPage === totalPaginas - 1 ? "#b0bec5" : "#006d77",
+                        "&:hover": { backgroundColor: "#e0f7fa" },
+                      }}
+                    >
+                      <ArrowForward />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </>
+            )}
           </DialogContent>
+
           <DialogActions
             sx={{
               backgroundColor: "#fafafa",

@@ -64,11 +64,11 @@ const Prediccion = () => {
       setResultado(res.data.asistira);
       setAlerta({
         open: true,
-        message: `Predicción: ${res.data.asistira === 1 ? "✅ Sí asistirá" : "⚠️ No asistirá"}`,
+        message: `Predicción: ${res.data.asistira === 1 ? "Sí asistirá" : "No asistirá"}`,
         severity: res.data.asistira === 1 ? "success" : "warning",
       });
     } catch (err) {
-      console.error("❌ Error en la predicción:", err);
+      console.error(" Error en la predicción:", err);
       setAlerta({
         open: true,
         message: "Error al obtener predicción",

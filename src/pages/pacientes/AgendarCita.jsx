@@ -301,7 +301,7 @@ const AgendarCita = () => {
             console.log("📌 Citas ocupadas con hora ajustada:", citasConHoraFormateada);
             setCitasOcupadas(citasConHoraFormateada);
         } catch (error) {
-            console.error('❌ Error al obtener las citas ocupadas:', error);
+            console.error(' Error al obtener las citas ocupadas:', error);
             setAlerta({
                 mostrar: true,
                 mensaje: 'Error al obtener las citas. Intenta nuevamente.',
@@ -442,7 +442,7 @@ const AgendarCita = () => {
             setFechaSeleccionada(null);
             setHoraSeleccionada('');
         } catch (error) {
-            console.error('❌ Error al agendar la cita:', error);
+            console.error(' Error al agendar la cita:', error);
             setAlerta({
                 mostrar: true,
                 mensaje: 'Error al agendar la cita. Inténtalo nuevamente.',

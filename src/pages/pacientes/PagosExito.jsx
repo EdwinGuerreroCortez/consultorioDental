@@ -148,13 +148,13 @@ const PagosExito = () => {
       {estado === "cargando" && <CircularProgress />}
       {estado === "ok" && (
         <>
-          <Typography variant="h5" color="primary">✅ ¡Pago exitoso!</Typography>
+          <Typography variant="h5" color="primary">¡Pago exitoso!</Typography>
           <Typography variant="body1">Tus pagos fueron procesados correctamente.</Typography>
         </>
       )}
       {estado === "error" && (
         <>
-          <Typography variant="h5" color="error">❌ Error al confirmar el pago</Typography>
+          <Typography variant="h5" color="error"> Error al confirmar el pago</Typography>
           <Typography variant="body2">Por favor, contacta al administrador.</Typography>
         </>
       )}

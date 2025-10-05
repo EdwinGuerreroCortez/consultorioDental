@@ -68,7 +68,7 @@ const HistorialMedicoSincuenta = ({ open, handleClose, paciente }) => {
       );
 
       if (!response.ok) {
-        console.warn(`⚠️ No se encontró historial médico.`);
+        console.warn(`No se encontró historial médico.`);
         setHistoriales([]);
         setHistorialSeleccionado(null);
         setTieneHistorial(false);
@@ -80,7 +80,7 @@ const HistorialMedicoSincuenta = ({ open, handleClose, paciente }) => {
       const data = await response.json();
 
       if (!Array.isArray(data) || data.length === 0) {
-        console.warn(`⚠️ No hay historiales médicos.`);
+        console.warn(`No hay historiales médicos.`);
         setHistoriales([]);
         setHistorialSeleccionado(null);
         setTieneHistorial(false);
@@ -168,10 +168,10 @@ const HistorialMedicoSincuenta = ({ open, handleClose, paciente }) => {
       console.log("Respuesta completa del servidor:", responseData);
 
       if (!response.ok) {
-        throw new Error(`⚠️ Error al guardar el historial: ${responseData.message || response.statusText}`);
+        throw new Error(`Error al guardar el historial: ${responseData.message || response.statusText}`);
       }
 
-      console.log("✅ Historial guardado correctamente");
+      console.log("Historial guardado correctamente");
       setSnackbarMessage("Historial guardado exitosamente");
       setSnackbarSeverity("success");
       setOpenSnackbar(true);

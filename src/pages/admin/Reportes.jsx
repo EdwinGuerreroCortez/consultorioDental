@@ -110,7 +110,7 @@ const Reportes = () => {
 
       setLoading(false);
     } catch (error) {
-      console.error("❌ Error al obtener datos de reportes:", error);
+      console.error(" Error al obtener datos de reportes:", error);
       setLoading(false);
     }
   };

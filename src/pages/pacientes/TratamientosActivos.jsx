@@ -88,7 +88,7 @@ const TratamientosActivos = () => {
                 console.log("🔍 Usuario autenticado:", usuario);
                 setUsuarioId(usuario.id);
             } else {
-                console.error("❌ No se pudo obtener la sesión. Inicia sesión nuevamente.");
+                console.error(" No se pudo obtener la sesión. Inicia sesión nuevamente.");
             }
         };
         obtenerUsuario();
@@ -103,11 +103,11 @@ const TratamientosActivos = () => {
                 const response = await axios.get(`http://localhost:4000/api/tratamientos-pacientes/activo/${usuarioId}`, {
                     withCredentials: true,
                 });
-                console.log("✅ Respuesta del backend:", response.data);
+                console.log("Respuesta del backend:", response.data);
                 setTratamientos(response.data);
                 setLoading(false);
             } catch (error) {
-                console.error("❌ Error al obtener tratamientos:", error);
+                console.error(" Error al obtener tratamientos:", error);
                 setLoading(false);
             }
         };
