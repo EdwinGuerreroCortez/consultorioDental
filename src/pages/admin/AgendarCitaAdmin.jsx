@@ -28,10 +28,15 @@ const AgendarCitaAdmin = () => {
   const [servicioSeleccionado, setServicioSeleccionado] = useState('');
   const [fechaSeleccionada, setFechaSeleccionada] = useState(null);
   const [horaSeleccionada, setHoraSeleccionada] = useState('');
-  const [disponibilidad] = useState([
-    '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM','02:00 PM',
+  const disponibilidadGeneral = [
+    '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM',
     '03:00 PM', '04:00 PM', '05:00 PM', '06:00 PM'
-  ]);
+  ];
+
+  const disponibilidadSabado = [
+    '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM', '02:00 PM'
+  ];
+
   const [citasOcupadas, setCitasOcupadas] = useState([]);
   const [alerta, setAlerta] = useState({ mostrar: false, mensaje: '', tipo: '' });
   const [usuarioEncontrado, setUsuarioEncontrado] = useState(null);
@@ -188,32 +193,43 @@ const AgendarCitaAdmin = () => {
     }
   };
 
-  const obtenerTratamientos = async () => {
-    if (!usuarioId || !csrfToken) return;
-    try {
-      const response = await axiosInstance.get('/tratamientos', {
-        headers: { "X-XSRF-TOKEN": csrfToken },
-      });
-      setServicios(response.data.filter(t => t.estado === 1));
-    } catch (error) {
-      setAlerta({ mostrar: true, mensaje: 'Error al cargar tratamientos.', tipo: 'error' });
-    }
-  };
+const obtenerTratamientos = async () => {
+  if (!usuarioId || !csrfToken) return;
+  try {
+    const response = await axiosInstance.get('/tratamientos', {
+      headers: { "X-XSRF-TOKEN": csrfToken },
+    });
+
+    // Filtra activos y ordena alfabéticamente por nombre (A-Z)
+    const tratamientosOrdenados = response.data
+      .filter(t => t.estado === 1)
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+
+    setServicios(tratamientosOrdenados);
+  } catch (error) {
+    setAlerta({ mostrar: true, mensaje: 'Error al cargar tratamientos.', tipo: 'error' });
+  }
+};
+
 
   const obtenerHorasDisponibles = useMemo(() => {
-    if (!fechaSeleccionada) return disponibilidad.map(hora => ({ value: hora, isOccupied: false }));
+    if (!fechaSeleccionada)
+      return disponibilidadGeneral.map(hora => ({ value: hora, isOccupied: false }));
+
+    const diaSemana = fechaSeleccionada.getDay();
+    const horasDelDia = diaSemana === 6 ? disponibilidadSabado : disponibilidadGeneral;
 
     const fechaFormateada = fechaSeleccionada.toISOString().split('T')[0];
     const horasOcupadas = citasOcupadas
       .filter(cita => new Date(cita.fecha_hora).toISOString().split('T')[0] === fechaFormateada)
       .map(cita => cita.hora_formateada);
 
-    console.log("📌 Horas ocupadas para esta fecha:", horasOcupadas);
-
-    return disponibilidad.map(hora => ({
+    console.log("Horas ocupadas para esta fecha:", horasOcupadas);
+    return horasDelDia.map(hora => ({
       value: hora,
       isOccupied: horasOcupadas.includes(hora),
     }));
+
   }, [fechaSeleccionada, citasOcupadas]);
 
   const buscarUsuario = async () => {
@@ -528,9 +544,11 @@ const AgendarCitaAdmin = () => {
                     onChange={(newValue) => setFechaSeleccionada(newValue)}
                     renderInput={(params) => <TextField {...params} fullWidth sx={inputStyle} />}
                     disablePast
+                    minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // Bloquea el día actual
                     maxDate={new Date(new Date().setDate(new Date().getDate() + 30))}
                     shouldDisableDate={(date) => ![1, 2, 3, 6].includes(date.getDay())}
                   />
+
                 </LocalizationProvider>
                 <Typography sx={{ mt: 1, color: "#d32f2f", fontFamily: "'Poppins', sans-serif" }}>
                   Solo Lunes, Martes, Miércoles y Sábado.
@@ -585,9 +603,9 @@ const AgendarCitaAdmin = () => {
                   borderRadius: "12px",
                   fontFamily: "'Poppins', sans-serif",
                   fontWeight: 600,
-                  "&:hover": { 
-                    backgroundColor: tratamientoActivo ? "#ccc" : "#78c1c8", 
-                    transform: "translateY(-2px)" 
+                  "&:hover": {
+                    backgroundColor: tratamientoActivo ? "#ccc" : "#78c1c8",
+                    transform: "translateY(-2px)"
                   },
                   transition: "all 0.3s ease-in-out",
                   display: "flex",
