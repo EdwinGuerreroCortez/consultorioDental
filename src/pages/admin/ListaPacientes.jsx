@@ -16,8 +16,6 @@ import {
   TextField,
 } from "@mui/material";
 import HistoryIcon from "@mui/icons-material/History";
-import ToggleOnIcon from "@mui/icons-material/ToggleOn";
-import ToggleOffIcon from "@mui/icons-material/ToggleOff";
 import SearchIcon from "@mui/icons-material/Search";
 import { motion } from "framer-motion";
 import HistorialMedico from "./HistorialMedico";
@@ -26,9 +24,8 @@ const ListaPacientes = () => {
   const [pacientes, setPacientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1); // Paginación comienza en 1
-  const [rowsPerPage] = useState(5); // 5 pacientes por página
-  const [estadoCuentas, setEstadoCuentas] = useState({});
+  const [page, setPage] = useState(1);
+  const [rowsPerPage] = useState(5);
   const [showSearch, setShowSearch] = useState(false);
   const [openHistorial, setOpenHistorial] = useState(false);
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null);
@@ -37,15 +34,9 @@ const ListaPacientes = () => {
     const fetchPacientes = async () => {
       setLoading(true);
       try {
-        const response = await fetch("http://localhost:4000/api/usuarios/pacientes");
+        const response = await fetch("https://backenddent.onrender.com/api/usuarios/pacientes");
         const data = await response.json();
         setPacientes(data);
-
-        const estadoInicial = {};
-        data.forEach((paciente) => {
-          estadoInicial[paciente.id] = true;
-        });
-        setEstadoCuentas(estadoInicial);
       } catch (error) {
         console.error("Error al obtener los pacientes:", error);
       }
@@ -55,14 +46,6 @@ const ListaPacientes = () => {
     fetchPacientes();
   }, []);
 
-  const toggleEstadoCuenta = (id) => {
-    setEstadoCuentas((prevEstado) => ({
-      ...prevEstado,
-      [id]: !prevEstado[id],
-    }));
-  };
-
-  // Filtrar pacientes según el término de búsqueda
   const filteredPacientes = pacientes.filter(
     (paciente) =>
       paciente.nombre.toLowerCase().includes(search.toLowerCase()) ||
@@ -71,10 +54,8 @@ const ListaPacientes = () => {
       paciente.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Calcular el número total de páginas basado en los pacientes filtrados
   const totalPages = Math.ceil(filteredPacientes.length / rowsPerPage);
 
-  // Asegurarse de que la página actual no exceda el número total de páginas
   useEffect(() => {
     if (page > totalPages && totalPages > 0) {
       setPage(totalPages);
@@ -87,7 +68,7 @@ const ListaPacientes = () => {
 
   const handleOpenHistorial = (paciente) => {
     if (!paciente || !paciente.id) {
-      console.error(" Error: paciente o paciente.id es undefined", paciente);
+      console.error("Error: paciente o paciente.id es undefined", paciente);
       return;
     }
 
@@ -125,19 +106,19 @@ const ListaPacientes = () => {
         backgroundColor: "#f9fbfd",
       }}
     >
-      {/* Contenedor del buscador en la esquina superior izquierda */}
+      {/* Buscador */}
       <Box
         sx={{
           display: "flex",
           justifyContent: "flex-start",
           alignItems: "center",
-          mb: 4, // Margen inferior para separar del formulario
+          mb: 4,
           width: "100%",
           maxWidth: "1400px",
           backgroundColor: "#ffffff",
           borderRadius: "12px",
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-          p: 2, // Padding para que se vea más separado
+          p: 2,
         }}
       >
         <IconButton onClick={() => setShowSearch(!showSearch)}>
@@ -175,7 +156,7 @@ const ListaPacientes = () => {
         )}
       </Box>
 
-      {/* Contenido de la tabla */}
+      {/* Tabla de pacientes */}
       <Box sx={{ flexGrow: 1, maxWidth: "1400px", mx: "auto", width: "100%" }}>
         {loading ? (
           <Box
@@ -218,25 +199,25 @@ const ListaPacientes = () => {
                   }}
                 >
                   <TableRow>
-                    <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700, width: "20%" }}>
+                    <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700 }}>
                       Nombre Completo
                     </TableCell>
-                    <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700, width: "12%" }}>
+                    <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700 }}>
                       Teléfono
                     </TableCell>
-                    <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700, width: "8%" }}>
+                    <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700 }}>
                       Sexo
                     </TableCell>
-                    <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700, width: "20%" }}>
+                    <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700 }}>
                       Email
                     </TableCell>
-                    <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700, width: "12%" }}>
+                    <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700 }}>
                       Fecha de Nacimiento
                     </TableCell>
-                    <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700, width: "12%" }}>
+                    <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700 }}>
                       Fecha de Creación
                     </TableCell>
-                    <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700, width: "16%" }}>
+                    <TableCell sx={{ ...cellStyle, color: "#e0f7fa", fontWeight: 700 }}>
                       Acciones
                     </TableCell>
                   </TableRow>
@@ -269,22 +250,10 @@ const ListaPacientes = () => {
                           <TableCell sx={cellStyle}>
                             {new Date(paciente.fecha_creacion).toLocaleDateString("es-MX")}
                           </TableCell>
-                          <TableCell sx={{ ...cellStyle, display: "flex", justifyContent: "center", gap: 2 }}>
+                          <TableCell sx={{ ...cellStyle, display: "flex", justifyContent: "center" }}>
                             <Tooltip title="Historial Médico" arrow>
                               <IconButton onClick={() => handleOpenHistorial(paciente)}>
                                 <HistoryIcon sx={{ color: "#006d77", fontSize: 28 }} />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip
-                              title={estadoCuentas[paciente.id] ? "Desactivar Cuenta" : "Activar Cuenta"}
-                              arrow
-                            >
-                              <IconButton onClick={() => toggleEstadoCuenta(paciente.id)}>
-                                {estadoCuentas[paciente.id] ? (
-                                  <ToggleOnIcon sx={{ color: "green", fontSize: 28 }} />
-                                ) : (
-                                  <ToggleOffIcon sx={{ color: "red", fontSize: 28 }} />
-                                )}
                               </IconButton>
                             </Tooltip>
                           </TableCell>

@@ -48,7 +48,7 @@ const CrearMisionVision = () => {
   useEffect(() => {
     const obtenerToken = async () => {
       try {
-        const res = await fetch("http://localhost:4000/api/get-csrf-token", {
+        const res = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await res.json();
@@ -62,7 +62,7 @@ const CrearMisionVision = () => {
 
   const cargarDatos = async () => {
     try {
-      const res = await fetch("http://localhost:4000/api/mision-vision/historial");
+      const res = await fetch("https://backenddent.onrender.com/api/mision-vision/historial");
       const data = await res.json();
       const misiones = data.filter((d) => d.tipo === "mision");
       const visiones = data.filter((d) => d.tipo === "vision");
@@ -110,7 +110,7 @@ const CrearMisionVision = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:4000/api/mision-vision/crear", {
+      const response = await fetch("https://backenddent.onrender.com/api/mision-vision/crear", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -175,7 +175,7 @@ const CrearMisionVision = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:4000/api/mision-vision/editar/${id}`, {
+      const response = await fetch(`https://backenddent.onrender.com/api/mision-vision/editar/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

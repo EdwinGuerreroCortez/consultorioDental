@@ -24,7 +24,7 @@ const Prediccion = () => {
   useEffect(() => {
     const obtenerPacientes = async () => {
       try {
-        const res = await axios.get("http://localhost:4000/api/usuarios/prediccion-pacientes");
+        const res = await axios.get("https://backenddent.onrender.com/api/usuarios/prediccion-pacientes");
         const updatedPacientes = res.data.map(p => ({
           ...p,
           monto_ultimo_pago: p.monto_ultimo_pago || "$0.00"

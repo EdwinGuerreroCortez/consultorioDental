@@ -101,7 +101,7 @@ const AgendarCitaAdmin = () => {
   };
 
   const axiosInstance = useMemo(() => axios.create({
-    baseURL: 'http://localhost:4000/api',
+    baseURL: 'https://backenddent.onrender.com/api',
     withCredentials: true,
   }), []);
 
@@ -124,7 +124,7 @@ const AgendarCitaAdmin = () => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/get-csrf-token", { credentials: "include" });
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", { credentials: "include" });
         const data = await response.json();
         setCsrfToken(data.csrfToken);
       } catch (error) {
@@ -193,23 +193,23 @@ const AgendarCitaAdmin = () => {
     }
   };
 
-const obtenerTratamientos = async () => {
-  if (!usuarioId || !csrfToken) return;
-  try {
-    const response = await axiosInstance.get('/tratamientos', {
-      headers: { "X-XSRF-TOKEN": csrfToken },
-    });
+  const obtenerTratamientos = async () => {
+    if (!usuarioId || !csrfToken) return;
+    try {
+      const response = await axiosInstance.get('/tratamientos', {
+        headers: { "X-XSRF-TOKEN": csrfToken },
+      });
 
-    // Filtra activos y ordena alfabéticamente por nombre (A-Z)
-    const tratamientosOrdenados = response.data
-      .filter(t => t.estado === 1)
-      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
+      // Filtra activos y ordena alfabéticamente por nombre (A-Z)
+      const tratamientosOrdenados = response.data
+        .filter(t => t.estado === 1)
+        .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' }));
 
-    setServicios(tratamientosOrdenados);
-  } catch (error) {
-    setAlerta({ mostrar: true, mensaje: 'Error al cargar tratamientos.', tipo: 'error' });
-  }
-};
+      setServicios(tratamientosOrdenados);
+    } catch (error) {
+      setAlerta({ mostrar: true, mensaje: 'Error al cargar tratamientos.', tipo: 'error' });
+    }
+  };
 
 
   const obtenerHorasDisponibles = useMemo(() => {
@@ -398,8 +398,16 @@ const obtenerTratamientos = async () => {
                     label="Fecha de Nacimiento"
                     value={busquedaUsuario.fecha_nacimiento}
                     onChange={(newValue) => setBusquedaUsuario({ ...busquedaUsuario, fecha_nacimiento: newValue })}
-                    renderInput={(params) => <TextField {...params} fullWidth sx={inputStyle} />}
+                    format="dd/MM/yyyy" // 👈 Esto fuerza el orden día/mes/año
+                    views={['day', 'month', 'year']} // 👈 Ordena los selectores correctamente
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        sx: inputStyle,
+                      },
+                    }}
                   />
+
                 </LocalizationProvider>
               </Grid>
             </Grid>

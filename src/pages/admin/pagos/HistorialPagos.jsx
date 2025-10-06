@@ -14,8 +14,6 @@ import {
   InputAdornment,
   Pagination,
 } from "@mui/material";
-import { format, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
 import SearchIcon from "@mui/icons-material/Search";
@@ -33,7 +31,12 @@ const agruparPorMes = (pagos) => {
 
   pagos.forEach((pago) => {
     const fecha = new Date(pago.fecha_pago || pago.fecha_cita);
-    const clave = format(fecha, "MMMM yyyy", { locale: es });
+    const mes = [
+      "enero", "febrero", "marzo", "abril", "mayo", "junio",
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+    ][fecha.getMonth()];
+    const anio = fecha.getFullYear();
+    const clave = `${mes} ${anio}`;
     const claveCapitalizada = clave.charAt(0).toUpperCase() + clave.slice(1);
 
     if (!agrupados[claveCapitalizada]) agrupados[claveCapitalizada] = [];
@@ -53,7 +56,6 @@ const HistorialPagosDiseño = () => {
   const [pagos, setPagos] = useState([]);
   const [filteredPagos, setFilteredPagos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [pageLoading, setPageLoading] = useState(false);
   const [alerta, setAlerta] = useState({ mostrar: false, mensaje: "", tipo: "" });
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -64,7 +66,7 @@ const HistorialPagosDiseño = () => {
     const obtenerPagos = async () => {
       setLoading(true);
       try {
-        const res = await axios.get("http://localhost:4000/api/pagos/historial", {
+        const res = await axios.get("https://backenddent.onrender.com/api/pagos/historial", {
           params: { page: 1, limit: rowsPerPage },
         });
 
@@ -132,25 +134,36 @@ const HistorialPagosDiseño = () => {
     currentPage * rowsPerPage
   );
 
-const formatUTCDate = (dateString) => {
-  if (!dateString) return "Sin registrar";
-  try {
-    // Intentar parsear como ISO 8601 (ej. 2025-07-24T14:30:00)
-    const date = parseISO(dateString);
-    if (!isNaN(date.getTime())) {
-      return format(date, "dd 'de' MMMM yyyy, hh:mm a", { locale: es });
+  const formatUTCDate = (dateString) => {
+    if (!dateString) return "Sin fecha";
+
+    try {
+      // La fecha viene en formato "2025-03-23T21:40:39.000Z", pero representa
+      // la hora local de Huejutla (America/Mexico_City). Eliminamos .000Z.
+      const fechaStr = dateString.replace(".000Z", "");
+      const fecha = new Date(fechaStr);
+
+      if (isNaN(fecha.getTime())) {
+        throw new Error("Formato de fecha no reconocido");
+      }
+
+      const dia = fecha.getDate();
+      const mes = [
+        "enero", "febrero", "marzo", "abril", "mayo", "junio",
+        "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+      ][fecha.getMonth()];
+      const anio = fecha.getFullYear();
+      let hora = fecha.getHours();
+      const minutos = fecha.getMinutes().toString().padStart(2, "0");
+      const ampm = hora >= 12 ? "PM" : "AM";
+      hora = hora % 12 || 12;
+
+      return `${dia} de ${mes} del ${anio} a las ${hora}:${minutos} ${ampm}`;
+    } catch (error) {
+      console.error("Error al parsear la fecha:", dateString, error);
+      return "Formato de fecha inválido";
     }
-    // Respaldo para otros formatos (ej. DD/MM/YYYY HH:mm:ss)
-    const dateLocal = new Date(dateString);
-    if (!isNaN(dateLocal.getTime())) {
-      return format(dateLocal, "dd 'de' MMMM yyyy, hh:mm a", { locale: es });
-    }
-    throw new Error("Formato de fecha no reconocido");
-  } catch (error) {
-    console.error("Error al parsear la fecha:", dateString, error);
-    return "Formato de fecha inválido";
-  }
-};
+  };
 
   const inputStyle = {
     "& .MuiOutlinedInput-root": {

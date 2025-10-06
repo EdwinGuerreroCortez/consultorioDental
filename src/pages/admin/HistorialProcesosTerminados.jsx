@@ -18,8 +18,11 @@ import {
   Pagination,
   Tooltip,
   IconButton,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import SearchIcon from "@mui/icons-material/Search";
 import axios from "axios";
 
 const HistorialProcesosTerminados = () => {
@@ -30,13 +33,13 @@ const HistorialProcesosTerminados = () => {
   const [comentario, setComentario] = useState(null);
   const [openComentario, setOpenComentario] = useState(false);
   const [pagina, setPagina] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const elementosPorPagina = 10;
 
   useEffect(() => {
     axios
-      .get("http://localhost:4000/api/tratamientos-pacientes/historial")
+      .get("https://backenddent.onrender.com/api/tratamientos-pacientes/historial")
       .then((response) => {
-        console.log("Datos recibidos del historial:", response.data);
         setTratamientos(response.data);
       })
       .catch((error) => {
@@ -45,7 +48,6 @@ const HistorialProcesosTerminados = () => {
   }, []);
 
   const handleVerDetalles = (tratamiento) => {
-    console.log("Tratamiento seleccionado:", tratamiento);
     setDetalleSeleccionado(tratamiento);
     setOpen(true);
     setTabIndex(0);
@@ -74,7 +76,21 @@ const HistorialProcesosTerminados = () => {
     setPagina(value);
   };
 
-  const tratamientosPaginados = tratamientos.slice(
+  // 🔍 Filtrado por nombre o tratamiento
+  const filteredTratamientos = tratamientos.filter((t) => {
+    const nombreCompleto = `${t.nombre} ${t.apellido_paterno} ${t.apellido_materno}`.toLowerCase();
+    const tratamientoNombre = t.tratamiento_nombre?.toLowerCase() || "";
+    return (
+      nombreCompleto.includes(searchTerm.toLowerCase().trim()) ||
+      tratamientoNombre.includes(searchTerm.toLowerCase().trim())
+    );
+  });
+
+  useEffect(() => {
+    setPagina(1);
+  }, [searchTerm]);
+
+  const tratamientosPaginados = filteredTratamientos.slice(
     (pagina - 1) * elementosPorPagina,
     pagina * elementosPorPagina
   );
@@ -106,6 +122,46 @@ const HistorialProcesosTerminados = () => {
         backgroundColor: "#f9fbfd",
       }}
     >
+      {/* 🔍 Buscador */}
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: "100%",
+          mb: 3,
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <TextField
+          label="Buscar paciente o tratamiento"
+          variant="outlined"
+          fullWidth
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "12px",
+              backgroundColor: "#fff",
+              "& fieldset": { borderColor: "#006d77" },
+              "&:hover fieldset": { borderColor: "#005c66" },
+              "&.Mui-focused fieldset": { borderColor: "#006d77", borderWidth: "2px" },
+            },
+            "& .MuiInputLabel-root": {
+              color: "#03445e",
+              "&.Mui-focused": { color: "#006d77" },
+            },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ color: "#006d77" }} />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+
+      {/* TABLA PRINCIPAL */}
       <Box sx={{ flexGrow: 1, width: "100%" }}>
         <TableContainer
           component={Paper}
@@ -114,8 +170,6 @@ const HistorialProcesosTerminados = () => {
             boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08)",
             overflow: "hidden",
             mt: 3,
-            maxWidth: "1400px",
-            mx: "auto",
             border: "1px solid #78c1c8",
           }}
         >
@@ -127,7 +181,8 @@ const HistorialProcesosTerminados = () => {
             >
               <TableRow>
                 {[
-                  "Nombre del Paciente",
+                  "#",
+                  "Nombre Completo",
                   "Edad",
                   "Sexo",
                   "Correo",
@@ -135,6 +190,7 @@ const HistorialProcesosTerminados = () => {
                   "Tratamiento",
                   "Citas Totales / Asistidas",
                   "Fecha de Inicio",
+                  "Fecha de Finalización",
                   "Acciones",
                 ].map((header) => (
                   <TableCell
@@ -157,7 +213,7 @@ const HistorialProcesosTerminados = () => {
             </TableHead>
             <TableBody>
               {tratamientosPaginados.length > 0 ? (
-                tratamientosPaginados.map((tratamiento) => (
+                tratamientosPaginados.map((tratamiento, index) => (
                   <TableRow
                     key={tratamiento.tratamiento_id}
                     sx={{
@@ -169,14 +225,22 @@ const HistorialProcesosTerminados = () => {
                       borderBottom: "1px solid #eef3f7",
                     }}
                   >
-                    <TableCell sx={cellStyle}>{`${tratamiento.nombre} ${tratamiento.apellido_paterno} ${tratamiento.apellido_materno}`}</TableCell>
+                    <TableCell sx={cellStyle}>
+                      {(pagina - 1) * elementosPorPagina + index + 1}
+                    </TableCell>
+                    <TableCell sx={cellStyle}>
+                      {`${tratamiento.nombre} ${tratamiento.apellido_paterno} ${tratamiento.apellido_materno}`}
+                    </TableCell>
                     <TableCell sx={cellStyle}>{tratamiento.edad || "N/A"}</TableCell>
                     <TableCell sx={cellStyle}>{tratamiento.sexo || "N/A"}</TableCell>
                     <TableCell sx={cellStyle}>{tratamiento.email || "N/A"}</TableCell>
                     <TableCell sx={cellStyle}>{tratamiento.telefono || "N/A"}</TableCell>
                     <TableCell sx={cellStyle}>{tratamiento.tratamiento_nombre}</TableCell>
-                    <TableCell sx={cellStyle}>{`${tratamiento.citas_totales} / ${tratamiento.citas_asistidas}`}</TableCell>
+                    <TableCell sx={cellStyle}>
+                      {`${tratamiento.citas_totales} / ${tratamiento.citas_asistidas}`}
+                    </TableCell>
                     <TableCell sx={cellStyle}>{tratamiento.fecha_inicio || "N/A"}</TableCell>
+                    <TableCell sx={cellStyle}>{tratamiento.fecha_finalizacion || "N/A"}</TableCell>
                     <TableCell sx={cellStyle}>
                       <Tooltip title="Ver Detalles" placement="top">
                         <IconButton
@@ -197,7 +261,7 @@ const HistorialProcesosTerminados = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={9} sx={{ ...cellStyle, color: "#999" }}>
+                  <TableCell colSpan={11} sx={{ ...cellStyle, color: "#999" }}>
                     No hay tratamientos registrados.
                   </TableCell>
                 </TableRow>
@@ -205,7 +269,7 @@ const HistorialProcesosTerminados = () => {
               {filasFaltantes > 0 &&
                 Array.from({ length: filasFaltantes }).map((_, index) => (
                   <TableRow key={`empty-${index}`}>
-                    {Array(9)
+                    {Array(11)
                       .fill("-")
                       .map((_, i) => (
                         <TableCell
@@ -228,48 +292,52 @@ const HistorialProcesosTerminados = () => {
         </TableContainer>
       </Box>
 
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          mt: "2rem",
-          mb: "4rem",
-        }}
-      >
-        <Pagination
-          count={Math.ceil(tratamientos.length / elementosPorPagina)}
-          page={pagina}
-          onChange={handleChangePagina}
-          color="primary"
-          size="medium"
+      {/* PAGINACIÓN */}
+      {filteredTratamientos.length > 0 && (
+        <Box
           sx={{
-            "& .MuiPaginationItem-root": {
-              fontSize: "1rem",
-              padding: "8px 16px",
-              margin: "0 4px",
-              borderRadius: "8px",
-              backgroundColor: "#ffffff",
-              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-              color: "#006d77",
-              fontFamily: "'Poppins', sans-serif",
-              "&:hover": {
-                backgroundColor: "#78c1c8",
-                color: "#ffffff",
-                transition: "all 0.3s ease",
-              },
-            },
-            "& .Mui-selected": {
-              backgroundColor: "#006d77",
-              color: "#e0f7fa",
-              "&:hover": {
-                backgroundColor: "#004d57",
-                transition: "all 0.3s ease",
-              },
-            },
+            display: "flex",
+            justifyContent: "center",
+            mt: "2rem",
+            mb: "4rem",
           }}
-        />
-      </Box>
+        >
+          <Pagination
+            count={Math.ceil(filteredTratamientos.length / elementosPorPagina)}
+            page={pagina}
+            onChange={handleChangePagina}
+            color="primary"
+            size="medium"
+            sx={{
+              "& .MuiPaginationItem-root": {
+                fontSize: "1rem",
+                padding: "8px 16px",
+                margin: "0 4px",
+                borderRadius: "8px",
+                backgroundColor: "#ffffff",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+                color: "#006d77",
+                fontFamily: "'Poppins', sans-serif",
+                "&:hover": {
+                  backgroundColor: "#78c1c8",
+                  color: "#ffffff",
+                  transition: "all 0.3s ease",
+                },
+              },
+              "& .Mui-selected": {
+                backgroundColor: "#006d77",
+                color: "#e0f7fa",
+                "&:hover": {
+                  backgroundColor: "#004d57",
+                  transition: "all 0.3s ease",
+                },
+              },
+            }}
+          />
+        </Box>
+      )}
 
+      {/* DIALOGO DETALLES */}
       <Dialog
         open={open}
         onClose={handleClose}
@@ -290,7 +358,9 @@ const HistorialProcesosTerminados = () => {
         >
           Detalles del Tratamiento
         </DialogTitle>
+
         <DialogContent sx={{ padding: "1.5rem", backgroundColor: "#ffffff" }}>
+          {/* Tabs */}
           {detalleSeleccionado ? (
             <>
               <Tabs
@@ -315,13 +385,12 @@ const HistorialProcesosTerminados = () => {
                 <Tab label="Citas" />
                 <Tab label="Pagos" />
               </Tabs>
+
+              {/* TAB CITAS */}
               {tabIndex === 0 && (
-                <TableContainer
-                  component={Paper}
-                  sx={{ borderRadius: "12px", boxShadow: "0 4px 16px rgba(0, 0, 0, 0.05)", backgroundColor: "#e0f7fa" }}
-                >
+                <TableContainer component={Paper} sx={{ borderRadius: "12px", backgroundColor: "#e0f7fa" }}>
                   <Table>
-                    <TableHead sx={{ backgroundColor: "#e0f7fa" }}>
+                    <TableHead>
                       <TableRow>
                         <TableCell sx={{ ...cellStyle, fontWeight: 600 }}>Fecha</TableCell>
                         <TableCell sx={{ ...cellStyle, fontWeight: 600 }}>Estado</TableCell>
@@ -330,12 +399,9 @@ const HistorialProcesosTerminados = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {detalleSeleccionado.citas && detalleSeleccionado.citas.length > 0 ? (
+                      {detalleSeleccionado.citas?.length ? (
                         detalleSeleccionado.citas.map((cita) => (
-                          <TableRow
-                            key={cita.cita_id}
-                            sx={{ "&:hover": { backgroundColor: "#d3ecef" } }}
-                          >
+                          <TableRow key={cita.cita_id}>
                             <TableCell sx={cellStyle}>{cita.fecha_cita || "Pendiente"}</TableCell>
                             <TableCell sx={cellStyle}>{cita.estado_cita || "N/A"}</TableCell>
                             <TableCell sx={cellStyle}>{cita.cita_pagada ? "Pagado" : "Pendiente"}</TableCell>
@@ -352,8 +418,6 @@ const HistorialProcesosTerminados = () => {
                                     backgroundColor: "#e0f7fa",
                                     borderColor: "#004d57",
                                   },
-                                  fontSize: "0.8rem",
-                                  padding: "4px 8px",
                                 }}
                               >
                                 Ver Comentario
@@ -372,13 +436,12 @@ const HistorialProcesosTerminados = () => {
                   </Table>
                 </TableContainer>
               )}
+
+              {/* TAB PAGOS */}
               {tabIndex === 1 && (
-                <TableContainer
-                  component={Paper}
-                  sx={{ borderRadius: "12px", boxShadow: "0 4px 16px rgba(0, 0, 0, 0.05)", backgroundColor: "#e0f7fa" }}
-                >
+                <TableContainer component={Paper} sx={{ borderRadius: "12px", backgroundColor: "#e0f7fa" }}>
                   <Table>
-                    <TableHead sx={{ backgroundColor: "#e0f7fa" }}>
+                    <TableHead>
                       <TableRow>
                         <TableCell sx={{ ...cellStyle, fontWeight: 600 }}>Monto</TableCell>
                         <TableCell sx={{ ...cellStyle, fontWeight: 600 }}>Método</TableCell>
@@ -387,12 +450,9 @@ const HistorialProcesosTerminados = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {detalleSeleccionado.pagos && detalleSeleccionado.pagos.length > 0 ? (
+                      {detalleSeleccionado.pagos?.length ? (
                         detalleSeleccionado.pagos.map((pago) => (
-                          <TableRow
-                            key={pago.pago_id}
-                            sx={{ "&:hover": { backgroundColor: "#d3ecef" } }}
-                          >
+                          <TableRow key={pago.pago_id}>
                             <TableCell sx={cellStyle}>{pago.monto_pago || "N/A"}</TableCell>
                             <TableCell sx={cellStyle}>{pago.metodo_pago || "No especificado"}</TableCell>
                             <TableCell sx={cellStyle}>{pago.estado_pago || "N/A"}</TableCell>
@@ -412,19 +472,20 @@ const HistorialProcesosTerminados = () => {
               )}
             </>
           ) : (
-            <Typography sx={{ textAlign: "center", color: "#03445e", fontFamily: "'Poppins', sans-serif", fontSize: "0.9rem" }}>
+            <Typography sx={{ textAlign: "center", color: "#03445e" }}>
               No se encontraron detalles.
             </Typography>
           )}
         </DialogContent>
       </Dialog>
 
+      {/* DIALOGO COMENTARIO */}
       <Dialog
         open={openComentario}
         onClose={handleCloseComentario}
         fullWidth
         maxWidth="sm"
-        sx={{ "& .MuiDialog-paper": { borderRadius: "12px", boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)" } }}
+        sx={{ "& .MuiDialog-paper": { borderRadius: "12px" } }}
       >
         <DialogTitle
           sx={{
@@ -433,8 +494,6 @@ const HistorialProcesosTerminados = () => {
             fontFamily: "'Poppins', sans-serif",
             fontWeight: 600,
             borderRadius: "12px 12px 0 0",
-            padding: "12px",
-            fontSize: "1rem",
           }}
         >
           Comentario
@@ -444,7 +503,6 @@ const HistorialProcesosTerminados = () => {
             sx={{
               fontFamily: "'Poppins', sans-serif",
               color: "#03445e",
-              fontSize: "0.9rem",
               textAlign: "center",
             }}
           >

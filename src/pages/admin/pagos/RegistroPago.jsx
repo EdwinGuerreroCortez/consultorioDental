@@ -69,7 +69,7 @@ const ListaPacientesTratamiento = () => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -87,7 +87,7 @@ const ListaPacientesTratamiento = () => {
     const obtenerPacientes = async () => {
       if (!csrfToken) return;
       try {
-        const response = await axios.get("http://localhost:4000/api/pagos/pacientes-con-tratamiento", {
+        const response = await axios.get("https://backenddent.onrender.com/api/pagos/pacientes-con-tratamiento", {
           headers: { "X-XSRF-TOKEN": csrfToken },
           withCredentials: true,
         });
@@ -126,7 +126,7 @@ const ListaPacientesTratamiento = () => {
     setMetodoPago("");
     setPaymentStatus(null);
     try {
-      const res = await axios.get(`http://localhost:4000/api/tratamientos-pacientes/citas-por-tratamiento/${id}`, {
+      const res = await axios.get(`https://backenddent.onrender.com/api/tratamientos-pacientes/citas-por-tratamiento/${id}`, {
         headers: { "X-XSRF-TOKEN": csrfToken },
         withCredentials: true,
       });
@@ -159,50 +159,60 @@ const ListaPacientesTratamiento = () => {
     ?.toFixed(2);
 
   const handlePagar = async () => {
-    if (citasSeleccionadas.length === 0 || !metodoPago || !csrfToken) {
-      setAlerta({ open: true, message: "Seleccione citas y método de pago", severity: "warning" });
-      return;
-    }
-    setPaymentLoading(true);
-    try {
-      const pagosSeleccionados = tratamientoSeleccionado?.citas
-        ?.filter((cita) => citasSeleccionadas.includes(cita.cita_id))
-        ?.map((cita) => cita.pago_id);
+  if (citasSeleccionadas.length === 0 || !metodoPago || !csrfToken) {
+    setAlerta({ open: true, message: "Seleccione citas y método de pago", severity: "warning" });
+    return;
+  }
+  setPaymentLoading(true);
+  try {
+    const pagosSeleccionados = tratamientoSeleccionado?.citas
+      ?.filter((cita) => citasSeleccionadas.includes(cita.cita_id))
+      ?.map((cita) => cita.pago_id);
 
-      const paymentData = {
-        ids: pagosSeleccionados,
-        metodo: metodoPago,
-        fecha_pago: new Date().toISOString().split("T")[0],
-      };
-      const response = await axios.put("http://localhost:4000/api/pagos/actualizar-pagos", paymentData, {
-        headers: {
-          "Content-Type": "application/json",
-          "X-XSRF-TOKEN": csrfToken,
-        },
-        withCredentials: true,
-      });
-      setPaymentStatus("success");
-      setAlerta({ open: true, message: "Pago registrado exitosamente", severity: "success" });
+    // Fecha y hora local (zona México)
+    const ahora = new Date();
+    const fechaLocal = new Date(ahora.getTime() - ahora.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " ");
 
-      // Actualiza la lista de pacientes
-      const refreshResponse = await axios.get("http://localhost:4000/api/pagos/pacientes-con-tratamiento", {
-        headers: { "X-XSRF-TOKEN": csrfToken },
-        withCredentials: true,
-      });
-      setPacientes(refreshResponse.data);
+    const paymentData = {
+      ids: pagosSeleccionados,
+      metodo: metodoPago,
+      fecha_pago: fechaLocal, // ← CORREGIDO
+    };
 
-      setTimeout(() => {
-        setOpenDialog(false);
-        setPaymentStatus(null);
-      }, 2000);
-    } catch (error) {
-      console.error("Error al registrar el pago:", error.response ? error.response.data : error.message);
-      setPaymentStatus("error");
-      setAlerta({ open: true, message: "Error al procesar el pago", severity: "error" });
-    } finally {
-      setPaymentLoading(false);
-    }
-  };
+    const response = await axios.put("https://backenddent.onrender.com/api/pagos/actualizar-pagos", paymentData, {
+      headers: {
+        "Content-Type": "application/json",
+        "X-XSRF-TOKEN": csrfToken,
+      },
+      withCredentials: true,
+    });
+
+    setPaymentStatus("success");
+    setAlerta({ open: true, message: "Pago registrado exitosamente", severity: "success" });
+
+    // Refrescar pacientes
+    const refreshResponse = await axios.get("https://backenddent.onrender.com/api/pagos/pacientes-con-tratamiento", {
+      headers: { "X-XSRF-TOKEN": csrfToken },
+      withCredentials: true,
+    });
+    setPacientes(refreshResponse.data);
+
+    setTimeout(() => {
+      setOpenDialog(false);
+      setPaymentStatus(null);
+    }, 2000);
+  } catch (error) {
+    console.error("Error al registrar el pago:", error.response ? error.response.data : error.message);
+    setPaymentStatus("error");
+    setAlerta({ open: true, message: "Error al procesar el pago", severity: "error" });
+  } finally {
+    setPaymentLoading(false);
+  }
+};
+
 
   const cerrarAlerta = () => setAlerta({ ...alerta, open: false });
 

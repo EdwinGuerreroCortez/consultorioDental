@@ -32,11 +32,18 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [csrfToken, setCsrfToken] = useState(null);
+  const [errors, setErrors] = useState({
+    signosVitales: false,
+    bajoTratamiento: false,
+    tipoTratamiento: false,
+    medicamentos: false,
+    comentario: false,
+  });
 
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -56,7 +63,7 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
     if (!csrfToken) return;
 
     try {
-      const response = await fetch(`http://localhost:4000/api/historial/usuario/${paciente.id}`, {
+      const response = await fetch(`https://backenddent.onrender.com/api/historial/usuario/${paciente.id}`, {
         headers: {
           "X-XSRF-TOKEN": csrfToken,
         },
@@ -102,9 +109,29 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
     obtenerHistorial();
   }, [open, paciente, csrfToken]);
 
+  const validateFields = () => {
+    const newErrors = {
+      signosVitales: !signosVitales.trim(),
+      bajoTratamiento: !bajoTratamiento,
+      tipoTratamiento: !tipoTratamiento.trim(),
+      medicamentos: !medicamentos.trim(),
+      comentario: !comentario.trim(),
+    };
+    setErrors(newErrors);
+    return !Object.values(newErrors).some((error) => error);
+  };
+
   const guardarHistorial = async () => {
     if (!paciente || !paciente.id) {
       console.error("Error: No hay paciente seleccionado.");
+      return;
+    }
+
+    if (!validateFields()) {
+      setSnackbarMessage("Por favor, completa todos los campos requeridos.");
+      setSnackbarSeverity("error");
+      setOpenSnackbar(true);
+      setTimeout(() => setOpenSnackbar(false), 3000);
       return;
     }
 
@@ -142,7 +169,7 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
       console.log("Datos completos que se envían al servidor:", historialData);
 
       // Paso 5: Enviar la solicitud al servidor
-      const response = await fetch(`http://localhost:4000/api/historial/usuario/${paciente.id}`, {
+      const response = await fetch(`https://backenddent.onrender.com/api/historial/usuario/${paciente.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -184,6 +211,13 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
     setMedicamentos("");
     setComentario("");
     setModoEdicion(true);
+    setErrors({
+      signosVitales: false,
+      bajoTratamiento: false,
+      tipoTratamiento: false,
+      medicamentos: false,
+      comentario: false,
+    });
   };
 
   const manejarCambioHistorial = (event) => {
@@ -202,8 +236,8 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
 
     const dia = fecha.getDate();
     const mes = [
-        "enero", "febrero", "marzo", "abril", "mayo", "junio",
-        "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+      "enero", "febrero", "marzo", "abril", "mayo", "junio",
+      "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
     ][fecha.getMonth()];
     const anio = fecha.getFullYear();
     let hora = fecha.getHours();
@@ -443,6 +477,8 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                 value={modoEdicion ? signosVitales : historialSeleccionado?.signos_vitales || ""}
                 onChange={(e) => setSignosVitales(e.target.value)}
                 InputProps={{ readOnly: !modoEdicion }}
+                error={errors.signosVitales}
+                helperText={errors.signosVitales ? "Este campo es obligatorio" : ""}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "12px",
@@ -464,7 +500,7 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
               <Divider sx={{ marginBottom: "1.5rem", borderColor: "#78c1c8" }} />
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
-                  <FormControl fullWidth variant="outlined">
+                  <FormControl fullWidth variant="outlined" error={errors.bajoTratamiento}>
                     <InputLabel sx={{ color: "#03445e", fontFamily: "'Poppins', sans-serif" }}>
                       Bajo Tratamiento
                     </InputLabel>
@@ -489,6 +525,11 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                         No
                       </MenuItem>
                     </Select>
+                    {errors.bajoTratamiento && (
+                      <Typography variant="caption" color="error">
+                        Este campo es obligatorio
+                      </Typography>
+                    )}
                   </FormControl>
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -499,6 +540,8 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                     value={modoEdicion ? tipoTratamiento : historialSeleccionado?.tipo_tratamiento || ""}
                     onChange={(e) => setTipoTratamiento(e.target.value)}
                     InputProps={{ readOnly: !modoEdicion }}
+                    error={errors.tipoTratamiento}
+                    helperText={errors.tipoTratamiento ? "Este campo es obligatorio" : ""}
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: "12px",
@@ -517,6 +560,8 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                     value={modoEdicion ? medicamentos : historialSeleccionado?.medicamentos_recetados || ""}
                     onChange={(e) => setMedicamentos(e.target.value)}
                     InputProps={{ readOnly: !modoEdicion }}
+                    error={errors.medicamentos}
+                    helperText={errors.medicamentos ? "Este campo es obligatorio" : ""}
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: "12px",
@@ -547,6 +592,8 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
                 value={modoEdicion ? comentario : historialSeleccionado?.observaciones_medicas || ""}
                 onChange={(e) => setComentario(e.target.value)}
                 InputProps={{ readOnly: !modoEdicion }}
+                error={errors.comentario}
+                helperText={errors.comentario ? "Este campo es obligatorio" : ""}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "12px",
