@@ -9,21 +9,44 @@ const FooterPublico = () => {
         backgroundColor: "#0077b6",
         color: "#ffffff",
         textAlign: "center",
-        padding: "20px 0",
+        padding: "20px 10px",
         width: "100%",
         margin: 0,
+        overflowX: "hidden",
         boxSizing: "border-box",
       }}
     >
-      <Typography variant="body2" sx={{ fontWeight: "bold", marginBottom: "10px" }}>
+      {/* Texto principal */}
+      <Typography
+        variant="body2"
+        sx={{
+          fontWeight: "bold",
+          mb: 1.5,
+          fontSize: { xs: "0.9rem", sm: "1rem" },
+        }}
+      >
         © 2025 Consultorio Dental. Todos los derechos reservados.
       </Typography>
-      
-      <Box>
+
+      {/* Enlaces del footer */}
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          gap: "12px",
+          mb: 1.5,
+        }}
+      >
         <Link
           href="/politicas-privacidad"
           underline="hover"
-          sx={{ color: "#ffffff", marginRight: "15px", textDecoration: "none" }}
+          sx={{
+            color: "#ffffff",
+            textDecoration: "none",
+            fontSize: { xs: "0.85rem", sm: "0.9rem" },
+            "&:hover": { textDecoration: "underline" },
+          }}
         >
           Políticas de Privacidad
         </Link>
@@ -31,7 +54,12 @@ const FooterPublico = () => {
         <Link
           href="/terminos-condiciones"
           underline="hover"
-          sx={{ color: "#ffffff", marginRight: "15px", textDecoration: "none" }}
+          sx={{
+            color: "#ffffff",
+            textDecoration: "none",
+            fontSize: { xs: "0.85rem", sm: "0.9rem" },
+            "&:hover": { textDecoration: "underline" },
+          }}
         >
           Términos y Condiciones
         </Link>
@@ -39,7 +67,12 @@ const FooterPublico = () => {
         <Link
           href="/deslinde-legal"
           underline="hover"
-          sx={{ color: "#ffffff", marginRight: "15px", textDecoration: "none" }}
+          sx={{
+            color: "#ffffff",
+            textDecoration: "none",
+            fontSize: { xs: "0.85rem", sm: "0.9rem" },
+            "&:hover": { textDecoration: "underline" },
+          }}
         >
           Deslinde Legal
         </Link>
@@ -47,7 +80,12 @@ const FooterPublico = () => {
         <Link
           href="/mision-vision"
           underline="hover"
-          sx={{ color: "#ffffff", marginRight: "15px", textDecoration: "none" }}
+          sx={{
+            color: "#ffffff",
+            textDecoration: "none",
+            fontSize: { xs: "0.85rem", sm: "0.9rem" },
+            "&:hover": { textDecoration: "underline" },
+          }}
         >
           Misión y Visión
         </Link>
@@ -57,16 +95,26 @@ const FooterPublico = () => {
           target="_blank"
           rel="noopener noreferrer"
           underline="hover"
-          sx={{ color: "#ffffff", textDecoration: "none" }}
+          sx={{
+            color: "#ffffff",
+            textDecoration: "none",
+            fontSize: { xs: "0.85rem", sm: "0.9rem" },
+            "&:hover": { textDecoration: "underline" },
+          }}
         >
           Mapa de Sitio
         </Link>
       </Box>
 
-      {/* 🆕 Versión del sistema */}
+      {/* Versión del sistema */}
       <Typography
         variant="caption"
-        sx={{ display: "block", marginTop: "12px", fontSize: "0.75rem", opacity: 0.8 }}
+        sx={{
+          display: "block",
+          mt: 1,
+          opacity: 0.8,
+          fontSize: { xs: "0.7rem", sm: "0.75rem" },
+        }}
       >
         Versión del sistema: <strong>1.0.0</strong>
       </Typography>

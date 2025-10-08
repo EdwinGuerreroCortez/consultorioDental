@@ -13,7 +13,6 @@ import {
   Divider,
   TextField,
   Tooltip,
-  Fade,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
@@ -23,6 +22,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import InputAdornment from "@mui/material/InputAdornment";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import "@fontsource/poppins";
+import { debounce } from "lodash"; // Opcional: descomentar si usas lodash
 import logo from "../../../assets/images/logo.png";
 
 const NavbarPublico = () => {
@@ -32,7 +32,10 @@ const NavbarPublico = () => {
   const searchBoxRef = useRef(null);
 
   const toggleDrawer = (open) => (event) => {
-    if (event.type === "keydown" && (event.key === "Tab" || event.key === "Shift")) {
+    if (
+      event.type === "keydown" &&
+      (event.key === "Tab" || event.key === "Shift")
+    ) {
       return;
     }
     setDrawerOpen(open);
@@ -40,22 +43,28 @@ const NavbarPublico = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (searchBoxRef.current && !searchBoxRef.current.contains(event.target)) {
+      if (
+        searchBoxRef.current &&
+        !searchBoxRef.current.contains(event.target)
+      ) {
         setSearchResults([]);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSearch = async (event) => {
-    const term = event.target.value;
+  const handleSearch = debounce(async (term) => {
     setSearchTerm(term);
 
     if (term.length > 0) {
       try {
-        const response = await fetch(`https://backenddent.onrender.com/api/tratamientos/buscar?search=${term}`);
+        const response = await fetch(
+          `https://backenddent.onrender.com/api/tratamientos/buscar?search=${term}`
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
         const results = await response.json();
         const filteredResults = results.filter((result) =>
           new RegExp(term, "i").test(result.nombre)
@@ -63,16 +72,19 @@ const NavbarPublico = () => {
         setSearchResults(filteredResults);
       } catch (error) {
         console.error("Error en la búsqueda:", error);
+        setSearchResults([]);
       }
     } else {
       setSearchResults([]);
     }
+  }, 300);
+
+  const handleInputChange = (event) => {
+    handleSearch(event.target.value);
   };
 
   const theme = createTheme({
-    typography: {
-      fontFamily: "Poppins, Arial, sans-serif",
-    },
+    typography: { fontFamily: "Poppins, Arial, sans-serif" },
     palette: {
       primary: { main: "#0077b6" },
       secondary: { main: "#80deea" },
@@ -88,7 +100,11 @@ const NavbarPublico = () => {
         <Typography
           key={index}
           component="span"
-          sx={{ fontWeight: "bold", textDecoration: "underline", color: "#d32f2f" }}
+          sx={{
+            fontWeight: "bold",
+            textDecoration: "underline",
+            color: "#d32f2f",
+          }}
         >
           {part}
         </Typography>
@@ -102,25 +118,21 @@ const NavbarPublico = () => {
     <ThemeProvider theme={theme}>
       <AppBar
         sx={{
-          height: "80px", // Altura fija del Navbar
+          height: "80px",
           background: "linear-gradient(90deg, #003366, #0077b6)",
-          position: "static", // Desplazamiento natural
+          position: "fixed", // Restaurar comportamiento de la primera versión
           width: "100%",
           zIndex: 10,
           boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",
-          margin: 0, // Sin márgenes alrededor del AppBar
-          padding: 0, // Sin relleno externo
         }}
       >
         <Toolbar
           sx={{
-            height: "80px", // Igualamos la altura al AppBar
-            minHeight: "80px !important", // Forzamos la altura mínima para evitar valores predeterminados de MUI
+            height: "80px",
+            minHeight: "80px !important",
             display: "flex",
             alignItems: "center",
-            paddingX: 2,
-            paddingY: 0, // Sin relleno vertical
-            margin: 0, // Sin márgenes internos
+            px: 2,
           }}
         >
           <IconButton
@@ -129,57 +141,71 @@ const NavbarPublico = () => {
             onClick={toggleDrawer(true)}
             sx={{
               display: { xs: "block", md: "none" },
-              "&:hover": { transform: "rotate(180deg)", transition: "transform 0.3s" },
-              margin: 0, // Sin márgenes en el botón
+              "&:hover": {
+                transform: "rotate(180deg)",
+                transition: "transform 0.3s",
+              },
             }}
             aria-label="Abrir menú lateral"
           >
             <MenuIcon />
           </IconButton>
 
-          <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center", margin: 0 }}>
-            <img
-              src={logo}
-              alt="Consultorio Dental"
-              style={{
-                height: "60px",
-                width: "auto",
-                marginRight: "12px",
-                marginTop: 0,
-                marginBottom: 0,
-                borderRadius: "50%",
-                transition: "transform 0.3s",
-              }}
-            />
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: "bold",
-                color: "#ffffff",
-                letterSpacing: "0.5px",
-                textShadow: "1px 1px 2px rgba(0, 0, 0, 0.2)",
-                margin: 0, // Sin márgenes en el texto
-              }}
-            >
-              Consultorio Dental
-            </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              flexGrow: 1,
+              gap: 2,
+            }}
+          >
             <Box
               sx={{
-                marginLeft: "16px",
+                display: { xs: "none", md: "flex" },
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <img
+                src={logo}
+                alt="Consultorio Dental"
+                style={{
+                  height: "60px",
+                  width: "auto",
+                  borderRadius: "50%",
+                }}
+              />
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: "bold",
+                  color: "#ffffff",
+                  letterSpacing: "0.5px",
+                  textShadow: "1px 1px 2px rgba(0, 0, 0, 0.2)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Consultorio Dental
+              </Typography>
+            </Box>
+
+            <Box
+              ref={searchBoxRef}
+              sx={{
                 flexGrow: 1,
-                maxWidth: "400px",
+                maxWidth: { xs: "90%", sm: "400px" },
                 position: "relative",
+                marginLeft: { xs: 0, md: "16px" },
                 marginTop: 0,
                 marginBottom: 0,
               }}
-              ref={searchBoxRef}
             >
               <TextField
                 fullWidth
                 variant="outlined"
                 placeholder="Buscar servicios..."
                 value={searchTerm}
-                onChange={handleSearch}
+                onChange={handleInputChange}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -193,13 +219,16 @@ const NavbarPublico = () => {
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": { borderColor: "#0077b6" },
                     "&:hover fieldset": { borderColor: "#005f8a" },
-                    "&.Mui-focused fieldset": { borderColor: "#0077b6", borderWidth: "2px" },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#0077b6",
+                      borderWidth: "2px",
+                    },
                   },
                   transition: "all 0.3s",
-                  "&:hover": { boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)" },
-                  margin: 0, // Sin márgenes en el TextField
+                  "&:hover": { boxShadow: "0 2px 10px rgba(0,0,0,0.1)" },
                 }}
               />
+
               {searchResults.length > 0 && (
                 <Box
                   sx={{
@@ -224,13 +253,18 @@ const NavbarPublico = () => {
                           href={`/catalogo-servicios/${result.hash}`}
                           sx={{
                             color: "#0077b6",
-                            "&:hover": { backgroundColor: "#0077b6", color: "#ffffff" },
+                            "&:hover": {
+                              backgroundColor: "#0077b6",
+                              color: "#ffffff",
+                            },
                             transition: "background-color 0.2s",
                           }}
                         >
                           <ListItemText
                             primary={highlightMatch(result.nombre, searchTerm)}
-                            sx={{ "& .MuiListItemText-primary": { fontWeight: "bold" } }}
+                            sx={{
+                              "& .MuiListItemText-primary": { fontWeight: "bold" },
+                            }}
                           />
                         </ListItemButton>
                       </ListItem>
@@ -242,7 +276,11 @@ const NavbarPublico = () => {
           </Box>
 
           <Box
-            sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 1, margin: 0 }}
+            sx={{
+              display: { xs: "none", md: "flex" },
+              alignItems: "center",
+              gap: 1,
+            }}
           >
             <Tooltip title="Inicio" placement="top" arrow>
               <IconButton
@@ -252,16 +290,15 @@ const NavbarPublico = () => {
                   backgroundColor: "rgba(255, 255, 255, 0.2)",
                   borderRadius: "50%",
                   p: 1.5,
-                  "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.4)", transform: "scale(1.1)" },
-                  transition: "all 0.3s",
-                  margin: 0, // Sin márgenes en el botón
+                  "&:hover": {
+                    backgroundColor: "rgba(255,255,255,0.4)",
+                    transform: "scale(1.1)",
+                  },
                 }}
-                aria-label="Inicio"
               >
                 <HomeIcon />
               </IconButton>
             </Tooltip>
-
             <Tooltip title="Servicios" placement="top" arrow>
               <IconButton
                 href="/catalogo-servicios"
@@ -270,16 +307,15 @@ const NavbarPublico = () => {
                   backgroundColor: "rgba(255, 255, 255, 0.2)",
                   borderRadius: "50%",
                   p: 1.5,
-                  "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.4)", transform: "scale(1.1)" },
-                  transition: "all 0.3s",
-                  margin: 0, // Sin márgenes en el botón
+                  "&:hover": {
+                    backgroundColor: "rgba(255,255,255,0.4)",
+                    transform: "scale(1.1)",
+                  },
                 }}
-                aria-label="Servicios"
               >
                 <ListAltIcon />
               </IconButton>
             </Tooltip>
-
             <Tooltip title="Iniciar Sesión" placement="top" arrow>
               <IconButton
                 href="/login"
@@ -288,11 +324,11 @@ const NavbarPublico = () => {
                   backgroundColor: "rgba(255, 255, 255, 0.2)",
                   borderRadius: "50%",
                   p: 1.5,
-                  "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.4)", transform: "scale(1.1)" },
-                  transition: "all 0.3s",
-                  margin: 0, // Sin márgenes en el botón
+                  "&:hover": {
+                    backgroundColor: "rgba(255,255,255,0.4)",
+                    transform: "scale(1.1)",
+                  },
                 }}
-                aria-label="Iniciar Sesión"
               >
                 <LoginIcon />
               </IconButton>
@@ -301,11 +337,16 @@ const NavbarPublico = () => {
         </Toolbar>
       </AppBar>
 
-      <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
+      <Drawer
+        anchor="left"
+        open={drawerOpen}
+        onClose={toggleDrawer(false)}
+        PaperProps={{
+          sx: { width: 250, backgroundColor: "#e0f7fa" },
+        }}
+      >
         <Box
           sx={{
-            width: 250,
-            backgroundColor: "#e0f7fa",
             height: "100%",
             borderRight: "1px solid rgba(0, 0, 0, 0.1)",
           }}
@@ -331,16 +372,25 @@ const NavbarPublico = () => {
                 <HomeIcon sx={{ marginRight: "10px", color: "#01579b" }} />
                 <ListItemText
                   primary="Inicio"
-                  sx={{ color: "#01579b", "& .MuiListItemText-primary": { fontWeight: "bold" } }}
+                  sx={{
+                    color: "#01579b",
+                    "& .MuiListItemText-primary": { fontWeight: "bold" },
+                  }}
                 />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding>
-              <ListItemButton href="/catalogo-servicios" onClick={toggleDrawer(false)}>
+              <ListItemButton
+                href="/catalogo-servicios"
+                onClick={toggleDrawer(false)}
+              >
                 <ListAltIcon sx={{ marginRight: "10px", color: "#01579b" }} />
                 <ListItemText
                   primary="Catálogo de Servicios"
-                  sx={{ color: "#01579b", "& .MuiListItemText-primary": { fontWeight: "bold" } }}
+                  sx={{
+                    color: "#01579b",
+                    "& .MuiListItemText-primary": { fontWeight: "bold" },
+                  }}
                 />
               </ListItemButton>
             </ListItem>
@@ -348,8 +398,11 @@ const NavbarPublico = () => {
               <ListItemButton href="/login" onClick={toggleDrawer(false)}>
                 <LoginIcon sx={{ marginRight: "10px", color: "#01579b" }} />
                 <ListItemText
-                  primary="Login"
-                  sx={{ color: "#01579b", "& .MuiListItemText-primary": { fontWeight: "bold" } }}
+                  primary="Iniciar Sesión"
+                  sx={{
+                    color: "#01579b",
+                    "& .MuiListItemText-primary": { fontWeight: "bold" },
+                  }}
                 />
               </ListItemButton>
             </ListItem>

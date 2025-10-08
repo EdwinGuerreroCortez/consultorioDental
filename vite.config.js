@@ -31,29 +31,39 @@ export default defineConfig({
         ]
       },
       workbox: {
-        maximumFileSizeToCacheInBytes: 4000000, // 🔹 Aumenta el límite a 4MB
+        // Aumenta el límite de tamaño cacheable (4 MB)
+        maximumFileSizeToCacheInBytes: 4000000,
+
+        // 🔹 Define estrategias separadas para frontend y backend
         runtimeCaching: [
+          // 1️⃣ Cache del frontend (HTML, JS, CSS, imágenes)
           {
-            urlPattern: ({ url }) => url.pathname.startsWith('/'),
+            urlPattern: ({ request }) =>
+              ['document', 'script', 'style', 'image', 'font'].includes(request.destination),
             handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'app-cache',
+              cacheName: 'app-shell',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 7
+                maxAgeSeconds: 60 * 60 * 24 * 7 // 7 días
               }
             }
           },
+
+          // 2️⃣ API del backend en Render → SIEMPRE datos actualizados
           {
-            urlPattern: /^http:\/\/localhost:4000\/api\/.*/,
+            urlPattern: /^https:\/\/backenddent\.onrender\.com\/api\/.*/, // ⚠️ cambia a tu dominio real de Render
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
+              networkTimeoutSeconds: 3, // espera 3 seg a la red antes de usar cache
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 3
+                maxAgeSeconds: 60 * 60 * 24 // 1 día
               },
-              networkTimeoutSeconds: 5
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
             }
           }
         ]
