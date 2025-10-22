@@ -77,7 +77,7 @@ const NavbarPublico = () => {
     } else {
       setSearchResults([]);
     }
-  }, 300);
+  }, 100);
 
   const handleInputChange = (event) => {
     handleSearch(event.target.value);
