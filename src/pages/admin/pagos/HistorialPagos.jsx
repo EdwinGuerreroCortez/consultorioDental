@@ -66,7 +66,7 @@ const HistorialPagosDiseño = () => {
     const obtenerPagos = async () => {
       setLoading(true);
       try {
-        const res = await axios.get("https://backenddent.onrender.com/api/pagos/historial", {
+        const res = await axios.get("http://localhost:4000/api/pagos/historial", {
           params: { page: 1, limit: rowsPerPage },
         });
 
@@ -117,8 +117,8 @@ const HistorialPagosDiseño = () => {
   useEffect(() => {
     const updatedPagos = Array.isArray(pagos)
       ? pagos.filter((pago) =>
-          pago.nombre_paciente?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+        pago.nombre_paciente?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
       : [];
     setFilteredPagos(updatedPagos);
     setTotalPages(Math.ceil(updatedPagos.length / rowsPerPage));
@@ -458,14 +458,14 @@ const HistorialPagosDiseño = () => {
                 alerta.tipo === "success"
                   ? "#e8f5e9"
                   : alerta.tipo === "error"
-                  ? "#ffebee"
-                  : "#fff3e0",
+                    ? "#ffebee"
+                    : "#fff3e0",
               color:
                 alerta.tipo === "success"
                   ? "#4caf50"
                   : alerta.tipo === "error"
-                  ? "#f44336"
-                  : "#ff9800",
+                    ? "#f44336"
+                    : "#ff9800",
               fontFamily: "'Poppins', sans-serif",
               borderRadius: "8px",
             }}

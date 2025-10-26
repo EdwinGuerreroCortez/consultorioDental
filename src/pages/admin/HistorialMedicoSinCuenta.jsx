@@ -44,7 +44,7 @@ const HistorialMedicoSincuenta = ({ open, handleClose, paciente }) => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -65,7 +65,7 @@ const HistorialMedicoSincuenta = ({ open, handleClose, paciente }) => {
 
     try {
       const response = await fetch(
-        `https://backenddent.onrender.com/api/historial/usuario/sin-Plataforma/${paciente.id}`,
+        `http://localhost:4000/api/historial/usuario/sin-Plataforma/${paciente.id}`,
         {
           headers: {
             "X-XSRF-TOKEN": csrfToken,
@@ -177,7 +177,7 @@ const HistorialMedicoSincuenta = ({ open, handleClose, paciente }) => {
 
       // Paso 5: Enviar la solicitud al servidor
       const response = await fetch(
-        `https://backenddent.onrender.com/api/historial/usuario/sin-Plataforma/${paciente.id}`,
+        `http://localhost:4000/api/historial/usuario/sin-Plataforma/${paciente.id}`,
         {
           method: "POST",
           headers: {
@@ -560,8 +560,8 @@ const HistorialMedicoSincuenta = ({ open, handleClose, paciente }) => {
                         modoEdicion
                           ? bajoTratamiento
                           : historialSeleccionado?.bajo_tratamiento
-                          ? "Sí"
-                          : "No"
+                            ? "Sí"
+                            : "No"
                       }
                       onChange={(e) => setBajoTratamiento(e.target.value)}
                       label="Bajo Tratamiento"
@@ -745,14 +745,14 @@ const HistorialMedicoSincuenta = ({ open, handleClose, paciente }) => {
                 snackbarSeverity === "success"
                   ? "#e8f5e9"
                   : snackbarSeverity === "error"
-                  ? "#ffebee"
-                  : "#fff3e0",
+                    ? "#ffebee"
+                    : "#fff3e0",
               color:
                 snackbarSeverity === "success"
                   ? "#2e7d32"
                   : snackbarSeverity === "error"
-                  ? "#c62828"
-                  : "#f57f17",
+                    ? "#c62828"
+                    : "#f57f17",
               borderRadius: "10px",
               boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
               fontFamily: "'Poppins', sans-serif",

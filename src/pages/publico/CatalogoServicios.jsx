@@ -37,7 +37,7 @@ const CatalogoServicios = () => {
   useEffect(() => {
     const fetchTratamientos = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/tratamientos");
+        const response = await fetch("http://localhost:4000/api/tratamientos");
         const data = await response.json();
         const tratamientosActivos = data.filter((tratamiento) => tratamiento.estado === 1);
         setServicios(tratamientosActivos);

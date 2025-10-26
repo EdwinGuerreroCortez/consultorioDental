@@ -62,7 +62,7 @@ const PoliticasPrivacidad = () => {
   useEffect(() => {
     const obtenerPoliticas = async () => {
       try {
-        const res = await fetch("https://backenddent.onrender.com/api/politicas/listar", {
+        const res = await fetch("http://localhost:4000/api/politicas/listar", {
           credentials: "include",
         });
         if (!res.ok) throw new Error("Error al obtener políticas");
@@ -154,13 +154,13 @@ const PoliticasPrivacidad = () => {
                 <Typography variant="body2" color="text.secondary">
                   Para más información, contáctanos con el siguiente correo:{" "}
                   <Link
-                  href="https://mail.google.com/mail/?view=cm&fs=1&to=leninvelang120381@gmail.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  color="primary"
-                >
-                  leninvelang120381@gmail.com
-                </Link>
+                    href="https://mail.google.com/mail/?view=cm&fs=1&to=leninvelang120381@gmail.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    color="primary"
+                  >
+                    leninvelang120381@gmail.com
+                  </Link>
                 </Typography>
               </Box>
             </CardContent>

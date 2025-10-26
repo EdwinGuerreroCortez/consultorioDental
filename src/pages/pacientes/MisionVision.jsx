@@ -74,7 +74,7 @@ const MisionVision = () => {
   useEffect(() => {
     const obtenerDatos = async () => {
       try {
-        const respuesta = await fetch('https://backenddent.onrender.com/api/mision-vision/vigentes', {
+        const respuesta = await fetch('http://localhost:4000/api/mision-vision/vigentes', {
           credentials: 'include',
         });
         if (!respuesta.ok) throw new Error('Error al obtener misión y visión');
@@ -139,7 +139,7 @@ const MisionVision = () => {
 
   return (
     <ThemeProvider theme={theme}>
-     
+
 
       <Container maxWidth="md" sx={{ mb: 12 }}>
         <Stack spacing={6}>

@@ -30,6 +30,7 @@ import MisionVision from "./pages/pacientes/MisionVision";
 import HistorialPagosPaciente from "./pages/pacientes/HistorialPagosPaciente";
 import PagosExito from "./pages/pacientes/PagosExito";
 import PagosCancelado from "./pages/pacientes/PagosCancelado";
+import HistorialPuntos from "./pages/pacientes/HistorialPuntos";
 // Admin
 import LayoutAdmin from "./components/navs/admin/LayoutAdmin";
 import BienvenidaAdmin from "./pages/admin/BienvenidaAdmin";
@@ -82,7 +83,7 @@ const InactivityHandler = ({ children }) => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -142,7 +143,7 @@ const InactivityHandler = ({ children }) => {
     }
 
     try {
-      const response = await fetch("https://backenddent.onrender.com/api/usuarios/logout", {
+      const response = await fetch("http://localhost:4000/api/usuarios/logout", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -388,7 +389,7 @@ const App = () => {
                   </RutaProtegida>
                 }
               />
-                            <Route
+              <Route
                 path="/Historial-pagos"
                 element={
                   <RutaProtegida tiposPermitidos={['paciente']}>
@@ -400,7 +401,7 @@ const App = () => {
               />
 
               <Route
-                path="/pagos-exito" 
+                path="/pagos-exito"
                 element={
                   <RutaProtegida tiposPermitidos={['paciente']}>
                     <LayoutPaciente>
@@ -415,6 +416,17 @@ const App = () => {
                   <RutaProtegida tiposPermitidos={['paciente']}>
                     <LayoutPaciente>
                       <PagosCancelado />
+                    </LayoutPaciente>
+                  </RutaProtegida>
+                }
+              />
+
+              <Route
+                path="/historial-puntos"
+                element={
+                  <RutaProtegida tiposPermitidos={['paciente']}>
+                    <LayoutPaciente>
+                      <HistorialPuntos />
                     </LayoutPaciente>
                   </RutaProtegida>
                 }
@@ -580,7 +592,7 @@ const App = () => {
                   </RutaProtegida>
                 }
               />
-               <Route
+              <Route
                 path="/admin/pagos-historial"
                 element={
                   <RutaProtegida tiposPermitidos={['admin']}>

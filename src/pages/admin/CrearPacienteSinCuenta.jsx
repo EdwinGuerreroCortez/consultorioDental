@@ -78,7 +78,7 @@ const CrearPacienteSinCuenta = () => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -132,7 +132,7 @@ const CrearPacienteSinCuenta = () => {
         console.log("Datos completos que se envían al servidor:", datosPaciente);
 
         const response = await axios.post(
-          "https://backenddent.onrender.com/api/pacientes-sin-plataforma/registrar",
+          "http://localhost:4000/api/pacientes-sin-plataforma/registrar",
           datosPaciente,
           {
             headers: {
@@ -442,10 +442,10 @@ const CrearPacienteSinCuenta = () => {
                   mensaje.tipo === "success"
                     ? "#C8E6C9"
                     : mensaje.tipo === "error"
-                    ? "#FFCDD2"
-                    : mensaje.tipo === "warning"
-                    ? "#FFE082"
-                    : "#B3E5FC",
+                      ? "#FFCDD2"
+                      : mensaje.tipo === "warning"
+                        ? "#FFE082"
+                        : "#B3E5FC",
                 color: textColor,
                 fontFamily: "'Poppins', sans-serif",
                 borderRadius: "12px",

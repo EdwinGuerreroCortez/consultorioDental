@@ -17,6 +17,9 @@ import {
   Alert,
   Tooltip,
   Fade,
+  Chip,
+  CircularProgress,
+
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
@@ -36,6 +39,9 @@ import PaymentIcon from "@mui/icons-material/Payment";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import "@fontsource/poppins";
 import logo from "../../../assets/images/logo.png";
+import puntosImg from "../../../assets/images/puntos.png"; // Importar la imagen de puntos
+import { verificarAutenticacion } from "../../../utils/auth"; // Importar la función de autenticación
+import axios from "axios"; // Importar axios para la solicitud al endpoint
 
 const NavbarPaciente = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -46,28 +52,57 @@ const NavbarPaciente = () => {
   const [searchResults, setSearchResults] = useState([]);
   const searchBoxRef = useRef(null);
   const [alertaExito, setAlertaExito] = useState(false);
-  const [csrfToken, setCsrfToken] = useState(null); // Nuevo estado para el token CSRF
+  const [csrfToken, setCsrfToken] = useState(null);
+  const [puntos, setPuntos] = useState(null); // Estado para los puntos
+  const [usuarioId, setUsuarioId] = useState(null); // Estado para el usuarioId
+  const [errorPuntos, setErrorPuntos] = useState(false); // Estado para manejar errores
 
   // Temporizadores para retrasar el cierre de submenús
   const [servicesTimeout, setServicesTimeout] = useState(null);
   const [treatmentsTimeout, setTreatmentsTimeout] = useState(null);
   const [paymentsTimeout, setPaymentsTimeout] = useState(null);
 
-  // Obtener el token CSRF al montar el componente
+  // Obtener el token CSRF y el usuarioId al montar el componente
   useEffect(() => {
-    const obtenerTokenCSRF = async () => {
+    const obtenerUsuarioYToken = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        // Obtener el usuarioId
+        const usuario = await verificarAutenticacion();
+        if (usuario) {
+          setUsuarioId(usuario.id);
+        } else {
+          throw new Error("Sesión no válida");
+        }
+        console.log("Usuario ID:", usuario.id);
+        // Obtener el token CSRF
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
-        setCsrfToken(data.csrfToken); // Guardar el token en el estado
+        setCsrfToken(data.csrfToken);
       } catch (error) {
-        console.error("Error obteniendo el token CSRF:", error);
+        console.error("Error obteniendo usuario o token CSRF:", error);
       }
     };
-    obtenerTokenCSRF();
+    obtenerUsuarioYToken();
   }, []);
+
+  // Obtener los puntos del usuario
+  useEffect(() => {
+    if (!usuarioId) return;
+    const obtenerPuntos = async () => {
+      try {
+        const response = await axios.get(`http://localhost:4000/api/puntos/saldo/${usuarioId}`, {
+          credentials: "include",
+        });
+        setPuntos(response.data);
+      } catch (error) {
+        console.error("Error al obtener los puntos:", error);
+        setErrorPuntos(true);
+      }
+    };
+    obtenerPuntos();
+  }, [usuarioId]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -84,12 +119,12 @@ const NavbarPaciente = () => {
     setSearchTerm(term);
     if (term.length > 0) {
       try {
-        const response = await fetch(`https://backenddent.onrender.com/api/tratamientos/buscar?search=${term}`, {
+        const response = await fetch(`http://localhost:4000/api/tratamientos/buscar?search=${term}`, {
           credentials: "include",
         });
         const results = await response.json();
         const filteredResults = results.filter((result) => new RegExp(term, "i").test(result.nombre));
-        setSearchResults(filteredResults); // Usar filteredResults para reflejar el filtrado local
+        setSearchResults(filteredResults);
       } catch (error) {
         console.error("Error en la búsqueda:", error);
         setSearchResults([]);
@@ -106,7 +141,7 @@ const NavbarPaciente = () => {
     }
 
     try {
-      const response = await fetch("https://backenddent.onrender.com/api/usuarios/logout", {
+      const response = await fetch("http://localhost:4000/api/usuarios/logout", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -165,7 +200,6 @@ const NavbarPaciente = () => {
     );
   };
 
-  // Funciones mejoradas para manejar hover en submenús con transiciones suaves
   const handleSubMenuEnter = (menu) => {
     clearTimeout(servicesTimeout);
     clearTimeout(treatmentsTimeout);
@@ -190,14 +224,12 @@ const NavbarPaciente = () => {
     }
   };
 
-  // Funciones para manejar clics en el drawer
   const handleSubMenuToggle = (menu) => {
     if (menu === "services") setServicesOpen(!servicesOpen);
     if (menu === "treatments") setSubMenuOpen(!subMenuOpen);
     if (menu === "payments") setPaymentsOpen(!paymentsOpen);
   };
 
-  // Estilo mejorado para submenús con mayor contraste y visibilidad
   const submenuStyle = {
     position: "absolute",
     top: "100%",
@@ -339,6 +371,112 @@ const NavbarPaciente = () => {
               )}
             </Box>
           </Box>
+
+          {/* Mostrar puntos disponibles con la imagen */}
+          <Box sx={{ display: "flex", alignItems: "center", mr: 2 }}>
+            {puntos ? (
+              <Tooltip
+                title={`Ver historial de puntos (${puntos.puntos_disponibles})`}
+                placement="top"
+                arrow
+              >
+                <Box
+                  component="a"
+                  href="/historial-puntos"
+                  sx={{
+                    textDecoration: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    background: "rgba(255,255,255,0.18)",
+                    border: "1px solid rgba(255,255,255,0.4)",
+                    borderRadius: "999px",
+                    padding: "6px 12px 6px 8px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+                    backdropFilter: "blur(4px)",
+                    WebkitBackdropFilter: "blur(4px)",
+                    cursor: "pointer",
+                    transition: "all .25s",
+                    "&:hover": {
+                      transform: "translateY(-2px) scale(1.03)",
+                      boxShadow: "0 6px 16px rgba(0,0,0,0.3)",
+                    },
+                  }}
+                >
+                  {/* Icono / avatar de puntos */}
+                  <Box
+                    component="img"
+                    src={puntosImg}
+                    alt="Puntos"
+                    sx={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: "50%",
+                      backgroundColor: "#fff",
+                      border: "2px solid #0077b6",
+                      boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+                      objectFit: "cover",
+                    }}
+                  />
+
+                  {/* Cantidad de puntos */}
+                  <Box
+                    sx={{
+                      backgroundColor: "#ffffff",
+                      borderRadius: "14px",
+                      padding: "4px 10px",
+                      minWidth: "48px",
+                      textAlign: "center",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      lineHeight: 1,
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.15)",
+                      border: "1px solid rgba(0,0,0,0.05)",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        color: "#0077b6",
+                        fontWeight: 700,
+                        fontSize: "0.95rem",
+                        fontFamily: "Poppins, sans-serif",
+                      }}
+                    >
+                      {puntos.puntos_disponibles}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Tooltip>
+            ) : errorPuntos ? (
+              <Tooltip title="Error al cargar puntos" placement="top" arrow>
+                <Box
+                  sx={{
+                    backgroundColor: "rgba(255,0,0,0.15)",
+                    borderRadius: "999px",
+                    border: "1px solid rgba(255,255,255,0.5)",
+                    padding: "6px 12px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      color: "#fff",
+                      fontWeight: 600,
+                      fontSize: "0.8rem",
+                      whiteSpace: "nowrap",
+                      fontFamily: "Poppins, sans-serif",
+                    }}
+                  >
+                    Error puntos
+                  </Typography>
+                </Box>
+              </Tooltip>
+            ) : (
+              <CircularProgress size={20} sx={{ color: "#ffffff" }} />
+            )}
+          </Box>
+
 
           <Box sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 1 }}>
             <Tooltip title="Inicio" placement="top" arrow>
@@ -692,6 +830,25 @@ const NavbarPaciente = () => {
           </Typography>
           <Divider />
 
+          {/* Mostrar puntos en el Drawer */}
+          {puntos && (
+            <Box sx={{ padding: "16px", display: "flex", alignItems: "center", gap: 1 }}>
+              <img
+                src={puntosImg}
+                alt="Puntos"
+                style={{
+                  height: "30px",
+                  width: "auto",
+                  borderRadius: "50%",
+                }}
+              />
+              <Typography sx={{ color: "#01579b", fontWeight: "bold" }}>
+                {puntos.puntos_disponibles} Puntos
+              </Typography>
+            </Box>
+          )}
+          <Divider />
+
           <List>
             <ListItem disablePadding>
               <ListItemButton href="/paciente" onClick={toggleDrawer(false)}>
@@ -703,7 +860,6 @@ const NavbarPaciente = () => {
               </ListItemButton>
             </ListItem>
 
-            {/* Submenú de "Mis Citas" en el Drawer */}
             <ListItem disablePadding>
               <ListItemButton onClick={() => handleSubMenuToggle("services")}>
                 <CalendarMonthIcon sx={{ marginRight: "10px", color: "#01579b" }} />
@@ -773,7 +929,6 @@ const NavbarPaciente = () => {
               </List>
             </Collapse>
 
-            {/* Submenú de "Tratamientos" en el Drawer */}
             <ListItem disablePadding>
               <ListItemButton onClick={() => handleSubMenuToggle("treatments")}>
                 <ReceiptLongIcon sx={{ marginRight: "10px", color: "#01579b" }} />
@@ -843,7 +998,6 @@ const NavbarPaciente = () => {
               </List>
             </Collapse>
 
-            {/* Submenú de "Pagos" en el Drawer */}
             <ListItem disablePadding>
               <ListItemButton onClick={() => handleSubMenuToggle("payments")}>
                 <AttachMoneyIcon sx={{ marginRight: "10px", color: "#01579b" }} />
@@ -946,7 +1100,6 @@ const NavbarPaciente = () => {
         </Box>
       </Drawer>
 
-      {/* Alerta de éxito */}
       <Snackbar
         open={alertaExito}
         autoHideDuration={2000}
