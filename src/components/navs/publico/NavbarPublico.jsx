@@ -23,7 +23,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import "@fontsource/poppins";
 import { debounce } from "lodash"; // Opcional: descomentar si usas lodash
-import logo from "../../../assets/images/logo.png";
+import logo from "../../../assets/images/Logo.png";
 
 const NavbarPublico = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
