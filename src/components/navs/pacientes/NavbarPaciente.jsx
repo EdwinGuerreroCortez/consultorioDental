@@ -36,6 +36,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import HistoryIcon from "@mui/icons-material/History";
 import PaymentIcon from "@mui/icons-material/Payment";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import "@fontsource/poppins";
 import logo from "../../../assets/images/logo.png";
@@ -765,6 +766,25 @@ const NavbarPaciente = () => {
                 aria-label="Servicios"
               >
                 <ListAltIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Mis Logros" placement="top" arrow>
+              <IconButton
+                href="/logros-paciente"
+                sx={{
+                  color: "#fff",
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  borderRadius: "50%",
+                  p: 1.5,
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.4)",
+                    transform: "scale(1.1)",
+                  },
+                  transition: "all 0.3s",
+                }}
+                aria-label="Mis Logros"
+              >
+                <EmojiEventsIcon />
               </IconButton>
             </Tooltip>
 

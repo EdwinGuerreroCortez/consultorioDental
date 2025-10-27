@@ -31,6 +31,7 @@ import HistorialPagosPaciente from "./pages/pacientes/HistorialPagosPaciente";
 import PagosExito from "./pages/pacientes/PagosExito";
 import PagosCancelado from "./pages/pacientes/PagosCancelado";
 import HistorialPuntos from "./pages/pacientes/HistorialPuntos";
+import LogrosPaciente from "./pages/pacientes/LogrosPaciente";
 // Admin
 import LayoutAdmin from "./components/navs/admin/LayoutAdmin";
 import BienvenidaAdmin from "./pages/admin/BienvenidaAdmin";
@@ -431,6 +432,17 @@ const App = () => {
                   </RutaProtegida>
                 }
               />
+              <Route
+                path="/logros-paciente"
+                element={
+                  <RutaProtegida tiposPermitidos={['paciente']}>
+                    <LayoutPaciente>
+                      <LogrosPaciente />
+                    </LayoutPaciente>
+                  </RutaProtegida>
+                }
+              />
+
               {/**************************************************** Rutas admin *******************************************************/}
               <Route
                 path="/admin"
