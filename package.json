@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "sonar": "sonar-scanner"
+    "sonar": "sonar-scanner",
+    "test": "jest"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
