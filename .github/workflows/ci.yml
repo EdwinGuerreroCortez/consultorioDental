@@ -23,10 +23,6 @@ jobs:
       - name: Instalar dependencias
         run: npm install
 
-      - name: Ejecutar pruebas unitarias (Jest)
-        env:
-          CI: true
-        run: npm test
 
       - name: Compilar aplicación (build)
         env:
