@@ -1,12 +1,27 @@
 import React from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 
-const Ubicacion = () => {
+const Ubicacion = ({ ubicacion, error }) => {
   // Detectar cuando el componente entra en vista
   const { ref, inView } = useInView({ triggerOnce: false, threshold: 0.2 });
+
+  // Coordenadas fijas de tu consultorio (fallback)
+  const LAT_FIJO = 21.1416355;
+  const LNG_FIJO = -98.4253395;
+
+  // Si hay ubicación del usuario, priorízala para el iframe
+  const lat = ubicacion?.latitud ?? LAT_FIJO;
+  const lng = ubicacion?.longitud ?? LNG_FIJO;
+
+  // URL dinámica para el iframe de Google Maps
+  // Nota: para usar *embed* con coordenadas dinámicas, el formato simple con q=lat,lng funciona bien.
+  const mapSrc = `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
+
+  // Link para abrir Google Maps en pestaña nueva (usa ubicación del usuario si existe)
+  const linkMaps = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 
   return (
     <motion.div
@@ -37,6 +52,29 @@ const Ubicacion = () => {
           </Typography>
         </motion.div>
 
+        {/* Mensajes de estado de geolocalización */}
+        <Box sx={{ mb: 2 }}>
+          {!ubicacion && !error && (
+            <Typography variant="body2" sx={{ color: "#e3f2fd" }}>
+              Solicitando permiso de ubicación…
+            </Typography>
+          )}
+          {ubicacion && (
+            <Typography variant="body2" sx={{ color: "#e3f2fd" }}>
+              Usando tu ubicación actual:{" "}
+              <strong>
+                {ubicacion.latitud.toFixed(4)}, {ubicacion.longitud.toFixed(4)}
+              </strong>{" "}
+              (±{Math.round(ubicacion.precision || 0)} m)
+            </Typography>
+          )}
+          {error && (
+            <Typography variant="body2" sx={{ color: "#ffebee" }}>
+              {error} — Mostrando ubicación del consultorio.
+            </Typography>
+          )}
+        </Box>
+
         <Box
           sx={{
             display: "flex",
@@ -62,14 +100,15 @@ const Ubicacion = () => {
                 borderRadius: "16px",
                 overflow: "hidden",
                 boxShadow: "0 6px 15px rgba(0, 0, 0, 0.15)",
+                backgroundColor: "#e0f2f1",
               }}
             >
               <iframe
                 title="Ubicación"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3754.884335732754!2d-98.4253395!3d21.1416355!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d726eb6d80e10d%3A0xb66064b6cb4b79a9!2sZacatecas%204%2C%20Centro%2C%2043000%20Huejutla%20de%20Reyes%2C%20Hgo.!5e0!3m2!1ses-419!2smx!4v1710974398765!5m2!1ses-419!2smx"
+                src={mapSrc}
                 width="100%"
                 height="100%"
-                style={{ border: "0" }}
+                style={{ border: 0 }}
                 allowFullScreen=""
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
@@ -92,30 +131,34 @@ const Ubicacion = () => {
             </Typography>
 
             <Typography variant="body1" sx={{ color: "#e3f2fd", marginBottom: "10px" }}>
-              Nos encontramos en una ubicación céntrica con fácil acceso.  
+              Nos encontramos en una ubicación céntrica con fácil acceso.
               Disponemos de estacionamiento y atención en horarios extendidos.
             </Typography>
 
             <Typography variant="body2" sx={{ color: "#b3e5fc" }}>
-              Si necesitas más información, haz clic en el enlace de abajo.
+              Si necesitas más información o rutas, abre el mapa.
             </Typography>
 
-            {/* Enlace a Google Maps */}
-            <Typography variant="body2" sx={{ marginTop: "15px" }}>
-              <a
-                href="https://www.google.com.mx/maps/place/Zacatecas+4,+Centro,+43000+Huejutla+de+Reyes,+Hgo./@21.1416355,-98.4253395,17z"
+            {/* Enlace / Botón a Google Maps (con la ubicación actual si está disponible) */}
+            <Box sx={{ mt: 2, display: "flex", gap: 1, alignItems: "center" }}>
+              <Button
+                component="a"
+                href={linkMaps}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  color: "#ffeb3b",
-                  textDecoration: "none",
-                  fontWeight: "bold",
-                  fontSize: "1.1rem",
-                }}
+                variant="contained"
+                color="warning"
+                startIcon={<LocationOnIcon />}
+                sx={{ fontWeight: "bold" }}
               >
-                📍 Ver en Google Maps
-              </a>
-            </Typography>
+                Ver en Google Maps
+              </Button>
+              <Typography variant="caption" sx={{ color: "#e3f2fd" }}>
+                {ubicacion
+                  ? "Usando tu ubicación actual."
+                  : "Mostrando la ubicación del consultorio."}
+              </Typography>
+            </Box>
           </motion.div>
         </Box>
       </Box>
