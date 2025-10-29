@@ -125,7 +125,7 @@ const CanjeosAdmin = () => {
     const axiosInstance = useMemo(
         () =>
             axios.create({
-                baseURL: "http://localhost:4000/api",
+                baseURL: "https://backenddent.onrender.com/api",
                 withCredentials: true,
             }),
         []
@@ -136,7 +136,7 @@ const CanjeosAdmin = () => {
         const obtenerTokenCSRF = async () => {
             try {
                 const response = await fetch(
-                    "http://localhost:4000/api/get-csrf-token",
+                    "https://backenddent.onrender.com/api/get-csrf-token",
                     { credentials: "include" }
                 );
                 const data = await response.json();

@@ -50,7 +50,7 @@ const Recompensas = () => {
     const axiosInstance = useMemo(
         () =>
             axios.create({
-                baseURL: "http://localhost:4000/api",
+                baseURL: "https://backenddent.onrender.com/api",
                 withCredentials: true,
             }),
         []
@@ -60,7 +60,7 @@ const Recompensas = () => {
     useEffect(() => {
         const obtenerTokenCSRF = async () => {
             try {
-                const resp = await fetch("http://localhost:4000/api/get-csrf-token", {
+                const resp = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
                     credentials: "include",
                 });
                 const data = await resp.json();

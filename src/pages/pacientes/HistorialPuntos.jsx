@@ -79,7 +79,7 @@ const HistorialPuntos = () => {
         const obtenerHistorial = async () => {
             try {
                 const { data } = await axios.get(
-                    `http://localhost:4000/api/puntos/historial/${usuarioId}`,
+                    `https://backenddent.onrender.com/api/puntos/historial/${usuarioId}`,
                     { withCredentials: true }
                 );
                 // Ordenar desc por fecha (por si backend no lo manda ya)

@@ -42,7 +42,7 @@ const Valores = () => {
 
   const obtenerToken = async () => {
     try {
-      const res = await fetch("http://localhost:4000/api/get-csrf-token", { credentials: "include" });
+      const res = await fetch("https://backenddent.onrender.com/api/get-csrf-token", { credentials: "include" });
       const data = await res.json();
       setCsrfToken(data.csrfToken);
     } catch {
@@ -52,7 +52,7 @@ const Valores = () => {
 
   const cargarValores = async () => {
     try {
-      const res = await fetch("http://localhost:4000/api/valores");
+      const res = await fetch("https://backenddent.onrender.com/api/valores");
       const data = await res.json();
       setValores(data);
     } catch {
@@ -72,7 +72,7 @@ const Valores = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:4000/api/valores", {
+      const res = await fetch("https://backenddent.onrender.com/api/valores", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -101,7 +101,7 @@ const Valores = () => {
 
   const guardarEdicion = async () => {
     try {
-      const res = await fetch(`http://localhost:4000/api/valores/${editandoId}`, {
+      const res = await fetch(`https://backenddent.onrender.com/api/valores/${editandoId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -125,7 +125,7 @@ const Valores = () => {
 
   const eliminarValor = async (id) => {
     try {
-      const res = await fetch(`http://localhost:4000/api/valores/${id}`, {
+      const res = await fetch(`https://backenddent.onrender.com/api/valores/${id}`, {
         method: "DELETE",
         headers: { "X-XSRF-TOKEN": csrfToken },
         credentials: "include",

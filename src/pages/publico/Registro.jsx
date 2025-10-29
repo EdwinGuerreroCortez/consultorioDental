@@ -71,7 +71,7 @@ const Registro = () => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -117,7 +117,7 @@ const Registro = () => {
         });
 
         const response = await axios.post(
-          "http://localhost:4000/api/usuarios/verificar",
+          "https://backenddent.onrender.com/api/usuarios/verificar",
           {
             email: formData.correo,
             codigo: formData.codigoVerificacion,
@@ -144,7 +144,7 @@ const Registro = () => {
     } else if (step === 1) {
       try {
         await axios.post(
-          "http://localhost:4000/api/usuarios/registrar",
+          "https://backenddent.onrender.com/api/usuarios/registrar",
           {
             nombre: formData.nombre,
             apellido_paterno: formData.apellidoPaterno,

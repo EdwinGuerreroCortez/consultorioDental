@@ -38,7 +38,7 @@ const HistorialProcesosTerminados = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:4000/api/tratamientos-pacientes/historial")
+      .get("https://backenddent.onrender.com/api/tratamientos-pacientes/historial")
       .then((response) => {
         setTratamientos(response.data);
       })

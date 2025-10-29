@@ -62,7 +62,7 @@ const ListaPacientes = () => {
   useEffect(() => {
     const obtenerCSRF = async () => {
       try {
-        const resp = await fetch("http://localhost:4000/api/get-csrf-token", {
+        const resp = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await resp.json();
@@ -84,7 +84,7 @@ const ListaPacientes = () => {
     const fetchPacientes = async () => {
       setLoading(true);
       try {
-        const response = await fetch("http://localhost:4000/api/usuarios/pacientes", {
+        const response = await fetch("https://backenddent.onrender.com/api/usuarios/pacientes", {
           credentials: "include",
         });
         const data = await response.json();
@@ -157,7 +157,7 @@ const ListaPacientes = () => {
 
     try {
       const resp = await fetch(
-        `http://localhost:4000/api/recompensas/mis-solicitudes/${paciente.id}`,
+        `https://backenddent.onrender.com/api/recompensas/mis-solicitudes/${paciente.id}`,
         {
           method: "GET",
           credentials: "include",
@@ -203,7 +203,7 @@ const ListaPacientes = () => {
 
     try {
       const resp = await fetch(
-        `http://localhost:4000/api/recompensas/entregar/${canjeId}`,
+        `https://backenddent.onrender.com/api/recompensas/entregar/${canjeId}`,
         {
           method: "PUT",
           credentials: "include",
@@ -224,7 +224,7 @@ const ListaPacientes = () => {
 
       // Refrescar solo si fue exitoso
       const refreshed = await fetch(
-        `http://localhost:4000/api/recompensas/mis-solicitudes/${pacienteSeleccionado.id}`,
+        `https://backenddent.onrender.com/api/recompensas/mis-solicitudes/${pacienteSeleccionado.id}`,
         {
           method: "GET",
           credentials: "include",

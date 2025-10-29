@@ -80,7 +80,7 @@ const NavbarPaciente = () => {
         }
         console.log("Usuario ID:", usuario.id);
         // Obtener el token CSRF
-        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -97,7 +97,7 @@ const NavbarPaciente = () => {
     if (!usuarioId) return;
     const obtenerPuntos = async () => {
       try {
-        const response = await axios.get(`http://localhost:4000/api/puntos/saldo/${usuarioId}`, {
+        const response = await axios.get(`https://backenddent.onrender.com/api/puntos/saldo/${usuarioId}`, {
           credentials: "include",
         });
         setPuntos(response.data);
@@ -124,7 +124,7 @@ const NavbarPaciente = () => {
     setSearchTerm(term);
     if (term.length > 0) {
       try {
-        const response = await fetch(`http://localhost:4000/api/tratamientos/buscar?search=${term}`, {
+        const response = await fetch(`https://backenddent.onrender.com/api/tratamientos/buscar?search=${term}`, {
           credentials: "include",
         });
         const results = await response.json();
@@ -146,7 +146,7 @@ const NavbarPaciente = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:4000/api/usuarios/logout", {
+      const response = await fetch("https://backenddent.onrender.com/api/usuarios/logout", {
         method: "POST",
         credentials: "include",
         headers: {

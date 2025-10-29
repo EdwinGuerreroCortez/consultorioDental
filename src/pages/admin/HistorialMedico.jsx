@@ -43,7 +43,7 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -63,7 +63,7 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
     if (!csrfToken) return;
 
     try {
-      const response = await fetch(`http://localhost:4000/api/historial/usuario/${paciente.id}`, {
+      const response = await fetch(`https://backenddent.onrender.com/api/historial/usuario/${paciente.id}`, {
         headers: {
           "X-XSRF-TOKEN": csrfToken,
         },
@@ -169,7 +169,7 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
       console.log("Datos completos que se envían al servidor:", historialData);
 
       // Paso 5: Enviar la solicitud al servidor
-      const response = await fetch(`http://localhost:4000/api/historial/usuario/${paciente.id}`, {
+      const response = await fetch(`https://backenddent.onrender.com/api/historial/usuario/${paciente.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

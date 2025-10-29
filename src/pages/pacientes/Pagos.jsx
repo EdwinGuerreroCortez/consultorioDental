@@ -61,7 +61,7 @@ const PagosPendientes = () => {
 
   // Crear instancia de Axios reutilizable
   const axiosInstance = useMemo(() => axios.create({
-    baseURL: 'http://localhost:4000/api',
+    baseURL: 'https://backenddent.onrender.com/api',
     withCredentials: true,
   }), []);
 
@@ -69,7 +69,7 @@ const PagosPendientes = () => {
   const obtenerCsrf = useCallback(async (reintentos = 3, delay = 1000) => {
     for (let intento = 1; intento <= reintentos; intento++) {
       try {
-        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
           credentials: "include",
         });
         if (!response.ok) {

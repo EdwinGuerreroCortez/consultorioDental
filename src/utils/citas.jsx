@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Configuración de Axios
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:4000/api",
+  baseURL: "https://backenddent.onrender.com/api",
   withCredentials: true,
 });
 

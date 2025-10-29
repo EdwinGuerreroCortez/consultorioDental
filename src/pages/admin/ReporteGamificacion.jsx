@@ -40,7 +40,7 @@ const ReporteGamificacionAlineado = () => {
         try {
             // 🔁 Endpoint correcto del backend que montaste en Express
             const response = await axios.get(
-                "http://localhost:4000/api/gamificacion/resumen"
+                "https://backenddent.onrender.com/api/gamificacion/resumen"
             );
 
             if (!response.data?.ok) throw new Error("Respuesta no válida");
