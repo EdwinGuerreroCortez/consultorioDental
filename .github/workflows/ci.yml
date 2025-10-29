@@ -46,5 +46,5 @@ jobs:
           local-dir: dist/
           # Carpeta remota en Hostinger donde apuntas el dominio
           server-dir: ${{ secrets.FTP_DIR }}/
-          # Para NO borrar tu .htaccess ni otros archivos que ya están ahí
+          # Para NO borrar tu .htaccess ni otros archivos que ya están ahi
           dangerous-clean-slate: false
