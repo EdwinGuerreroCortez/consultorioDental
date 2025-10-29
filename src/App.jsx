@@ -32,6 +32,8 @@ import PagosExito from "./pages/pacientes/PagosExito";
 import PagosCancelado from "./pages/pacientes/PagosCancelado";
 import HistorialPuntos from "./pages/pacientes/HistorialPuntos";
 import LogrosPaciente from "./pages/pacientes/LogrosPaciente";
+import Recompensas from "./pages/pacientes/Recompensas";
+import MisCupones from "./pages/pacientes/MiCupones";
 // Admin
 import LayoutAdmin from "./components/navs/admin/LayoutAdmin";
 import BienvenidaAdmin from "./pages/admin/BienvenidaAdmin";
@@ -55,6 +57,8 @@ import QuienesSomos from "./pages/admin/ConfGeneral/QuienesSomos";
 import Configuraciones from "./pages/admin/ConfGeneral/Configuraciones";
 import Prediccion from "./pages/admin/prediccion";
 import Reportes from "./pages/admin/Reportes";
+import Canjeos from "./pages/admin/Canjeos";
+import ReporteGamificacion from "./pages/admin/ReporteGamificacion";
 // Errores
 import Error404 from "./components/Errors/Error404";
 import Error400 from "./components/Errors/Error400";
@@ -442,6 +446,26 @@ const App = () => {
                   </RutaProtegida>
                 }
               />
+              <Route
+                path="/recompensas-paciente"
+                element={
+                  <RutaProtegida tiposPermitidos={['paciente']}>
+                    <LayoutPaciente>
+                      <Recompensas />
+                    </LayoutPaciente>
+                  </RutaProtegida>
+                }
+              />
+              <Route
+                path="/cupones-paciente"
+                element={
+                  <RutaProtegida tiposPermitidos={['paciente']}>
+                    <LayoutPaciente>
+                      <MisCupones />
+                    </LayoutPaciente>
+                  </RutaProtegida>
+                }
+              />
 
               {/**************************************************** Rutas admin *******************************************************/}
               <Route
@@ -660,6 +684,26 @@ const App = () => {
                   <RutaProtegida tiposPermitidos={['admin']}>
                     <LayoutAdmin title={"Reportes"}>
                       <Reportes />
+                    </LayoutAdmin>
+                  </RutaProtegida>
+                }
+              />
+              <Route
+                path="/admin/canjeos"
+                element={
+                  <RutaProtegida tiposPermitidos={['admin']}>
+                    <LayoutAdmin title={"Canjeos"}>
+                      <Canjeos />
+                    </LayoutAdmin>
+                  </RutaProtegida>
+                }
+              />
+              <Route
+                path="/admin/reporte"
+                element={
+                  <RutaProtegida tiposPermitidos={['admin']}>
+                    <LayoutAdmin title={"Reporte de Canjeos"}>
+                      <ReporteGamificacion />
                     </LayoutAdmin>
                   </RutaProtegida>
                 }

@@ -259,6 +259,15 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
         { text: "Reportes", href: "/admin/reportes" },
       ],
     },
+    {
+      text: "Canjeos",
+      //icono pero canjeos
+      icon: <LibraryBooksIcon />,
+      submenu: [
+        { text: "Reporte", href: "/admin/reporte" },
+        { text: "Registrar Canjeo Manual", href: "/admin/canjeos" },
+      ],
+    },
     { text: "Cerrar Sesión", icon: <LogoutIcon />, action: cerrarSesion },
   ];
 

@@ -26,11 +26,18 @@ import {
   TextField,
   Snackbar,
   Pagination,
+  InputAdornment,
 } from "@mui/material";
-import { Person, MonetizationOn, AccountBalance, Close } from "@mui/icons-material";
+import {
+  Person,
+  MonetizationOn,
+  AccountBalance,
+  Close,
+  Percent,
+} from "@mui/icons-material";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Función para formatear la fecha sin ajustar la zona horaria
+// Función para formatear fecha sin cambiar zona horaria
 const convertirFecha = (fechaISO) => {
   if (!fechaISO) return "Sin definir";
   const fecha = new Date(fechaISO);
@@ -54,18 +61,27 @@ const ListaPacientesTratamiento = () => {
   const [tratamientoSeleccionado, setTratamientoSeleccionado] = useState(null);
   const [loadingDetalle, setLoadingDetalle] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+
   const [citasSeleccionadas, setCitasSeleccionadas] = useState([]);
   const [metodoPago, setMetodoPago] = useState("");
+  const [descuentoPorc, setDescuentoPorc] = useState(0); // <<--- NUEVO
+
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("a-z");
   const [csrfToken, setCsrfToken] = useState(null);
-  const [alerta, setAlerta] = useState({ open: false, message: "", severity: "success" });
+  const [alerta, setAlerta] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
   const [currentPage, setCurrentPage] = useState(1);
   const pacientesPorPagina = 12;
 
-  // Fetch CSRF token
+  // CSRF
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
@@ -76,45 +92,60 @@ const ListaPacientesTratamiento = () => {
         setCsrfToken(data.csrfToken);
       } catch (error) {
         console.error("Error obteniendo el token CSRF:", error);
-        setAlerta({ open: true, message: "Error al obtener el token CSRF", severity: "error" });
+        setAlerta({
+          open: true,
+          message: "Error al obtener el token CSRF",
+          severity: "error",
+        });
       }
     };
     obtenerTokenCSRF();
   }, []);
 
-  // Fetch patients
+  // Pacientes
   useEffect(() => {
     const obtenerPacientes = async () => {
       if (!csrfToken) return;
       try {
-        const response = await axios.get("http://localhost:4000/api/pagos/pacientes-con-tratamiento", {
-          headers: { "X-XSRF-TOKEN": csrfToken },
-          withCredentials: true,
-        });
+        const response = await axios.get(
+          "http://localhost:4000/api/pagos/pacientes-con-tratamiento",
+          {
+            headers: { "X-XSRF-TOKEN": csrfToken },
+            withCredentials: true,
+          }
+        );
         setPacientes(response.data);
       } catch (error) {
         console.error("Error al obtener pacientes:", error);
-        setAlerta({ open: true, message: "Error al cargar los pacientes", severity: "error" });
+        setAlerta({
+          open: true,
+          message: "Error al cargar los pacientes",
+          severity: "error",
+        });
       }
     };
     obtenerPacientes();
   }, [csrfToken]);
 
-  // Filter and sort patients
+  // Filtro + orden
   const filteredAndSortedPacientes = pacientes
     .filter((paciente) =>
-      paciente.nombre_completo.toLowerCase().includes(searchTerm.toLowerCase())
+      paciente.nombre_completo
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
       const nameA = a.nombre_completo.toLowerCase();
       const nameB = b.nombre_completo.toLowerCase();
       return sortOrder === "a-z"
         ? nameA.localeCompare(nameB)
-        : nameB.localeCompare(nameA); // Corregido el error en el ordenamiento
+        : nameB.localeCompare(nameA);
     });
 
   // Paginación
-  const totalPaginas = Math.ceil(filteredAndSortedPacientes.length / pacientesPorPagina);
+  const totalPaginas = Math.ceil(
+    filteredAndSortedPacientes.length / pacientesPorPagina
+  );
   const pacientesPaginados = filteredAndSortedPacientes.slice(
     (currentPage - 1) * pacientesPorPagina,
     currentPage * pacientesPorPagina
@@ -124,12 +155,19 @@ const ListaPacientesTratamiento = () => {
     setLoadingDetalle(true);
     setCitasSeleccionadas([]);
     setMetodoPago("");
+    setDescuentoPorc(0); // reset descuento al abrir
     setPaymentStatus(null);
+
     try {
-      const res = await axios.get(`http://localhost:4000/api/tratamientos-pacientes/citas-por-tratamiento/${id}`, {
-        headers: { "X-XSRF-TOKEN": csrfToken },
-        withCredentials: true,
-      });
+      const res = await axios.get(
+        `http://localhost:4000/api/tratamientos-pacientes/citas-por-tratamiento/${id}`,
+        {
+          headers: { "X-XSRF-TOKEN": csrfToken },
+          withCredentials: true,
+        }
+      );
+
+      // ordenar citas por fecha asc
       const citasOrdenadas = res.data.citas
         ? [...res.data.citas].sort((a, b) => {
           if (!a.fecha_hora) return 1;
@@ -137,11 +175,16 @@ const ListaPacientesTratamiento = () => {
           return new Date(a.fecha_hora) - new Date(b.fecha_hora);
         })
         : [];
+
       setTratamientoSeleccionado({ ...res.data, citas: citasOrdenadas });
       setOpenDialog(true);
     } catch (error) {
       console.error("Error al obtener detalles del tratamiento:", error);
-      setAlerta({ open: true, message: "Error al cargar los detalles del tratamiento", severity: "error" });
+      setAlerta({
+        open: true,
+        message: "Error al cargar los detalles del tratamiento",
+        severity: "error",
+      });
     } finally {
       setLoadingDetalle(false);
     }
@@ -149,84 +192,151 @@ const ListaPacientesTratamiento = () => {
 
   const handleToggleCita = (id) => {
     setCitasSeleccionadas((prev) =>
-      prev.includes(id) ? prev.filter((cita) => cita !== id) : [...prev, id]
+      prev.includes(id)
+        ? prev.filter((cita) => cita !== id)
+        : [...prev, id]
     );
   };
 
-  const totalSeleccionado = tratamientoSeleccionado?.citas
+  // Subtotal bruto SIN descuento
+  const subtotalSeleccionado = tratamientoSeleccionado?.citas
     ?.filter((cita) => citasSeleccionadas.includes(cita.cita_id))
-    ?.reduce((acc, cita) => acc + parseFloat(cita.monto), 0)
-    ?.toFixed(2);
+    ?.reduce((acc, cita) => acc + parseFloat(cita.monto), 0) || 0;
+
+  // Validamos el porcentaje (0 a 100)
+  const porcValido =
+    isNaN(descuentoPorc) || descuentoPorc < 0
+      ? 0
+      : descuentoPorc > 100
+        ? 100
+        : descuentoPorc;
+
+  // Valor descuento en $
+  const descuentoCalculado = (subtotalSeleccionado * porcValido) / 100;
+
+  // Total final después del descuento
+  const totalConDescuento = (subtotalSeleccionado - descuentoCalculado)
+    .toFixed(2);
 
   const handlePagar = async () => {
-    if (citasSeleccionadas.length === 0 || !metodoPago || !csrfToken) {
-      setAlerta({ open: true, message: "Seleccione citas y método de pago", severity: "warning" });
+    if (
+      citasSeleccionadas.length === 0 ||
+      !metodoPago ||
+      !csrfToken
+    ) {
+      setAlerta({
+        open: true,
+        message: "Seleccione citas y método de pago",
+        severity: "warning",
+      });
       return;
     }
+
     setPaymentLoading(true);
+
     try {
+      // IDs de pago que quieres cerrar/pagar
       const pagosSeleccionados = tratamientoSeleccionado?.citas
         ?.filter((cita) => citasSeleccionadas.includes(cita.cita_id))
         ?.map((cita) => cita.pago_id);
 
-      // Fecha y hora local (zona México)
+      // Fecha/hora local formateada (zona MX)
       const ahora = new Date();
-      const fechaLocal = new Date(ahora.getTime() - ahora.getTimezoneOffset() * 60000)
+      const fechaLocal = new Date(
+        ahora.getTime() - ahora.getTimezoneOffset() * 60000
+      )
         .toISOString()
         .slice(0, 19)
         .replace("T", " ");
 
+      // ⬇⬇ ESTA ES LA DATA QUE LE MANDAS AL BACKEND ⬇⬇
       const paymentData = {
         ids: pagosSeleccionados,
         metodo: metodoPago,
-        fecha_pago: fechaLocal, // ← CORREGIDO
+        fecha_pago: fechaLocal,
+        descuento_porcentaje: porcValido,       // <<--- NUEVO
+        subtotal: subtotalSeleccionado,         // para referencia/auditoría
+        total_final: parseFloat(totalConDescuento), // lo que realmente pagó
       };
 
-      const response = await axios.put("http://localhost:4000/api/pagos/actualizar-pagos", paymentData, {
-        headers: {
-          "Content-Type": "application/json",
-          "X-XSRF-TOKEN": csrfToken,
-        },
-        withCredentials: true,
-      });
+      const response = await axios.put(
+        "http://localhost:4000/api/pagos/actualizar-pagos",
+        paymentData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "X-XSRF-TOKEN": csrfToken,
+          },
+          withCredentials: true,
+        }
+      );
 
       setPaymentStatus("success");
-      setAlerta({ open: true, message: "Pago registrado exitosamente", severity: "success" });
-
-      // Refrescar pacientes
-      const refreshResponse = await axios.get("http://localhost:4000/api/pagos/pacientes-con-tratamiento", {
-        headers: { "X-XSRF-TOKEN": csrfToken },
-        withCredentials: true,
+      setAlerta({
+        open: true,
+        message: "Pago registrado exitosamente",
+        severity: "success",
       });
+
+      // refrescar la lista de pacientes (para reflejar pagos liquidados)
+      const refreshResponse = await axios.get(
+        "http://localhost:4000/api/pagos/pacientes-con-tratamiento",
+        {
+          headers: { "X-XSRF-TOKEN": csrfToken },
+          withCredentials: true,
+        }
+      );
       setPacientes(refreshResponse.data);
 
+      // cerrar modal luego de un ratito
       setTimeout(() => {
         setOpenDialog(false);
         setPaymentStatus(null);
       }, 2000);
     } catch (error) {
-      console.error("Error al registrar el pago:", error.response ? error.response.data : error.message);
+      console.error(
+        "Error al registrar el pago:",
+        error.response ? error.response.data : error.message
+      );
       setPaymentStatus("error");
-      setAlerta({ open: true, message: "Error al procesar el pago", severity: "error" });
+      setAlerta({
+        open: true,
+        message: "Error al procesar el pago",
+        severity: "error",
+      });
     } finally {
       setPaymentLoading(false);
     }
   };
 
-
-  const cerrarAlerta = () => setAlerta({ ...alerta, open: false });
+  const cerrarAlerta = () =>
+    setAlerta({ ...alerta, open: false });
 
   return (
-    <Box sx={{ p: 3, fontFamily: "'Poppins', sans-serif", backgroundColor: "#f9fdfd" }}>
-      {/* Search and Sort Controls */}
-      <Box sx={{ mb: 3, display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
+    <Box
+      sx={{
+        p: 3,
+        fontFamily: "'Poppins', sans-serif",
+        backgroundColor: "#f9fdfd",
+      }}
+    >
+      {/* Buscador y orden */}
+      <Box
+        sx={{
+          mb: 3,
+          display: "flex",
+          gap: 2,
+          alignItems: "center",
+          flexWrap: "wrap",
+        }}
+      >
         <TextField
           label="Buscar paciente"
           variant="outlined"
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
-            setCurrentPage(1); // Resetear a la primera página al buscar
+            setCurrentPage(1);
           }}
           sx={{
             flex: 1,
@@ -251,8 +361,12 @@ const ListaPacientesTratamiento = () => {
             onChange={(e) => setSortOrder(e.target.value)}
             label="Ordenar"
             sx={{
-              "& .MuiOutlinedInput-notchedOutline": { borderColor: "#006d77" },
-              "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#005c66" },
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: "#006d77",
+              },
+              "&:hover .MuiOutlinedInput-notchedOutline": {
+                borderColor: "#005c66",
+              },
             }}
           >
             <MenuItem value="a-z">A-Z</MenuItem>
@@ -261,6 +375,7 @@ const ListaPacientesTratamiento = () => {
         </FormControl>
       </Box>
 
+      {/* Grid de pacientes */}
       {filteredAndSortedPacientes.length === 0 ? (
         <Box
           sx={{
@@ -276,7 +391,11 @@ const ListaPacientesTratamiento = () => {
         >
           <Typography
             variant="h6"
-            sx={{ color: "#03445e", fontWeight: 500, textAlign: "center" }}
+            sx={{
+              color: "#03445e",
+              fontWeight: 500,
+              textAlign: "center",
+            }}
           >
             No hay pacientes con tratamiento activo.
           </Typography>
@@ -285,20 +404,33 @@ const ListaPacientesTratamiento = () => {
         <>
           <Grid container spacing={3}>
             {pacientesPaginados.map((paciente, index) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={paciente.tratamiento_paciente_id}>
+              <Grid
+                item
+                xs={12}
+                sm={6}
+                md={4}
+                lg={3}
+                key={paciente.tratamiento_paciente_id}
+              >
                 <motion.div
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, ease: "easeOut", delay: index * 0.1 }}
+                  transition={{
+                    duration: 0.5,
+                    ease: "easeOut",
+                    delay: index * 0.1,
+                  }}
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => manejarClickPaciente(paciente.tratamiento_paciente_id)}
+                  onClick={() =>
+                    manejarClickPaciente(paciente.tratamiento_paciente_id)
+                  }
                   style={{ cursor: "pointer" }}
                 >
                   <Card
                     sx={{
                       borderRadius: 4,
-                      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                       p: 2,
                       background: "#ffffff",
                       border: "1px solid #e0f7fa",
@@ -319,16 +451,25 @@ const ListaPacientesTratamiento = () => {
                           mb: 2,
                         }}
                       >
-                        <Person sx={{ fontSize: 30, color: "#006d77" }} />
+                        <Person
+                          sx={{ fontSize: 30, color: "#006d77" }}
+                        />
                       </Avatar>
                       <Typography
                         variant="subtitle1"
-                        sx={{ fontWeight: "bold", color: "#006d77" }}
+                        sx={{
+                          fontWeight: "bold",
+                          color: "#006d77",
+                        }}
                       >
                         {paciente.nombre_completo}
                       </Typography>
-                      <Typography variant="body2" sx={{ color: "#78909c", mt: 0.5 }}>
-                        Tipo de paciente: <strong>{paciente.tipo_paciente}</strong>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "#78909c", mt: 0.5 }}
+                      >
+                        Tipo de paciente:{" "}
+                        <strong>{paciente.tipo_paciente}</strong>
                       </Typography>
                     </CardContent>
                   </Card>
@@ -336,7 +477,15 @@ const ListaPacientesTratamiento = () => {
               </Grid>
             ))}
           </Grid>
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+
+          {/* paginación */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              mt: 3,
+            }}
+          >
             <Pagination
               count={totalPaginas}
               page={currentPage}
@@ -356,6 +505,7 @@ const ListaPacientesTratamiento = () => {
         </>
       )}
 
+      {/* DIALOG DETALLE / COBRO */}
       <Dialog
         open={openDialog}
         onClose={() => setOpenDialog(false)}
@@ -390,9 +540,16 @@ const ListaPacientesTratamiento = () => {
             <Close />
           </IconButton>
         </DialogTitle>
+
         <DialogContent dividers sx={{ p: 3 }}>
           {loadingDetalle ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                py: 4,
+              }}
+            >
               <CircularProgress sx={{ color: "#006d77" }} />
             </Box>
           ) : tratamientoSeleccionado ? (
@@ -401,18 +558,36 @@ const ListaPacientesTratamiento = () => {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <Typography variant="h6" sx={{ color: "#006d77", mb: 2, fontWeight: 600 }}>
+              {/* Nombre del tratamiento */}
+              <Typography
+                variant="h6"
+                sx={{
+                  color: "#006d77",
+                  mb: 2,
+                  fontWeight: 600,
+                }}
+              >
                 {tratamientoSeleccionado.nombre_tratamiento}
               </Typography>
 
-              <List sx={{ maxHeight: 300, overflowY: "auto", mb: 3 }}>
+              {/* Lista de citas */}
+              <List
+                sx={{
+                  maxHeight: 300,
+                  overflowY: "auto",
+                  mb: 3,
+                }}
+              >
                 {tratamientoSeleccionado.citas.map((cita) => (
                   <React.Fragment key={cita.cita_id}>
                     <ListItem
                       alignItems="flex-start"
                       sx={{
-                        opacity: cita.estado_pago !== "pendiente" ? 0.5 : 1,
-                        bgcolor: citasSeleccionadas.includes(cita.cita_id)
+                        opacity:
+                          cita.estado_pago !== "pendiente" ? 0.5 : 1,
+                        bgcolor: citasSeleccionadas.includes(
+                          cita.cita_id
+                        )
                           ? "#e0f7fa"
                           : "transparent",
                         borderRadius: 2,
@@ -423,33 +598,52 @@ const ListaPacientesTratamiento = () => {
                       {cita.estado_pago === "pendiente" ? (
                         <Checkbox
                           edge="start"
-                          checked={citasSeleccionadas.includes(cita.cita_id)}
-                          onChange={() => handleToggleCita(cita.cita_id)}
+                          checked={citasSeleccionadas.includes(
+                            cita.cita_id
+                          )}
+                          onChange={() =>
+                            handleToggleCita(cita.cita_id)
+                          }
                           sx={{
                             color: "#006d77",
-                            "&.Mui-checked": { color: "#006d77" },
+                            "&.Mui-checked": {
+                              color: "#006d77",
+                            },
                           }}
-                          inputProps={{ "aria-label": `Seleccionar cita ${cita.cita_id}` }}
+                          inputProps={{
+                            "aria-label": `Seleccionar cita ${cita.cita_id}`,
+                          }}
                         />
                       ) : (
                         <Box sx={{ width: 40 }} />
                       )}
+
                       <ListItemText
                         primary={
-                          <Typography sx={{ fontWeight: "bold", color: "#03445e" }}>
-                            Fecha: {convertirFecha(cita.fecha_hora)}
+                          <Typography
+                            sx={{
+                              fontWeight: "bold",
+                              color: "#03445e",
+                            }}
+                          >
+                            Fecha:{" "}
+                            {convertirFecha(cita.fecha_hora)}
                           </Typography>
                         }
                         secondary={
                           <Box sx={{ color: "#555", mt: 1 }}>
                             <Typography variant="body2">
-                              <strong>Monto:</strong> ${cita.monto}
+                              <strong>Monto:</strong> $
+                              {cita.monto}
                             </Typography>
                             <Typography variant="body2">
-                              <strong>Estado:</strong> {cita.estado_pago}
+                              <strong>Estado:</strong>{" "}
+                              {cita.estado_pago}
                             </Typography>
                             <Typography variant="body2">
-                              <strong>Comentario:</strong> {cita.comentario || "Sin comentarios"}
+                              <strong>Comentario:</strong>{" "}
+                              {cita.comentario ||
+                                "Sin comentarios"}
                             </Typography>
                           </Box>
                         }
@@ -460,57 +654,194 @@ const ListaPacientesTratamiento = () => {
                 ))}
               </List>
 
-              <Box sx={{ bgcolor: "#f5f9fa", p: 2, borderRadius: 2, mb: 3 }}>
-                <Typography variant="subtitle1" sx={{ color: "#006d77", fontWeight: 600, mb: 1 }}>
-                  Resumen del Pago
+              {/* === DESCUENTO Y RESUMEN === */}
+              <Box
+                sx={{
+                  bgcolor: "#f5f9fa",
+                  p: 2,
+                  borderRadius: 2,
+                  mb: 3,
+                }}
+              >
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    color: "#006d77",
+                    fontWeight: 600,
+                    mb: 1,
+                  }}
+                >
+                  Descuentos y resumen
                 </Typography>
-                <Typography variant="body2" sx={{ color: "#555" }}>
-                  Citas seleccionadas: {citasSeleccionadas.length}
+
+                {/* Subtotal */}
+                <Typography
+                  variant="body2"
+                  sx={{ color: "#555" }}
+                >
+                  Subtotal seleccionado: $
+                  {subtotalSeleccionado.toFixed(2)}
                 </Typography>
-                <Typography variant="body2" sx={{ color: "#555", mb: 1 }}>
-                  Método de pago: {metodoPago || "No seleccionado"}
+
+                {/* Campo de descuento en % */}
+                <TextField
+                  label="Descuento (%)"
+                  type="number"
+                  value={descuentoPorc}
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value);
+                    setDescuentoPorc(
+                      isNaN(v) ? 0 : v
+                    );
+                  }}
+                  InputProps={{
+                    inputProps: {
+                      min: 0,
+                      max: 100,
+                      step: "0.5",
+                    },
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Percent
+                          sx={{ color: "#006d77" }}
+                        />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    mt: 2,
+                    mb: 1,
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      "& fieldset": {
+                        borderColor: "#006d77",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#005c66",
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      color: "#006d77",
+                      "&.Mui-focused": {
+                        color: "#006d77",
+                      },
+                    },
+                  }}
+                />
+
+                {/* Descuento calculado */}
+                <Typography
+                  variant="body2"
+                  sx={{ color: "#555" }}
+                >
+                  Descuento aplicado: -$
+                  {descuentoCalculado.toFixed(2)} (
+                  {porcValido}%)
                 </Typography>
-                <Typography variant="h6" sx={{ color: "#006d77", fontWeight: "bold" }}>
-                  Total: ${totalSeleccionado || "0.00"}
+
+                {/* Método de pago */}
+                <FormControl fullWidth sx={{ mt: 2 }}>
+                  <InputLabel
+                    sx={{ color: "#006d77" }}
+                  >
+                    Método de pago
+                  </InputLabel>
+                  <Select
+                    value={metodoPago}
+                    onChange={(e) =>
+                      setMetodoPago(e.target.value)
+                    }
+                    label="Método de pago"
+                    sx={{
+                      "& .MuiOutlinedInput-notchedOutline":
+                      {
+                        borderColor:
+                          "#006d77",
+                      },
+                      "&:hover .MuiOutlinedInput-notchedOutline":
+                      {
+                        borderColor:
+                          "#005c66",
+                      },
+                    }}
+                  >
+                    <MenuItem value="efectivo">
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                        }}
+                      >
+                        <MonetizationOn
+                          sx={{
+                            color: "#006d77",
+                          }}
+                        />
+                        Efectivo
+                      </Box>
+                    </MenuItem>
+                    <MenuItem value="transferencia">
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                        }}
+                      >
+                        <AccountBalance
+                          sx={{
+                            color: "#006d77",
+                          }}
+                        />
+                        Transferencia
+                      </Box>
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+
+                {/* Total final */}
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: "#006d77",
+                    fontWeight: "bold",
+                    mt: 2,
+                  }}
+                >
+                  Total a pagar: $
+                  {totalConDescuento}
                 </Typography>
               </Box>
 
-              <FormControl fullWidth sx={{ mb: 3 }}>
-                <InputLabel sx={{ color: "#006d77" }}>Método de pago</InputLabel>
-                <Select
-                  value={metodoPago}
-                  onChange={(e) => setMetodoPago(e.target.value)}
-                  label="Método de pago"
-                  sx={{
-                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "#006d77" },
-                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#005c66" },
-                  }}
-                >
-                  <MenuItem value="efectivo">
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <MonetizationOn sx={{ color: "#006d77" }} />
-                      Efectivo
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="transferencia">
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <AccountBalance sx={{ color: "#006d77" }} />
-                      Transferencia
-                    </Box>
-                  </MenuItem>
-                </Select>
-              </FormControl>
-
+              {/* Mensaje de estado pago */}
               <AnimatePresence>
                 {paymentStatus && (
                   <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.3 }}
+                    initial={{
+                      opacity: 0,
+                      y: 10,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      y: 10,
+                    }}
+                    transition={{
+                      duration: 0.3,
+                    }}
                   >
-                    <Alert severity={paymentStatus} sx={{ mb: 2 }}>
-                      {paymentStatus === "success"
+                    <Alert
+                      severity={
+                        paymentStatus
+                      }
+                      sx={{ mb: 2 }}
+                    >
+                      {paymentStatus ===
+                        "success"
                         ? "Pago registrado exitosamente."
                         : "Hubo un error al procesar el pago."}
                     </Alert>
@@ -518,25 +849,49 @@ const ListaPacientesTratamiento = () => {
                 )}
               </AnimatePresence>
 
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              {/* Botón confirmar pago */}
+              <motion.div
+                whileHover={{
+                  scale: 1.02,
+                }}
+                whileTap={{
+                  scale: 0.98,
+                }}
+              >
                 <Button
                   variant="contained"
                   fullWidth
                   onClick={handlePagar}
-                  disabled={citasSeleccionadas.length === 0 || !metodoPago || paymentLoading}
+                  disabled={
+                    citasSeleccionadas.length ===
+                    0 ||
+                    !metodoPago ||
+                    paymentLoading
+                  }
                   sx={{
                     bgcolor: "#006d77",
                     color: "#fff",
-                    ":hover": { bgcolor: "#005c66" },
-                    ":disabled": { bgcolor: "#b0bec5", cursor: "not-allowed" },
+                    ":hover": {
+                      bgcolor: "#005c66",
+                    },
+                    ":disabled": {
+                      bgcolor:
+                        "#b0bec5",
+                      cursor:
+                        "not-allowed",
+                    },
                     borderRadius: 2,
                     py: 1.5,
                     fontWeight: "bold",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                    boxShadow:
+                      "0 2px 8px rgba(0,0,0,0.2)",
                   }}
                 >
                   {paymentLoading ? (
-                    <CircularProgress size={24} sx={{ color: "#fff" }} />
+                    <CircularProgress
+                      size={24}
+                      sx={{ color: "#fff" }}
+                    />
                   ) : (
                     "Confirmar pago"
                   )}
@@ -544,18 +899,28 @@ const ListaPacientesTratamiento = () => {
               </motion.div>
             </motion.div>
           ) : (
-            <Typography>No se pudo cargar el tratamiento.</Typography>
+            <Typography>
+              No se pudo cargar el tratamiento.
+            </Typography>
           )}
         </DialogContent>
       </Dialog>
 
+      {/* Snackbar global */}
       <Snackbar
         open={alerta.open}
         autoHideDuration={6000}
         onClose={cerrarAlerta}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
       >
-        <Alert onClose={cerrarAlerta} severity={alerta.severity} sx={{ width: "100%" }}>
+        <Alert
+          onClose={cerrarAlerta}
+          severity={alerta.severity}
+          sx={{ width: "100%" }}
+        >
           {alerta.message}
         </Alert>
       </Snackbar>

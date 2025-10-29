@@ -36,7 +36,9 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import HistoryIcon from "@mui/icons-material/History";
 import PaymentIcon from "@mui/icons-material/Payment";
+import RedeemIcon from "@mui/icons-material/Redeem";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import "@fontsource/poppins";
 import logo from "../../../assets/images/logo.png";
@@ -49,6 +51,7 @@ const NavbarPaciente = () => {
   const [servicesOpen, setServicesOpen] = useState(false);
   const [subMenuOpen, setSubMenuOpen] = useState(false);
   const [paymentsOpen, setPaymentsOpen] = useState(false);
+  const [recompensasOpen, setRecompensasOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const searchBoxRef = useRef(null);
@@ -62,6 +65,7 @@ const NavbarPaciente = () => {
   const [servicesTimeout, setServicesTimeout] = useState(null);
   const [treatmentsTimeout, setTreatmentsTimeout] = useState(null);
   const [paymentsTimeout, setPaymentsTimeout] = useState(null);
+  const [recompensasTimeout, setRecompensasTimeout] = useState(null);
 
   // Obtener el token CSRF y el usuarioId al montar el componente
   useEffect(() => {
@@ -205,9 +209,11 @@ const NavbarPaciente = () => {
     clearTimeout(servicesTimeout);
     clearTimeout(treatmentsTimeout);
     clearTimeout(paymentsTimeout);
+    clearTimeout(recompensasTimeout);
     setServicesOpen(menu === "services");
     setSubMenuOpen(menu === "treatments");
     setPaymentsOpen(menu === "payments");
+    setRecompensasOpen(menu === "recompensas");
   };
 
   const handleSubMenuLeave = (menu) => {
@@ -223,12 +229,17 @@ const NavbarPaciente = () => {
       const timeout = setTimeout(() => setPaymentsOpen(false), 300);
       setPaymentsTimeout(timeout);
     }
+    if (menu === "recompensas") {
+      const timeout = setTimeout(() => setRecompensasOpen(false), 300);
+      setRecompensasTimeout(timeout);
+    }
   };
 
   const handleSubMenuToggle = (menu) => {
     if (menu === "services") setServicesOpen(!servicesOpen);
     if (menu === "treatments") setSubMenuOpen(!subMenuOpen);
     if (menu === "payments") setPaymentsOpen(!paymentsOpen);
+    if (menu === "recompensas") setRecompensasOpen(!recompensasOpen);
   };
 
   const submenuStyle = {
@@ -787,7 +798,90 @@ const NavbarPaciente = () => {
                 <EmojiEventsIcon />
               </IconButton>
             </Tooltip>
-
+            {/* Submenú de "Recompensas" */}
+            <Box
+              sx={{ position: "relative" }}
+              onMouseEnter={() => handleSubMenuEnter("recompensas")}
+              onMouseLeave={() => handleSubMenuLeave("recompensas")}
+            >
+              <Tooltip title="Recompensas" placement="top" arrow>
+                <IconButton
+                  sx={{
+                    color: "#fff",
+                    backgroundColor: "rgba(255, 255, 255, 0.2)",
+                    borderRadius: "50%",
+                    p: 1.5,
+                    "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.4)", transform: "scale(1.1)" },
+                    transition: "all 0.3s",
+                  }}
+                  aria-label="Recompensas"
+                >
+                  <RedeemIcon />
+                </IconButton>
+              </Tooltip>
+              <Fade in={recompensasOpen} timeout={250}>
+                <Box
+                  sx={{
+                    ...submenuStyle,
+                    opacity: recompensasOpen ? 1 : 0,
+                    transform: recompensasOpen ? "translateY(5px)" : "translateY(-5px)",
+                  }}
+                >
+                  <List>
+                    <ListItem disablePadding>
+                      <ListItemButton
+                        href="/recompensas-paciente"
+                        sx={{
+                          padding: "12px 20px",
+                          "&:hover": {
+                            backgroundColor: "#0077b6",
+                            color: "#ffffff",
+                          },
+                          transition: "background-color 0.2s ease",
+                        }}
+                      >
+                        <RedeemIcon sx={{ marginRight: "14px", color: "#0077b6" }} />
+                        <ListItemText
+                          primary="Recompensas"
+                          sx={{
+                            "& .MuiListItemText-primary": {
+                              fontSize: "1rem",
+                              fontWeight: "bold",
+                              color: "#1a237e",
+                            },
+                          }}
+                        />
+                      </ListItemButton>
+                    </ListItem>
+                    <ListItem disablePadding>
+                      <ListItemButton
+                        href="/cupones-paciente"
+                        sx={{
+                          padding: "12px 20px",
+                          "&:hover": {
+                            backgroundColor: "#0077b6",
+                            color: "#ffffff",
+                          },
+                          transition: "background-color 0.2s ease",
+                        }}
+                      >
+                        <LocalOfferIcon sx={{ marginRight: "14px", color: "#0077b6" }} />
+                        <ListItemText
+                          primary="Mis Cupones"
+                          sx={{
+                            "& .MuiListItemText-primary": {
+                              fontSize: "1rem",
+                              fontWeight: "bold",
+                              color: "#1a237e",
+                            },
+                          }}
+                        />
+                      </ListItemButton>
+                    </ListItem>
+                  </List>
+                </Box>
+              </Fade>
+            </Box>
             <Tooltip title="Perfil" placement="top" arrow>
               <IconButton
                 href="/perfil"
@@ -804,6 +898,8 @@ const NavbarPaciente = () => {
                 <AccountCircleIcon />
               </IconButton>
             </Tooltip>
+
+
 
             <Tooltip title="Cerrar Sesión" placement="top" arrow>
               <IconButton
@@ -1096,6 +1192,85 @@ const NavbarPaciente = () => {
                 />
               </ListItemButton>
             </ListItem>
+
+            <ListItem disablePadding>
+              <ListItemButton href="/logros-paciente" onClick={toggleDrawer(false)}>
+                <EmojiEventsIcon sx={{ marginRight: "10px", color: "#01579b" }} />
+                <ListItemText
+                  primary="Mis Logros"
+                  sx={{ color: "#01579b", "& .MuiListItemText-primary": { fontWeight: "bold" } }}
+                />
+              </ListItemButton>
+            </ListItem>
+
+            <ListItem disablePadding>
+              <ListItemButton onClick={() => handleSubMenuToggle("recompensas")}>
+                <RedeemIcon sx={{ marginRight: "10px", color: "#01579b" }} />
+                <ListItemText
+                  primary="Recompensas"
+                  sx={{ color: "#01579b", "& .MuiListItemText-primary": { fontWeight: "bold" } }}
+                />
+                {recompensasOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </ListItemButton>
+            </ListItem>
+            <Collapse in={recompensasOpen} timeout="auto" unmountOnExit>
+              <List component="div" disablePadding>
+                <ListItem disablePadding>
+                  <ListItemButton
+                    href="/recompensas-paciente"
+                    sx={{
+                      paddingLeft: 4,
+                      padding: "14px 20px",
+                      "&:hover": {
+                        backgroundColor: "#0077b6",
+                        color: "#ffffff",
+                      },
+                      transition: "background-color 0.2s ease",
+                    }}
+                    onClick={toggleDrawer(false)}
+                  >
+                    <RedeemIcon sx={{ marginRight: "14px", color: "#0077b6" }} />
+                    <ListItemText
+                      primary="Recompensas"
+                      sx={{
+                        "& .MuiListItemText-primary": {
+                          fontSize: "1rem",
+                          fontWeight: "bold",
+                          color: "#1a237e",
+                        },
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+                <ListItem disablePadding>
+                  <ListItemButton
+                    href="/cupones-paciente"
+                    sx={{
+                      paddingLeft: 4,
+                      padding: "14px 20px",
+                      "&:hover": {
+                        backgroundColor: "#0077b6",
+                        color: "#ffffff",
+                      },
+                      transition: "background-color 0.2s ease",
+                    }}
+                    onClick={toggleDrawer(false)}
+                  >
+                    <LocalOfferIcon sx={{ marginRight: "14px", color: "#0077b6" }} />
+                    <ListItemText
+                      primary="Mis Cupones"
+                      sx={{
+                        "& .MuiListItemText-primary": {
+                          fontSize: "1rem",
+                          fontWeight: "bold",
+                          color: "#1a237e",
+                        },
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              </List>
+            </Collapse>
 
             <ListItem disablePadding>
               <ListItemButton href="/perfil" onClick={toggleDrawer(false)}>
