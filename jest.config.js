@@ -1,11 +1,10 @@
-
-export const testEnvironment = "jsdom";
-export const transform = {
-    "^.+\\.[jt]sx?$": "babel-jest",
+// jest.config.js
+export default {
+    testEnvironment: "node",
+    testMatch: [
+        "**/src/__tests__/**/*.test.js"
+    ],
+    transform: {
+        "^.+\\.(js|jsx)$": "babel-jest"
+    }
 };
-export const moduleNameMapper = {
-    "\\.(css|less|scss|sass)$": "identity-obj-proxy",
-};
-export const setupFilesAfterEnv = [
-    "<rootDir>/jest.setup.js"
-];

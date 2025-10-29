@@ -18,12 +18,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'npm'
 
       - name: Instalar dependencias
         run: npm install
-        
-      - name: Ejecutar pruebas unitarias
+
+      - name: Ejecutar pruebas unitarias (Jest)
+        env:
+          CI: true
         run: npm test
 
       - name: Compilar aplicación (build)
+        env:
+          CI: true
         run: npm run build
