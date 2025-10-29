@@ -42,9 +42,6 @@ jobs:
           password: ${{ secrets.FTP_PASS }}
           port: 21
           protocol: ftp
-          # Carpeta local generada por tu build (Vite -> dist/)
           local-dir: dist/
-          # Carpeta remota en Hostinger donde apuntas el dominio
           server-dir: ${{ secrets.FTP_DIR }}/
-          # Para NO borrar tu .htaccess ni otros archivos que ya están ahi
           dangerous-clean-slate: false
