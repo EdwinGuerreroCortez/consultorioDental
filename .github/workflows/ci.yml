@@ -32,3 +32,19 @@ jobs:
         env:
           CI: true
         run: npm run build
+
+      - name: Deploy automático a Hostinger
+        if: github.event_name == 'push'
+        uses: SamKirkland/FTP-Deploy-Action@v4
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          port: 21
+          protocol: ftp
+          # Carpeta local que genera tu build (Vite normalmente genera dist/)
+          local-dir: dist/
+          # Carpeta remota de Hostinger donde sirves tu sitio
+          server-dir: ${{ secrets.FTP_DIR }}/
+          # No borres .htaccess ni otros archivos que tengas arriba
+          dangerous-clean-slate: false
