@@ -1,27 +1,28 @@
 import React from "react";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, Switch, FormControlLabel } from "@mui/material";
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 
 const Ubicacion = ({ ubicacion, error }) => {
-  // Detectar cuando el componente entra en vista
+  // Detecta cuando el componente entra en vista
   const { ref, inView } = useInView({ triggerOnce: false, threshold: 0.2 });
 
-  // Coordenadas fijas de tu consultorio (fallback)
+  // ⚓️ URL *exacta* del mapa que ya tenías (pin y etiqueta del consultorio)
+  const FIXED_EMBED_SRC =
+    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3754.884335732754!2d-98.4253395!3d21.1416355!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d726eb6d80e10d%3A0xb66064b6cb4b79a9!2sZacatecas%204%2C%20Centro%2C%2043000%20Huejutla%20de%20Reyes%2C%20Hgo.!5e0!3m2!1ses-419!2smx!4v1710974398765!5m2!1ses-419!2smx";
+
+  // Coordenadas del consultorio (por si se usan en el enlace)
   const LAT_FIJO = 21.1416355;
   const LNG_FIJO = -98.4253395;
 
-  // Si hay ubicación del usuario, priorízala para el iframe
-  const lat = ubicacion?.latitud ?? LAT_FIJO;
-  const lng = ubicacion?.longitud ?? LNG_FIJO;
+  // 🧭 Si hay ubicación del usuario, se usará solo para el ENLACE (no para el iframe),
+  // así el mapa embebido SIEMPRE muestra el consultorio como pediste.
+  const latLink = ubicacion?.latitud ?? LAT_FIJO;
+  const lngLink = ubicacion?.longitud ?? LNG_FIJO;
 
-  // URL dinámica para el iframe de Google Maps
-  // Nota: para usar *embed* con coordenadas dinámicas, el formato simple con q=lat,lng funciona bien.
-  const mapSrc = `https://www.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
-
-  // Link para abrir Google Maps en pestaña nueva (usa ubicación del usuario si existe)
-  const linkMaps = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  // Enlace para abrir Google Maps en pestaña nueva
+  const linkMaps = `https://www.google.com/maps/search/?api=1&query=${latLink},${lngLink}`;
 
   return (
     <motion.div
@@ -52,25 +53,25 @@ const Ubicacion = ({ ubicacion, error }) => {
           </Typography>
         </motion.div>
 
-        {/* Mensajes de estado de geolocalización */}
+        {/* Mensajes de estado (informativos, el mapa siempre queda fijo al consultorio) */}
         <Box sx={{ mb: 2 }}>
           {!ubicacion && !error && (
             <Typography variant="body2" sx={{ color: "#e3f2fd" }}>
-              Solicitando permiso de ubicación…
+              (Opcional) Puedes permitir ubicación para abrir rutas desde donde estás.
             </Typography>
           )}
           {ubicacion && (
             <Typography variant="body2" sx={{ color: "#e3f2fd" }}>
-              Usando tu ubicación actual:{" "}
+              Tu ubicación actual:{" "}
               <strong>
                 {ubicacion.latitud.toFixed(4)}, {ubicacion.longitud.toFixed(4)}
               </strong>{" "}
-              (±{Math.round(ubicacion.precision || 0)} m)
+              (±{Math.round(ubicacion.precision || 0)} m). El mapa muestra el consultorio.
             </Typography>
           )}
           {error && (
             <Typography variant="body2" sx={{ color: "#ffebee" }}>
-              {error} — Mostrando ubicación del consultorio.
+              {error}. El mapa embebido muestra la dirección del consultorio.
             </Typography>
           )}
         </Box>
@@ -86,7 +87,7 @@ const Ubicacion = ({ ubicacion, error }) => {
             gap: "30px",
           }}
         >
-          {/* Mapa con animación */}
+          {/* Mapa (SIEMPRE fijo al consultorio) */}
           <motion.div
             initial={{ opacity: 0, x: -100 }}
             animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -100 }}
@@ -104,8 +105,8 @@ const Ubicacion = ({ ubicacion, error }) => {
               }}
             >
               <iframe
-                title="Ubicación"
-                src={mapSrc}
+                title="Ubicación del Consultorio"
+                src={FIXED_EMBED_SRC}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
@@ -116,7 +117,7 @@ const Ubicacion = ({ ubicacion, error }) => {
             </Box>
           </motion.div>
 
-          {/* Información con animación */}
+          {/* Información */}
           <motion.div
             initial={{ opacity: 0, x: 100 }}
             animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: 100 }}
@@ -131,15 +132,14 @@ const Ubicacion = ({ ubicacion, error }) => {
             </Typography>
 
             <Typography variant="body1" sx={{ color: "#e3f2fd", marginBottom: "10px" }}>
-              Nos encontramos en una ubicación céntrica con fácil acceso.
-              Disponemos de estacionamiento y atención en horarios extendidos.
+              Ubicación céntrica con fácil acceso. Contamos con estacionamiento y horarios extendidos.
             </Typography>
 
             <Typography variant="body2" sx={{ color: "#b3e5fc" }}>
-              Si necesitas más información o rutas, abre el mapa.
+              Para rutas desde tu ubicación actual, ábrelo en Google Maps.
             </Typography>
 
-            {/* Enlace / Botón a Google Maps (con la ubicación actual si está disponible) */}
+            {/* Botón para abrir en Google Maps (usa tu ubicación si existe; si no, abre con la del consultorio) */}
             <Box sx={{ mt: 2, display: "flex", gap: 1, alignItems: "center" }}>
               <Button
                 component="a"
@@ -155,8 +155,8 @@ const Ubicacion = ({ ubicacion, error }) => {
               </Button>
               <Typography variant="caption" sx={{ color: "#e3f2fd" }}>
                 {ubicacion
-                  ? "Usando tu ubicación actual."
-                  : "Mostrando la ubicación del consultorio."}
+                  ? "Se calcularán rutas desde tu ubicación."
+                  : "Abrirá la ubicación del consultorio."}
               </Typography>
             </Box>
           </motion.div>
