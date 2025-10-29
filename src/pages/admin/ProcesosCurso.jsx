@@ -45,7 +45,7 @@ const TratamientosEnCurso = () => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -59,7 +59,7 @@ const TratamientosEnCurso = () => {
 
   useEffect(() => {
     axios
-      .get("https://backenddent.onrender.com/api/tratamientos-pacientes/en-progreso")
+      .get("http://localhost:4000/api/tratamientos-pacientes/en-progreso")
       .then((response) => {
         const tratamientosEnProgreso = response.data.map((tratamiento) => ({
           ...tratamiento,
@@ -67,8 +67,8 @@ const TratamientosEnCurso = () => {
             tratamiento.sexo === "femenino"
               ? "F"
               : tratamiento.sexo === "masculino"
-              ? "M"
-              : "N/A",
+                ? "M"
+                : "N/A",
           nombre_completo: `${tratamiento.nombre} ${tratamiento.apellido_paterno} ${tratamiento.apellido_materno}`.trim(),
         }));
         setTratamientos(tratamientosEnProgreso);
@@ -102,7 +102,7 @@ const TratamientosEnCurso = () => {
 
     try {
       const response = await axios.put(
-        `https://backenddent.onrender.com/api/tratamientos-pacientes/cancelar/${tratamientoSeleccionado}`,
+        `http://localhost:4000/api/tratamientos-pacientes/cancelar/${tratamientoSeleccionado}`,
         {},
         {
           headers: { "X-XSRF-TOKEN": csrfToken },
@@ -116,15 +116,15 @@ const TratamientosEnCurso = () => {
         severity: "success",
       });
 
-      const updated = await axios.get("https://backenddent.onrender.com/api/tratamientos-pacientes/en-progreso");
+      const updated = await axios.get("http://localhost:4000/api/tratamientos-pacientes/en-progreso");
       const tratamientosEnProgreso = updated.data.map((tratamiento) => ({
         ...tratamiento,
         sexo:
           tratamiento.sexo === "femenino"
             ? "F"
             : tratamiento.sexo === "masculino"
-            ? "M"
-            : "N/A",
+              ? "M"
+              : "N/A",
         nombre_completo: `${tratamiento.nombre} ${tratamiento.apellido_paterno} ${tratamiento.apellido_materno}`.trim(),
       }));
       setTratamientos(tratamientosEnProgreso);
@@ -403,7 +403,7 @@ const TratamientosEnCurso = () => {
         </DialogTitle>
         <DialogContent>
           <Alert severity="warning">
-            ¿Estás seguro de que deseas cancelar este tratamiento?  
+            ¿Estás seguro de que deseas cancelar este tratamiento?
             Esta acción afectará todas las citas y pagos asociados.
           </Alert>
         </DialogContent>

@@ -120,7 +120,7 @@ const HistorialTratamientoPaciente = () => {
     const fetchHistorial = async () => {
       if (!usuarioId) return;
       try {
-        const response = await axios.get(`https://backenddent.onrender.com/api/tratamientos-pacientes/historial/${usuarioId}`, {
+        const response = await axios.get(`http://localhost:4000/api/tratamientos-pacientes/historial/${usuarioId}`, {
           withCredentials: true,
         });
         setHistorial(response.data);

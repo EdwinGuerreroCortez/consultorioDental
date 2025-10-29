@@ -67,7 +67,7 @@ const CambioPassword = () => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -130,7 +130,7 @@ const CambioPassword = () => {
 
     try {
       await axios.post(
-        "https://backenddent.onrender.com/api/usuarios/cambiar-password",
+        "http://localhost:4000/api/usuarios/cambiar-password",
         { token, nuevaPassword: password },
         {
           headers: {
@@ -336,8 +336,8 @@ const CambioPassword = () => {
                         passwordStrength.score < 2
                           ? "#f44336"
                           : passwordStrength.score < 4
-                          ? "#ff9800"
-                          : "#4caf50",
+                            ? "#ff9800"
+                            : "#4caf50",
                       transition: "width 0.3s ease-in-out",
                     },
                   }}

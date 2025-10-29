@@ -79,7 +79,7 @@ export default function EvaluarCitasPendientes() {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -97,7 +97,7 @@ export default function EvaluarCitasPendientes() {
   }, []);
 
   const axiosInstance = axios.create({
-    baseURL: "https://backenddent.onrender.com/api",
+    baseURL: "http://localhost:4000/api",
     withCredentials: true,
   });
 
@@ -413,14 +413,14 @@ export default function EvaluarCitasPendientes() {
   };
 
   // Filtrar tratamientos según el término de búsqueda
- const filteredTratamientos = tratamientos.filter((tratamiento) => {
-  const nombreCompleto = `${tratamiento.nombre} ${tratamiento.apellido_paterno} ${tratamiento.apellido_materno}`
-    .toLowerCase()
-    .trim();
+  const filteredTratamientos = tratamientos.filter((tratamiento) => {
+    const nombreCompleto = `${tratamiento.nombre} ${tratamiento.apellido_paterno} ${tratamiento.apellido_materno}`
+      .toLowerCase()
+      .trim();
 
-  // Solo mostrar coincidencias que comiencen con las letras escritas
-  return nombreCompleto.startsWith(searchTerm.toLowerCase().trim());
-});
+    // Solo mostrar coincidencias que comiencen con las letras escritas
+    return nombreCompleto.startsWith(searchTerm.toLowerCase().trim());
+  });
 
 
   // Paginación de tratamientos

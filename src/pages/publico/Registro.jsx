@@ -71,7 +71,7 @@ const Registro = () => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -117,7 +117,7 @@ const Registro = () => {
         });
 
         const response = await axios.post(
-          "https://backenddent.onrender.com/api/usuarios/verificar",
+          "http://localhost:4000/api/usuarios/verificar",
           {
             email: formData.correo,
             codigo: formData.codigoVerificacion,
@@ -144,7 +144,7 @@ const Registro = () => {
     } else if (step === 1) {
       try {
         await axios.post(
-          "https://backenddent.onrender.com/api/usuarios/registrar",
+          "http://localhost:4000/api/usuarios/registrar",
           {
             nombre: formData.nombre,
             apellido_paterno: formData.apellidoPaterno,
@@ -803,8 +803,8 @@ const Registro = () => {
                         passwordStrength.score < 2
                           ? "#d32f2f"
                           : passwordStrength.score < 4
-                          ? "#ff9800"
-                          : "#4caf50",
+                            ? "#ff9800"
+                            : "#4caf50",
                       fontFamily: "'Poppins', sans-serif",
                       fontSize: { xs: "1rem", md: "1.25rem" },
                     }}
@@ -824,8 +824,8 @@ const Registro = () => {
                               ? passwordStrength.score < 2
                                 ? "#d32f2f"
                                 : passwordStrength.score < 4
-                                ? "#ff9800"
-                                : "#4caf50"
+                                  ? "#ff9800"
+                                  : "#4caf50"
                               : "#e0e0e0",
                           transition: "background-color 0.3s",
                         }}

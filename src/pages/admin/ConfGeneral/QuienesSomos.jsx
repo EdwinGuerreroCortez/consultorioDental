@@ -46,7 +46,7 @@ const QuienesSomos = () => {
   useEffect(() => {
     const obtenerToken = async () => {
       try {
-        const res = await fetch("https://backenddent.onrender.com/api/get-csrf-token", { credentials: "include" });
+        const res = await fetch("http://localhost:4000/api/get-csrf-token", { credentials: "include" });
         const data = await res.json();
         setCsrfToken(data.csrfToken);
       } catch {
@@ -59,8 +59,8 @@ const QuienesSomos = () => {
   const cargarDatos = async () => {
     try {
       const [resVigente, resHistorial] = await Promise.all([
-        fetch("https://backenddent.onrender.com/api/quienes-somos/vigente"),
-        fetch("https://backenddent.onrender.com/api/quienes-somos/listar"),
+        fetch("http://localhost:4000/api/quienes-somos/vigente"),
+        fetch("http://localhost:4000/api/quienes-somos/listar"),
       ]);
       const vigenteData = await resVigente.json();
       const historialData = await resHistorial.json();
@@ -93,7 +93,7 @@ const QuienesSomos = () => {
     }
 
     try {
-      const response = await fetch("https://backenddent.onrender.com/api/quienes-somos/crear", {
+      const response = await fetch("http://localhost:4000/api/quienes-somos/crear", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -128,7 +128,7 @@ const QuienesSomos = () => {
     }
 
     try {
-      const response = await fetch(`https://backenddent.onrender.com/api/quienes-somos/editar/${id}`, {
+      const response = await fetch(`http://localhost:4000/api/quienes-somos/editar/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -149,7 +149,7 @@ const QuienesSomos = () => {
 
   const activarComoVigente = async (id) => {
     try {
-      const res = await fetch(`https://backenddent.onrender.com/api/quienes-somos/activar/${id}`, {
+      const res = await fetch(`http://localhost:4000/api/quienes-somos/activar/${id}`, {
         method: "PUT",
         headers: { "X-XSRF-TOKEN": csrfToken },
         credentials: "include",

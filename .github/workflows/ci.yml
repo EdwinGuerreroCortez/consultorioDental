@@ -2,9 +2,9 @@ name: CI Pipeline ConsultorioDental
 
 on:
   push:
-    branches: [ main ]
+    branches: [ Main ]
   pull_request:
-    branches: [ main ]
+    branches: [ Main ]
 
 jobs:
   build_and_test:
@@ -12,18 +12,36 @@ jobs:
 
     steps:
       - name: Clonar repositorio
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configurar Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'npm'
 
       - name: Instalar dependencias
         run: npm install
 
+      - name: Ejecutar pruebas unitarias (Jest)
+        env:
+          CI: true
+        run: npm test
+
       - name: Compilar aplicación (build)
+        env:
+          CI: true
         run: npm run build
 
-      - name: Ejecutar pruebas unitarias
-        run: npm test
+      - name: Deploy automático a Hostinger
+        if: github.event_name == 'push'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          port: 21
+          protocol: ftp
+          local-dir: dist/
+          server-dir: ${{ secrets.FTP_DIR }}/
+          dangerous-clean-slate: false

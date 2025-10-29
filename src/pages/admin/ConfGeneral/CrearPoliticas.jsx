@@ -47,7 +47,7 @@ const CrearPoliticas = () => {
   useEffect(() => {
     const obtenerToken = async () => {
       try {
-        const res = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const res = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await res.json();
@@ -62,7 +62,7 @@ const CrearPoliticas = () => {
 
   const cargarDatos = async () => {
     try {
-      const res = await fetch("https://backenddent.onrender.com/api/politicas/listar");
+      const res = await fetch("http://localhost:4000/api/politicas/listar");
       const data = await res.json();
       setUltima(data[0] || null);
       setHistorial(data.slice(1));
@@ -83,7 +83,7 @@ const CrearPoliticas = () => {
     }
 
     try {
-      const res = await fetch("https://backenddent.onrender.com/api/politicas/crear", {
+      const res = await fetch("http://localhost:4000/api/politicas/crear", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -119,7 +119,7 @@ const CrearPoliticas = () => {
     }
 
     try {
-      const res = await fetch(`https://backenddent.onrender.com/api/politicas/editar/${id}`, {
+      const res = await fetch(`http://localhost:4000/api/politicas/editar/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -150,7 +150,7 @@ const CrearPoliticas = () => {
   // Confirmar eliminación
   const handleConfirmEliminar = async () => {
     try {
-      const res = await fetch(`https://backenddent.onrender.com/api/politicas/eliminarPolitica/${politicaToDelete}`, {
+      const res = await fetch(`http://localhost:4000/api/politicas/eliminarPolitica/${politicaToDelete}`, {
         method: "DELETE",
         headers: {
           "X-XSRF-TOKEN": csrfToken,

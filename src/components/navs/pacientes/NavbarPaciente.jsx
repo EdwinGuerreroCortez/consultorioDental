@@ -37,6 +37,11 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import "@fontsource/poppins";
 import logo from "../../../assets/images/logo.png";
 
+const API_BASE =
+  (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_API_BASE_URL) ||
+  (typeof process !== "undefined" && process.env && process.env.REACT_APP_API_BASE_URL) ||
+  "http://localhost:4000";
+
 const NavbarPaciente = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
@@ -57,7 +62,7 @@ const NavbarPaciente = () => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const response = await fetch(`${API_BASE}/api/get-csrf-token`, {
           credentials: "include",
         });
         const data = await response.json();
@@ -84,7 +89,7 @@ const NavbarPaciente = () => {
     setSearchTerm(term);
     if (term.length > 0) {
       try {
-        const response = await fetch(`https://backenddent.onrender.com/api/tratamientos/buscar?search=${term}`, {
+        const response = await fetch(`${API_BASE}/api/tratamientos/buscar?search=${encodeURIComponent(term)}`, {
           credentials: "include",
         });
         const results = await response.json();
@@ -106,7 +111,7 @@ const NavbarPaciente = () => {
     }
 
     try {
-      const response = await fetch("https://backenddent.onrender.com/api/usuarios/logout", {
+      const response = await fetch(`${API_BASE}/api/usuarios/logout`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -219,7 +224,7 @@ const NavbarPaciente = () => {
         sx={{
           height: "80px",
           background: "linear-gradient(90deg, #003366, #0077b6)",
-          position: "static",
+          position: "fixed", // FIXED como en el público
           width: "100%",
           zIndex: 10,
           boxShadow: "0 4px 20px rgba(0, 0, 0, 0.2)",

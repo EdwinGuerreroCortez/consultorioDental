@@ -43,7 +43,7 @@ const TratamientosPendientes = () => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -73,7 +73,7 @@ const TratamientosPendientes = () => {
   const obtenerTratamientos = async (isFirstLoad = false) => {
     if (!csrfToken) return;
     try {
-      const response = await axios.get("https://backenddent.onrender.com/api/tratamientos-pacientes/pendientes", {
+      const response = await axios.get("http://localhost:4000/api/tratamientos-pacientes/pendientes", {
         headers: { "X-XSRF-TOKEN": csrfToken },
         withCredentials: true,
       });
@@ -111,7 +111,7 @@ const TratamientosPendientes = () => {
 
     try {
       const response = await axios.post(
-        "https://backenddent.onrender.com/api/tratamientos-pacientes/crear-nuevas-citas-pagos",
+        "http://localhost:4000/api/tratamientos-pacientes/crear-nuevas-citas-pagos",
         {
           tratamientoPacienteId: tratamientoSeleccionado.id,
           citasTotales: parseInt(numCitas, 10),
@@ -447,8 +447,8 @@ const TratamientosPendientes = () => {
               alerta.severity === "success"
                 ? "#e8f5e9"
                 : alerta.severity === "error"
-                ? "#ffebee"
-                : "#fff3e0",
+                  ? "#ffebee"
+                  : "#fff3e0",
           }}
         >
           {alerta.message}

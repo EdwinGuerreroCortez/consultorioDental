@@ -1,44 +1,60 @@
 import React from "react";
 import NavbarPaciente from "../pacientes/NavbarPaciente";
 import FooterPaciente from "../pacientes/FooterPaciente";
-import BreadcrumbNav from '../../Breadcrumbs';
-
+import BreadcrumbNav from "../../Breadcrumbs";
 import { Box, CssBaseline } from "@mui/material";
 
 const LayoutPaciente = ({ children }) => {
   return (
     <>
       <CssBaseline />
+      <NavbarPaciente />
+
+      {/* Contenedor general de la vista paciente */}
       <Box
         sx={{
+          width: "100%",
+          overflowX: "hidden",
+          overflowY: "visible",
+          position: "relative",
+          boxSizing: "border-box",
+          backgroundColor: "#fff",
           display: "flex",
           flexDirection: "column",
-          minHeight: "100vh",
-          width: "100%",
-          margin: 0,
-          padding: 0,
-          boxSizing: "border-box", // Reset general para todos los elementos
-          backgroundColor: "#e6f7ff",
-
-          
+          alignItems: "center",
         }}
       >
-
-        <NavbarPaciente />
-        {/* Breadcrumb */}
+        {/* Breadcrumb pegado debajo del AppBar fijo */}
         <Box
           sx={{
-            backgroundColor: "#ffffff",
-            zIndex: 2,
+            width: "100%",
+            maxWidth: "100%",
+            padding: "10px 16px",
+            backgroundColor: "#e6f7ff",
             position: "relative",
+            zIndex: 2,
+            boxSizing: "border-box",
+            mt: "80px", // separa contenido del navbar fijo (misma altura del AppBar)
           }}
         >
           <BreadcrumbNav userType="paciente" />
         </Box>
 
-        {children}
-        <FooterPaciente />
+        {/* Contenido principal de cada página / dashboard paciente */}
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: "100%",
+            overflow: "hidden",
+            paddingBottom: "20px",
+            boxSizing: "border-box",
+          }}
+        >
+          {children}
+        </Box>
       </Box>
+
+      <FooterPaciente />
     </>
   );
 };

@@ -29,7 +29,7 @@ const Configuraciones = () => {
   useEffect(() => {
     const fetchToken = async () => {
       try {
-        const res = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+        const res = await fetch("http://localhost:4000/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await res.json();
@@ -43,7 +43,7 @@ const Configuraciones = () => {
 
   const fetchConfiguracion = async () => {
     try {
-      const res = await fetch("https://backenddent.onrender.com/api/configuraciones/obtener");
+      const res = await fetch("http://localhost:4000/api/configuraciones/obtener");
       const data = await res.json();
       setConfig(data);
     } catch {
@@ -61,7 +61,7 @@ const Configuraciones = () => {
 
   const handleGuardar = async () => {
     try {
-      const res = await fetch("https://backenddent.onrender.com/api/configuraciones/actualizar", {
+      const res = await fetch("http://localhost:4000/api/configuraciones/actualizar", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
