@@ -66,7 +66,7 @@ const HistorialPagosDiseño = () => {
     const obtenerPagos = async () => {
       setLoading(true);
       try {
-        const res = await axios.get("http://localhost:4000/api/pagos/historial", {
+        const res = await axios.get("https://backenddent.onrender.com/api/pagos/historial", {
           params: { page: 1, limit: rowsPerPage },
         });
 

@@ -45,7 +45,7 @@ const TratamientosEnCurso = () => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -59,7 +59,7 @@ const TratamientosEnCurso = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:4000/api/tratamientos-pacientes/en-progreso")
+      .get("https://backenddent.onrender.com/api/tratamientos-pacientes/en-progreso")
       .then((response) => {
         const tratamientosEnProgreso = response.data.map((tratamiento) => ({
           ...tratamiento,
@@ -102,7 +102,7 @@ const TratamientosEnCurso = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:4000/api/tratamientos-pacientes/cancelar/${tratamientoSeleccionado}`,
+        `https://backenddent.onrender.com/api/tratamientos-pacientes/cancelar/${tratamientoSeleccionado}`,
         {},
         {
           headers: { "X-XSRF-TOKEN": csrfToken },
@@ -116,7 +116,7 @@ const TratamientosEnCurso = () => {
         severity: "success",
       });
 
-      const updated = await axios.get("http://localhost:4000/api/tratamientos-pacientes/en-progreso");
+      const updated = await axios.get("https://backenddent.onrender.com/api/tratamientos-pacientes/en-progreso");
       const tratamientosEnProgreso = updated.data.map((tratamiento) => ({
         ...tratamiento,
         sexo:

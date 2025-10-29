@@ -60,7 +60,7 @@ const NavbarPublico = () => {
     if (term.length > 0) {
       try {
         const response = await fetch(
-          `http://localhost:4000/api/tratamientos/buscar?search=${term}`
+          `https://backenddent.onrender.com/api/tratamientos/buscar?search=${term}`
         );
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);

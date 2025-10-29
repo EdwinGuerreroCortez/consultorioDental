@@ -69,7 +69,7 @@ const ListaPacientesTratamiento = () => {
   useEffect(() => {
     const obtenerTokenCSRF = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/get-csrf-token", {
+        const response = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
           credentials: "include",
         });
         const data = await response.json();
@@ -87,7 +87,7 @@ const ListaPacientesTratamiento = () => {
     const obtenerPacientes = async () => {
       if (!csrfToken) return;
       try {
-        const response = await axios.get("http://localhost:4000/api/pagos/pacientes-con-tratamiento", {
+        const response = await axios.get("https://backenddent.onrender.com/api/pagos/pacientes-con-tratamiento", {
           headers: { "X-XSRF-TOKEN": csrfToken },
           withCredentials: true,
         });
@@ -126,7 +126,7 @@ const ListaPacientesTratamiento = () => {
     setMetodoPago("");
     setPaymentStatus(null);
     try {
-      const res = await axios.get(`http://localhost:4000/api/tratamientos-pacientes/citas-por-tratamiento/${id}`, {
+      const res = await axios.get(`https://backenddent.onrender.com/api/tratamientos-pacientes/citas-por-tratamiento/${id}`, {
         headers: { "X-XSRF-TOKEN": csrfToken },
         withCredentials: true,
       });
@@ -182,7 +182,7 @@ const ListaPacientesTratamiento = () => {
         fecha_pago: fechaLocal, // ← CORREGIDO
       };
 
-      const response = await axios.put("http://localhost:4000/api/pagos/actualizar-pagos", paymentData, {
+      const response = await axios.put("https://backenddent.onrender.com/api/pagos/actualizar-pagos", paymentData, {
         headers: {
           "Content-Type": "application/json",
           "X-XSRF-TOKEN": csrfToken,
@@ -194,7 +194,7 @@ const ListaPacientesTratamiento = () => {
       setAlerta({ open: true, message: "Pago registrado exitosamente", severity: "success" });
 
       // Refrescar pacientes
-      const refreshResponse = await axios.get("http://localhost:4000/api/pagos/pacientes-con-tratamiento", {
+      const refreshResponse = await axios.get("https://backenddent.onrender.com/api/pagos/pacientes-con-tratamiento", {
         headers: { "X-XSRF-TOKEN": csrfToken },
         withCredentials: true,
       });

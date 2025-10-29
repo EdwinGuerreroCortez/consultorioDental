@@ -44,7 +44,7 @@ const BreadcrumbNav = ({ userType = "publico" }) => {
   useEffect(() => {
     const fetchServiceName = async (hash) => {
       try {
-        const response = await fetch(`http://localhost:4000/api/tratamientos/${hash}/detalle`);
+        const response = await fetch(`https://backenddent.onrender.com/api/tratamientos/${hash}/detalle`);
         if (response.ok) {
           const data = await response.json();
           setDynamicName(data.nombre || 'Servicio desconocido');

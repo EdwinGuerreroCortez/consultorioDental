@@ -40,7 +40,7 @@ import logo from "../../../assets/images/logo.png";
 const API_BASE =
   (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_API_BASE_URL) ||
   (typeof process !== "undefined" && process.env && process.env.REACT_APP_API_BASE_URL) ||
-  "http://localhost:4000";
+  "https://backenddent.onrender.com";
 
 const NavbarPaciente = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
