@@ -21,9 +21,9 @@ jobs:
 
       - name: Instalar dependencias
         run: npm install
+        
+      - name: Ejecutar pruebas unitarias
+        run: npm test
 
       - name: Compilar aplicación (build)
         run: npm run build
-
-      - name: Ejecutar pruebas unitarias
-        run: npm test
