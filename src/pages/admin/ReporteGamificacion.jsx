@@ -29,7 +29,7 @@ import { motion } from "framer-motion";
 
 const primaryColor = "#1e40af"; // Azul oscuro bonito
 const bgGradient = "linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)";
-
+//Gamificacion front en Render
 const ReporteGamificacionAlineado = () => {
     const [resumen, setResumen] = useState(null);
     const [topPacientes, setTopPacientes] = useState([]);
