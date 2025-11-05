@@ -290,7 +290,7 @@ const NavbarAdmin = ({ drawerOpen, onToggleDrawer }) => {
               <MenuIcon />
             </IconButton>
             <Typography variant="h6" noWrap component="div" sx={{ fontWeight: "bold", color: "#e0f7fa" }}>
-              Panel de Administración
+              Banel de Administración
             </Typography>
           </Box>
 
