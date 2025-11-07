@@ -1,10 +1,32 @@
-import React from "react";
+import React, { useEffect } from "react";
 import NavbarPublico from "../publico/NavbarPublico";
 import FooterPublico from "../publico/FooterPublico";
 import BreadcrumbNav from "../../Breadcrumbs";
 import { Box, CssBaseline } from "@mui/material";
 
 const LayoutPublico = ({ children }) => {
+  useEffect(() => {
+    const precargarEndpoints = async () => {
+      const urls = [
+        "https://backenddent.onrender.com/api/politicas/listar",         // Políticas de privacidad
+        "https://backenddent.onrender.com/api/tratamientos",             // Catálogo de servicios
+        "https://backenddent.onrender.com/api/mision-vision/vigentes",   // Misión y visión
+      ];
+
+      for (const url of urls) {
+        try {
+          await fetch(url, {
+            credentials: "include", // igual que en tus otros fetch
+          });
+        } catch (err) {
+          console.warn("No se pudo precargar:", url);
+        }
+      }
+    };
+
+    precargarEndpoints();
+  }, []);
+
   return (
     <>
       <CssBaseline />
@@ -34,7 +56,7 @@ const LayoutPublico = ({ children }) => {
             position: "relative",
             zIndex: 2,
             boxSizing: "border-box",
-            mt: "80px", // Ajuste para que las migajas estén justo debajo del AppBar fijo
+            mt: "80px", // debajo del AppBar fijo
           }}
         >
           <BreadcrumbNav userType="publico" />
