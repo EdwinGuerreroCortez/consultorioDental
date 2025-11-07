@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { Snackbar, Alert } from "@mui/material"; // Eliminé Box y Typography
+import { Snackbar, Alert } from "@mui/material";
 import RutaProtegida from './components/RutaProtegida';
 
 // Públicos
@@ -30,6 +30,7 @@ import MisionVision from "./pages/pacientes/MisionVision";
 import HistorialPagosPaciente from "./pages/pacientes/HistorialPagosPaciente";
 import PagosExito from "./pages/pacientes/PagosExito";
 import PagosCancelado from "./pages/pacientes/PagosCancelado";
+
 // Admin
 import LayoutAdmin from "./components/navs/admin/LayoutAdmin";
 import BienvenidaAdmin from "./pages/admin/BienvenidaAdmin";
@@ -53,6 +54,7 @@ import QuienesSomos from "./pages/admin/ConfGeneral/QuienesSomos";
 import Configuraciones from "./pages/admin/ConfGeneral/Configuraciones";
 import Prediccion from "./pages/admin/prediccion";
 import Reportes from "./pages/admin/Reportes";
+
 // Errores
 import Error404 from "./components/Errors/Error404";
 import Error400 from "./components/Errors/Error400";
@@ -61,7 +63,7 @@ import Error500 from "./components/Errors/Error500";
 // Cargas
 import Loader from "./components/Loader";
 
-import '@fontsource/geologica'; // Importa la fuente
+import '@fontsource/geologica';
 
 const theme = createTheme({
   typography: {
@@ -69,14 +71,18 @@ const theme = createTheme({
   },
 });
 
-const INACTIVITY_LIMIT = 1800000; // 30 minutos (1800000 milisegundos)
+const INACTIVITY_LIMIT = 1800000; // 30 minutos
 
-// Componente para manejar la lógica de inactividad
+// 🔹 Componente para manejar la lógica de inactividad y estado online/offline
 const InactivityHandler = ({ children }) => {
   const [alertaExito, setAlertaExito] = useState(false);
   const [csrfToken, setCsrfToken] = useState(null);
   const inactivityTimeoutRef = useRef(null);
   const location = useLocation();
+
+  // 🔴 NUEVO: estado para conexión
+  const [estaOffline, setEstaOffline] = useState(!navigator.onLine);
+  const [volvioOnline, setVolvioOnline] = useState(false);
 
   // Obtener el token CSRF
   useEffect(() => {
@@ -166,18 +172,35 @@ const InactivityHandler = ({ children }) => {
     }
   };
 
-  const isProtectedRoute =
-    location.pathname.startsWith("/paciente") ||
-    location.pathname.startsWith("/admin") ||
-    location.pathname === "/agendar-cita" ||
-    location.pathname === "/citas-agendadas" ||
-    location.pathname === "/tratamientos-activos" ||
-    location.pathname === "/perfil" ||
-    location.pathname === "/historial-tratamientos";
+  // 🔹 NUEVO: detectar cambios de conexión online/offline
+  useEffect(() => {
+    const handleOnline = () => {
+      setEstaOffline(false);
+      setVolvioOnline(true);
+      setTimeout(() => setVolvioOnline(false), 3000);
+    };
+
+    const handleOffline = () => {
+      setEstaOffline(true);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    // estado inicial
+    setEstaOffline(!navigator.onLine);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   return (
     <>
       {children}
+
+      {/* Sesión cerrada por inactividad */}
       <Snackbar
         open={alertaExito}
         autoHideDuration={2000}
@@ -192,6 +215,28 @@ const InactivityHandler = ({ children }) => {
           ¡Sesión cerrada por inactividad!
         </Alert>
       </Snackbar>
+
+      {/* 🔴 Aviso mientras no hay conexión */}
+      <Snackbar
+        open={estaOffline}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity="error" sx={{ width: "100%", fontSize: "1rem" }}>
+          Estás sin conexión. Algunas funciones pueden no estar disponibles.
+        </Alert>
+      </Snackbar>
+
+      {/* 🟢 Aviso corto cuando vuelve la conexión */}
+      <Snackbar
+        open={volvioOnline}
+        autoHideDuration={3000}
+        onClose={() => setVolvioOnline(false)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity="success" sx={{ width: "100%", fontSize: "1rem" }}>
+          Conexión restablecida. Los datos se actualizarán automáticamente.
+        </Alert>
+      </Snackbar>
     </>
   );
 };
@@ -204,7 +249,7 @@ const App = () => {
         <InactivityHandler>
           <Loader>
             <Routes>
-              {/**************************************************** Rutas públicas *******************************************************/}
+              {/* Rutas públicas */}
               <Route element={<LayoutPublico />}>
                 <Route path="/" element={<BienvenidaPublica />} />
                 <Route path="/politicas-privacidad" element={<PoliticasPrivacidad />} />
@@ -217,8 +262,8 @@ const App = () => {
                 <Route path="/catalogo-servicios/:hash" element={<DetalleServicio />} />
                 <Route path="/mision-vision" element={<MisionVision />} />
               </Route>
-
-              {/**************************************************** Rutas paciente *******************************************************/}
+              <Route path="/login" element={<Login />} />
+              {/* Rutas paciente */}
               <Route
                 path="/paciente"
                 element={
@@ -329,7 +374,6 @@ const App = () => {
                   </RutaProtegida>
                 }
               />
-
               <Route
                 path="/pagos-exito"
                 element={
@@ -350,7 +394,8 @@ const App = () => {
                   </RutaProtegida>
                 }
               />
-              {/**************************************************** Rutas admin *******************************************************/}
+
+              {/* Rutas admin */}
               <Route
                 path="/admin"
                 element={
@@ -574,8 +619,8 @@ const App = () => {
 
               {/* Rutas Errores */}
               <Route path="/400" element={<Error400 />} />
-              <Route path="*" element={<Error404 />} />
               <Route path="/500" element={<Error500 />} />
+              <Route path="*" element={<Error404 />} />
             </Routes>
           </Loader>
         </InactivityHandler>
