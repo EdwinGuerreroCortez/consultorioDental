@@ -1,22 +1,23 @@
 import React, { useEffect } from "react";
+import { Outlet } from "react-router-dom";       // 👈 NUEVO
 import NavbarPublico from "../publico/NavbarPublico";
 import FooterPublico from "../publico/FooterPublico";
 import BreadcrumbNav from "../../Breadcrumbs";
 import { Box, CssBaseline } from "@mui/material";
 
-const LayoutPublico = ({ children }) => {
+const LayoutPublico = () => {
   useEffect(() => {
     const precargarEndpoints = async () => {
       const urls = [
-        "https://backenddent.onrender.com/api/politicas/listar",         // Políticas de privacidad
-        "https://backenddent.onrender.com/api/tratamientos",             // Catálogo de servicios
-        "https://backenddent.onrender.com/api/mision-vision/vigentes",   // Misión y visión
+        "https://backenddent.onrender.com/api/politicas/listar",       // Políticas de privacidad
+        "https://backenddent.onrender.com/api/tratamientos",           // Catálogo de servicios
+        "https://backenddent.onrender.com/api/mision-vision/vigentes", // Misión y visión
       ];
 
       for (const url of urls) {
         try {
           await fetch(url, {
-            credentials: "include", // igual que en tus otros fetch
+            credentials: "include",
           });
         } catch (err) {
           console.warn("No se pudo precargar:", url);
@@ -72,7 +73,7 @@ const LayoutPublico = ({ children }) => {
             boxSizing: "border-box",
           }}
         >
-          {children}
+          <Outlet />   {/* 👈 Aquí se pintan tus páginas públicas, visualmente igual a {children} */}
         </Box>
       </Box>
 

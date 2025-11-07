@@ -205,87 +205,18 @@ const App = () => {
           <Loader>
             <Routes>
               {/**************************************************** Rutas públicas *******************************************************/}
-              <Route
-                path="/"
-                element={
-                  <LayoutPublico>
-                    <BienvenidaPublica />
-                  </LayoutPublico>
-                }
-              />
-              <Route
-                path="/politicas-privacidad"
-                element={
-                  <LayoutPublico>
-                    <PoliticasPrivacidad />
-                  </LayoutPublico>
-                }
-              />
-              <Route
-                path="/deslinde-legal"
-                element={
-                  <LayoutPublico>
-                    <DeslindeLegal />
-                  </LayoutPublico>
-                }
-              />
-              <Route
-                path="/terminos-condiciones"
-                element={
-                  <LayoutPublico>
-                    <TerminosCondiciones />
-                  </LayoutPublico>
-                }
-              />
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/registro"
-                element={
-                  <LayoutPublico>
-                    <Registro />
-                  </LayoutPublico>
-                }
-              />
-              <Route
-                path="/catalogo-servicios"
-                element={
-                  <LayoutPublico>
-                    <CatalogoServicios />
-                  </LayoutPublico>
-                }
-              />
-              <Route
-                path="/recuperar-password"
-                element={
-                  <LayoutPublico>
-                    <RecuperarPassword />
-                  </LayoutPublico>
-                }
-              />
-              <Route
-                path="/cambiar-password"
-                element={
-                  <LayoutPublico>
-                    <CambioPassword />
-                  </LayoutPublico>
-                }
-              />
-              <Route
-                path="/catalogo-servicios/:hash"
-                element={
-                  <LayoutPublico>
-                    <DetalleServicio />
-                  </LayoutPublico>
-                }
-              />
-              <Route
-                path="/mision-vision"
-                element={
-                  <LayoutPublico>
-                    <MisionVision />
-                  </LayoutPublico>
-                }
-              />
+              <Route element={<LayoutPublico />}>
+                <Route path="/" element={<BienvenidaPublica />} />
+                <Route path="/politicas-privacidad" element={<PoliticasPrivacidad />} />
+                <Route path="/deslinde-legal" element={<DeslindeLegal />} />
+                <Route path="/terminos-condiciones" element={<TerminosCondiciones />} />
+                <Route path="/registro" element={<Registro />} />
+                <Route path="/catalogo-servicios" element={<CatalogoServicios />} />
+                <Route path="/recuperar-password" element={<RecuperarPassword />} />
+                <Route path="/cambiar-password" element={<CambioPassword />} />
+                <Route path="/catalogo-servicios/:hash" element={<DetalleServicio />} />
+                <Route path="/mision-vision" element={<MisionVision />} />
+              </Route>
 
               {/**************************************************** Rutas paciente *******************************************************/}
               <Route
