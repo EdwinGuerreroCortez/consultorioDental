@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { Snackbar, Alert } from "@mui/material";
-import RutaProtegida from './components/RutaProtegida';
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { Snackbar, Alert, Box } from "@mui/material"; // ← agregué Box
+import RutaProtegida from "./components/RutaProtegida";
 
 // Públicos
 import LayoutPublico from "./components/navs/publico/LayoutPublico";
@@ -63,7 +63,7 @@ import Error500 from "./components/Errors/Error500";
 // Cargas
 import Loader from "./components/Loader";
 
-import '@fontsource/geologica';
+import "@fontsource/geologica";
 
 const theme = createTheme({
   typography: {
@@ -73,16 +73,18 @@ const theme = createTheme({
 
 const INACTIVITY_LIMIT = 1800000; // 30 minutos
 
-// 🔹 Componente para manejar la lógica de inactividad y estado online/offline
+// Componente para manejar la lógica de inactividad y estado online/offline
 const InactivityHandler = ({ children }) => {
   const [alertaExito, setAlertaExito] = useState(false);
   const [csrfToken, setCsrfToken] = useState(null);
   const inactivityTimeoutRef = useRef(null);
   const location = useLocation();
 
-  // 🔴 NUEVO: estado para conexión
   const [estaOffline, setEstaOffline] = useState(!navigator.onLine);
   const [volvioOnline, setVolvioOnline] = useState(false);
+  const [estadoConexion, setEstadoConexion] = useState(
+    navigator.onLine ? "online" : "offline"
+  );
 
   // Obtener el token CSRF
   useEffect(() => {
@@ -172,23 +174,32 @@ const InactivityHandler = ({ children }) => {
     }
   };
 
-  // 🔹 NUEVO: detectar cambios de conexión online/offline
+  // Detectar cambios de conexión online/offline
   useEffect(() => {
+    console.log(
+      "Estado inicial de conexión:",
+      navigator.onLine ? "ONLINE" : "OFFLINE"
+    );
+
     const handleOnline = () => {
+      console.log("Evento ONLINE disparado");
       setEstaOffline(false);
+      setEstadoConexion("online");
       setVolvioOnline(true);
       setTimeout(() => setVolvioOnline(false), 3000);
     };
 
     const handleOffline = () => {
+      console.log("Evento OFFLINE disparado");
       setEstaOffline(true);
+      setEstadoConexion("offline");
     };
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    // estado inicial
     setEstaOffline(!navigator.onLine);
+    setEstadoConexion(navigator.onLine ? "online" : "offline");
 
     return () => {
       window.removeEventListener("online", handleOnline);
@@ -199,6 +210,26 @@ const InactivityHandler = ({ children }) => {
   return (
     <>
       {children}
+
+      {/* Banda fija arriba indicando modo sin conexión */}
+      {estadoConexion === "offline" && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            bgcolor: "#d32f2f",
+            color: "#fff",
+            textAlign: "center",
+            py: 0.5,
+            zIndex: 1301,
+            fontSize: "0.9rem",
+          }}
+        >
+          Modo sin conexión: se está usando información guardada. Algunas funciones pueden no estar disponibles.
+        </Box>
+      )}
 
       {/* Sesión cerrada por inactividad */}
       <Snackbar
@@ -212,11 +243,11 @@ const InactivityHandler = ({ children }) => {
           severity="warning"
           sx={{ width: "100%", fontSize: "1.1rem" }}
         >
-          ¡Sesión cerrada por inactividad!
+          Sesión cerrada por inactividad.
         </Alert>
       </Snackbar>
 
-      {/* 🔴 Aviso mientras no hay conexión */}
+      {/* Aviso mientras no hay conexión */}
       <Snackbar
         open={estaOffline}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
@@ -226,7 +257,7 @@ const InactivityHandler = ({ children }) => {
         </Alert>
       </Snackbar>
 
-      {/* 🟢 Aviso corto cuando vuelve la conexión */}
+      {/* Aviso corto cuando vuelve la conexión */}
       <Snackbar
         open={volvioOnline}
         autoHideDuration={3000}
@@ -263,11 +294,12 @@ const App = () => {
                 <Route path="/mision-vision" element={<MisionVision />} />
               </Route>
               <Route path="/login" element={<Login />} />
+
               {/* Rutas paciente */}
               <Route
                 path="/paciente"
                 element={
-                  <RutaProtegida tiposPermitidos={['paciente']}>
+                  <RutaProtegida tiposPermitidos={["paciente"]}>
                     <LayoutPaciente>
                       <Inicio />
                     </LayoutPaciente>
@@ -277,7 +309,7 @@ const App = () => {
               <Route
                 path="/paciente/catalogo-servicios"
                 element={
-                  <RutaProtegida tiposPermitidos={['paciente']}>
+                  <RutaProtegida tiposPermitidos={["paciente"]}>
                     <LayoutPaciente>
                       <CatalogoServicios />
                     </LayoutPaciente>
@@ -287,7 +319,7 @@ const App = () => {
               <Route
                 path="/paciente/catalogo-servicios/:hash"
                 element={
-                  <RutaProtegida tiposPermitidos={['paciente']}>
+                  <RutaProtegida tiposPermitidos={["paciente"]}>
                     <LayoutPaciente>
                       <DetalleServicio />
                     </LayoutPaciente>
@@ -297,7 +329,7 @@ const App = () => {
               <Route
                 path="/agendar-cita"
                 element={
-                  <RutaProtegida tiposPermitidos={['paciente']}>
+                  <RutaProtegida tiposPermitidos={["paciente"]}>
                     <LayoutPaciente>
                       <AgendarCita />
                     </LayoutPaciente>
@@ -307,7 +339,7 @@ const App = () => {
               <Route
                 path="/citas-agendadas"
                 element={
-                  <RutaProtegida tiposPermitidos={['paciente']}>
+                  <RutaProtegida tiposPermitidos={["paciente"]}>
                     <LayoutPaciente>
                       <CitasAgendadas />
                     </LayoutPaciente>
@@ -317,7 +349,7 @@ const App = () => {
               <Route
                 path="/tratamientos-activos"
                 element={
-                  <RutaProtegida tiposPermitidos={['paciente']}>
+                  <RutaProtegida tiposPermitidos={["paciente"]}>
                     <LayoutPaciente>
                       <TratamientosActivos />
                     </LayoutPaciente>
@@ -327,7 +359,7 @@ const App = () => {
               <Route
                 path="/perfil"
                 element={
-                  <RutaProtegida tiposPermitidos={['paciente']}>
+                  <RutaProtegida tiposPermitidos={["paciente"]}>
                     <LayoutPaciente>
                       <Perfil />
                     </LayoutPaciente>
@@ -337,7 +369,7 @@ const App = () => {
               <Route
                 path="/historial-tratamientos"
                 element={
-                  <RutaProtegida tiposPermitidos={['paciente']}>
+                  <RutaProtegida tiposPermitidos={["paciente"]}>
                     <LayoutPaciente>
                       <HistorialTratamientoPaciente />
                     </LayoutPaciente>
@@ -347,7 +379,7 @@ const App = () => {
               <Route
                 path="/Pagos"
                 element={
-                  <RutaProtegida tiposPermitidos={['paciente']}>
+                  <RutaProtegida tiposPermitidos={["paciente"]}>
                     <LayoutPaciente>
                       <Pagos />
                     </LayoutPaciente>
@@ -357,7 +389,7 @@ const App = () => {
               <Route
                 path="/paciente/mision-vision"
                 element={
-                  <RutaProtegida tiposPermitidos={['paciente']}>
+                  <RutaProtegida tiposPermitidos={["paciente"]}>
                     <LayoutPaciente>
                       <MisionVision />
                     </LayoutPaciente>
@@ -367,7 +399,7 @@ const App = () => {
               <Route
                 path="/Historial-pagos"
                 element={
-                  <RutaProtegida tiposPermitidos={['paciente']}>
+                  <RutaProtegida tiposPermitidos={["paciente"]}>
                     <LayoutPaciente>
                       <HistorialPagosPaciente />
                     </LayoutPaciente>
@@ -377,7 +409,7 @@ const App = () => {
               <Route
                 path="/pagos-exito"
                 element={
-                  <RutaProtegida tiposPermitidos={['paciente']}>
+                  <RutaProtegida tiposPermitidos={["paciente"]}>
                     <LayoutPaciente>
                       <PagosExito />
                     </LayoutPaciente>
@@ -387,7 +419,7 @@ const App = () => {
               <Route
                 path="/pagos-cancelado"
                 element={
-                  <RutaProtegida tiposPermitidos={['paciente']}>
+                  <RutaProtegida tiposPermitidos={["paciente"]}>
                     <LayoutPaciente>
                       <PagosCancelado />
                     </LayoutPaciente>
@@ -399,7 +431,7 @@ const App = () => {
               <Route
                 path="/admin"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin>
                       <BienvenidaAdmin />
                     </LayoutAdmin>
@@ -409,7 +441,7 @@ const App = () => {
               <Route
                 path="/admin/catalogos-tratamientos"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin>
                       <CrearServicioOdontologia />
                     </LayoutAdmin>
@@ -419,7 +451,7 @@ const App = () => {
               <Route
                 path="/admin/mis-tratamientos"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin>
                       <MisCatalogos />
                     </LayoutAdmin>
@@ -429,7 +461,7 @@ const App = () => {
               <Route
                 path="/admin/citas-ver"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"Ver Citas Programadas"}>
                       <ProximasCitas />
                     </LayoutAdmin>
@@ -439,7 +471,7 @@ const App = () => {
               <Route
                 path="/admin/procesos-en-curso"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"Procesos en Curso"}>
                       <TratamientosEnCurso />
                     </LayoutAdmin>
@@ -449,7 +481,7 @@ const App = () => {
               <Route
                 path="/admin/tratamientos-pendientes"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"Procesos Pendientes De Valoración"}>
                       <TratamientosPendientes />
                     </LayoutAdmin>
@@ -459,7 +491,7 @@ const App = () => {
               <Route
                 path="/admin/tratamientos/pendientes"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin>
                       <TratamientosPendientes />
                     </LayoutAdmin>
@@ -469,7 +501,7 @@ const App = () => {
               <Route
                 path="/admin/citas-registrar"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title="Registrar Nuevas Citas">
                       <AgendarCitaAdmin />
                     </LayoutAdmin>
@@ -479,7 +511,7 @@ const App = () => {
               <Route
                 path="/admin/citas-valorar"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"Valorar Citas Pendientes"}>
                       <EvaluarCitasPendientes />
                     </LayoutAdmin>
@@ -489,7 +521,7 @@ const App = () => {
               <Route
                 path="/admin/tratamientos-historial"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"Historial Procesos Terminados"}>
                       <HistorialProcesosTerminados />
                     </LayoutAdmin>
@@ -499,7 +531,7 @@ const App = () => {
               <Route
                 path="/admin/pacientes/con-cuenta"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"Lista de Pacientes"}>
                       <ListaPacientes />
                     </LayoutAdmin>
@@ -509,7 +541,7 @@ const App = () => {
               <Route
                 path="/admin/pacientes/sin-cuenta"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"Lista de Pacientes Sin Cuenta"}>
                       <ListaPacientesSinCuenta />
                     </LayoutAdmin>
@@ -519,7 +551,7 @@ const App = () => {
               <Route
                 path="/admin/pacientes/registrar"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"Registrar Pacientes"}>
                       <CrearPacienteSinCuenta />
                     </LayoutAdmin>
@@ -529,7 +561,7 @@ const App = () => {
               <Route
                 path="/admin/configuracion/mision-vision"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"Misión y Visión"}>
                       <CrearMisionVision />
                     </LayoutAdmin>
@@ -539,7 +571,7 @@ const App = () => {
               <Route
                 path="/admin/configuracion/politicas"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"Politicas de privacidad"}>
                       <CrearPoliticas />
                     </LayoutAdmin>
@@ -549,7 +581,7 @@ const App = () => {
               <Route
                 path="/admin/pagos-registrar"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"Registro de Pagos"}>
                       <RegistroPago />
                     </LayoutAdmin>
@@ -559,7 +591,7 @@ const App = () => {
               <Route
                 path="/admin/pagos-historial"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"Historial de Pagos"}>
                       <HistorialPagos />
                     </LayoutAdmin>
@@ -569,7 +601,7 @@ const App = () => {
               <Route
                 path="/admin/configuracion/valores"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"Valores"}>
                       <Valores />
                     </LayoutAdmin>
@@ -579,7 +611,7 @@ const App = () => {
               <Route
                 path="/admin/configuracion/quienes-somos"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"¿Quiénes Somos?"}>
                       <QuienesSomos />
                     </LayoutAdmin>
@@ -589,7 +621,7 @@ const App = () => {
               <Route
                 path="/admin/configuracion/sistema"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"Configuración de Seguridad"}>
                       <Configuraciones />
                     </LayoutAdmin>
@@ -599,7 +631,7 @@ const App = () => {
               <Route
                 path="/admin/pacientes/prediccion"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"Predicción "}>
                       <Prediccion />
                     </LayoutAdmin>
@@ -609,7 +641,7 @@ const App = () => {
               <Route
                 path="/admin/reportes"
                 element={
-                  <RutaProtegida tiposPermitidos={['admin']}>
+                  <RutaProtegida tiposPermitidos={["admin"]}>
                     <LayoutAdmin title={"Reportes"}>
                       <Reportes />
                     </LayoutAdmin>
