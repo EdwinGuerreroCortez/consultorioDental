@@ -9,21 +9,56 @@ const BienvenidaPublica = () => {
   const [errorUbicacion, setErrorUbicacion] = useState(null);
 
   useEffect(() => {
-    // La geolocalización solo funciona en HTTPS o http://localhost
+    // Verifica compatibilidad
     if (!("geolocation" in navigator)) {
       setErrorUbicacion("Tu navegador no soporta geolocalización.");
       return;
     }
 
-    const onOk = (pos) => {
+    // 🧭 Intenta revisar el permiso de ubicación
+    if (navigator.permissions) {
+      navigator.permissions
+        .query({ name: "geolocation" })
+        .then((result) => {
+          if (result.state === "denied") {
+            setErrorUbicacion("Permiso de ubicación denegado por el usuario.");
+            return;
+          }
+
+          // Solicita ubicación si no está denegada
+          navigator.geolocation.getCurrentPosition(onOk, onErr, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          });
+        })
+        .catch(() => {
+          // Si falla, igualmente intenta solicitarla
+          navigator.geolocation.getCurrentPosition(onOk, onErr, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0,
+          });
+        });
+    } else {
+      // Si no soporta Permissions API
+      navigator.geolocation.getCurrentPosition(onOk, onErr, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      });
+    }
+
+    // Funciones auxiliares
+    function onOk(pos) {
       setUbicacion({
         latitud: pos.coords.latitude,
         longitud: pos.coords.longitude,
-        precision: pos.coords.accuracy
+        precision: pos.coords.accuracy,
       });
-    };
+    }
 
-    const onErr = (err) => {
+    function onErr(err) {
       switch (err.code) {
         case err.PERMISSION_DENIED:
           setErrorUbicacion("Permiso de ubicación denegado.");
@@ -32,19 +67,12 @@ const BienvenidaPublica = () => {
           setErrorUbicacion("Ubicación no disponible.");
           break;
         case err.TIMEOUT:
-          setErrorUbicacion("Tiempo de espera agotado.");
+          setErrorUbicacion("Tiempo de espera agotado al obtener la ubicación.");
           break;
         default:
           setErrorUbicacion("Error desconocido al obtener la ubicación.");
       }
-    };
-
-    // Solicita la ubicación una vez
-    navigator.geolocation.getCurrentPosition(onOk, onErr, {
-      enableHighAccuracy: true,
-      timeout: 8000,
-      maximumAge: 0
-    });
+    }
   }, []);
 
   return (
@@ -52,7 +80,6 @@ const BienvenidaPublica = () => {
       <HeroSection />
       <Servicios />
       <Horarios />
-      {/* Le pasamos ubicacion y error al componente */}
       <Ubicacion ubicacion={ubicacion} error={errorUbicacion} />
     </>
   );

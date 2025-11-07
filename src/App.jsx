@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { Snackbar, Alert, Box } from "@mui/material"; // ← agregué Box
+import { Snackbar, Alert, Box } from "@mui/material";
 import RutaProtegida from "./components/RutaProtegida";
 
 // Públicos
@@ -174,15 +174,9 @@ const InactivityHandler = ({ children }) => {
     }
   };
 
-  // Detectar cambios de conexión online/offline
+  // Eventos online/offline del navegador (cuando sí los dispara)
   useEffect(() => {
-    console.log(
-      "Estado inicial de conexión:",
-      navigator.onLine ? "ONLINE" : "OFFLINE"
-    );
-
     const handleOnline = () => {
-      console.log("Evento ONLINE disparado");
       setEstaOffline(false);
       setEstadoConexion("online");
       setVolvioOnline(true);
@@ -190,7 +184,6 @@ const InactivityHandler = ({ children }) => {
     };
 
     const handleOffline = () => {
-      console.log("Evento OFFLINE disparado");
       setEstaOffline(true);
       setEstadoConexion("offline");
     };
@@ -206,6 +199,45 @@ const InactivityHandler = ({ children }) => {
       window.removeEventListener("offline", handleOffline);
     };
   }, []);
+
+  // Comprobación real contra el backend cada 15s
+  useEffect(() => {
+    let cancelado = false;
+
+    const checarConexionReal = async () => {
+      try {
+        const resp = await fetch("https://backenddent.onrender.com/api/get-csrf-token", {
+          credentials: "include",
+          cache: "no-store",
+        });
+
+        if (cancelado) return;
+
+        if (!resp.ok) throw new Error("Respuesta no OK");
+
+        // hay conexión real
+        if (estadoConexion === "offline") {
+          setVolvioOnline(true);
+          setTimeout(() => setVolvioOnline(false), 3000);
+        }
+        setEstaOffline(false);
+        setEstadoConexion("online");
+      } catch (err) {
+        if (cancelado) return;
+        setEstaOffline(true);
+        setEstadoConexion("offline");
+      }
+    };
+
+    // correr al inicio y luego cada 15 s
+    checarConexionReal();
+    const id = setInterval(checarConexionReal, 15000);
+
+    return () => {
+      cancelado = true;
+      clearInterval(id);
+    };
+  }, [estadoConexion]);
 
   return (
     <>
@@ -223,7 +255,7 @@ const InactivityHandler = ({ children }) => {
             color: "#fff",
             textAlign: "center",
             py: 0.5,
-            zIndex: 1301,
+            zIndex: 2000,
             fontSize: "0.9rem",
           }}
         >
