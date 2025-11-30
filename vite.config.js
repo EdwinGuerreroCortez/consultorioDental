@@ -34,7 +34,7 @@ export default defineConfig({
         // Aumenta el límite de tamaño cacheable (4 MB)
         maximumFileSizeToCacheInBytes: 4000000,
 
-        // 🔹 Define estrategias separadas para frontend y backend
+        //  Define estrategias separadas para frontend y backend
         runtimeCaching: [
           // 1️⃣ Cache del frontend (HTML, JS, CSS, imágenes)
           {

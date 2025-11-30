@@ -23,25 +23,25 @@ const LayoutAdmin = ({ children, title }) => {
           marginLeft: drawerOpen ? `${drawerWidth}px` : `${drawerCollapsedWidth}px`,
           transition: "all 0.3s ease-in-out",
           backgroundColor: "transparent",
-          height: "auto", // 🔹 Se ajusta automáticamente al contenido
+          height: "auto", //  Se ajusta automáticamente al contenido
           display: "flex",
           flexDirection: "column",
-          overflow: "visible", // 🔹 Permitir que el contenido crezca y se desplace normalmente
+          overflow: "visible", //  Permitir que el contenido crezca y se desplace normalmente
         }}
       >
-        {/* 🔹 Header ahora es parte del contenido y se moverá con el scroll */}
+        {/*  Header ahora es parte del contenido y se moverá con el scroll */}
         <Box
           sx={{
             width: "100%",
             backgroundColor: "#fff",
             padding: { xs: "12px 18px", md: "16px 24px" },
-            borderBottom: "1px solid #ddd", // 🔹 Línea sutil para separación
+            borderBottom: "1px solid #ddd", //  Línea sutil para separación
             display: "flex",
             flexDirection: "column",
             gap: 1.5,
           }}
         >
-          {/* 🔹 Título Animado */}
+          {/*  Título Animado */}
           <motion.div
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -63,14 +63,14 @@ const LayoutAdmin = ({ children, title }) => {
             </Typography>
           </motion.div>
 
-          {/* 🔹 Breadcrumbs con más separación */}
+          {/*  Breadcrumbs con más separación */}
           <Box sx={{ width: "100%" }}>
             <BreadcrumbNav userType="admin" />
           </Box>
         </Box>
 
 
-        {/* 🔹 Contenido Principal con scroll normal */}
+        {/*  Contenido Principal con scroll normal */}
         <Box
           sx={{
             flexGrow: 1,
@@ -80,7 +80,7 @@ const LayoutAdmin = ({ children, title }) => {
             maxWidth: "1800px",
             backgroundColor: "transparent",
             borderRadius: "16px",
-            height: "auto", // 🔹 Ajuste dinámico para adaptarse al contenido
+            height: "auto", //  Ajuste dinámico para adaptarse al contenido
           }}
         >
           {children}

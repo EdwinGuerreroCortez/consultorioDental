@@ -16,7 +16,10 @@ import {
   MenuItem,
   Alert,
 } from "@mui/material";
+import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+
 import DientesImage from "../../assets/images/Dientes.jpg"; // Imagen de dientes
+import DientesInfantil from "../../assets/images/odontogramainfantil.jpg";
 
 const HistorialMedicoSincuenta = ({ open, handleClose, paciente }) => {
   const [signosVitales, setSignosVitales] = useState("");
@@ -39,6 +42,18 @@ const HistorialMedicoSincuenta = ({ open, handleClose, paciente }) => {
     medicamentos: false,
     comentario: false,
   });
+  const imagenes = [DientesImage, DientesInfantil]; // ← agrega las que quieras
+  const [indiceImg, setIndiceImg] = useState(0);
+
+  const siguienteImagen = () => {
+    setIndiceImg((prev) => (prev + 1) % imagenes.length);
+  };
+
+  const anteriorImagen = () => {
+    setIndiceImg((prev) => (prev - 1 + imagenes.length) % imagenes.length);
+  };
+
+
 
   // Obtener el token CSRF al montar el componente
   useEffect(() => {
@@ -491,14 +506,77 @@ const HistorialMedicoSincuenta = ({ open, handleClose, paciente }) => {
                 </Grid>
               </Grid>
             </Box>
+            <Box
+              sx={{
+                position: "relative",       // ← Importante
+                width: "100%",
+                height: "400px",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                mb: "2rem",
+              }}
+            >
+              {/* Flecha izquierda */}
+              <Button
+                onClick={anteriorImagen}
+                sx={{
+                  position: "absolute",     // ← NO mueve nada del layout
+                  left: 10,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  minWidth: "50px",
+                  height: "50px",
+                  borderRadius: "50%",
+                  backgroundColor: "#006d77",
+                  color: "white",
+                  boxShadow: "0 4px 10px rgba(0,0,0,0.25)",
+                  "&:hover": { backgroundColor: "#004d57" },
+                  zIndex: 10,               // ← Encima de la imagen
+                }}
+              >
+                <ChevronLeft sx={{ fontSize: 30 }} />
+              </Button>
 
-            <Box sx={{ display: "flex", justifyContent: "center", mb: "2rem" }}>
+              {/* Imagen estable */}
               <img
-                src={DientesImage}
-                alt="Dientes"
-                style={{ width: "700px", borderRadius: "10px", boxShadow: "0 6px 24px rgba(0, 0, 0, 0.08)" }}
+                src={imagenes[indiceImg]}
+                alt="Imagen dental"
+                style={{
+                  width: "700px",
+                  maxWidth: "100%",
+                  borderRadius: "10px",
+                  boxShadow: "0 6px 24px rgba(0,0,0,0.08)",
+                  transition: "opacity 0.3s ease",
+                  display: "block",        // ← Evita saltos por inline-block
+                }}
               />
+
+              {/* Flecha derecha */}
+              <Button
+                onClick={siguienteImagen}
+                sx={{
+                  position: "absolute",      // ← No afecta el flow
+                  right: 10,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  minWidth: "50px",
+                  height: "50px",
+                  borderRadius: "50%",
+                  backgroundColor: "#006d77",
+                  color: "white",
+                  boxShadow: "0 4px 10px rgba(0,0,0,0.25)",
+                  "&:hover": { backgroundColor: "#004d57" },
+                  zIndex: 10,
+                }}
+              >
+                <ChevronRight sx={{ fontSize: 30 }} />
+              </Button>
             </Box>
+
+
+
+
 
             <Box sx={{ marginBottom: "2rem" }}>
               <Typography

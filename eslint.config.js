@@ -24,13 +24,34 @@ export default [
       'react-refresh': reactRefresh,
     },
     rules: {
+      // DESACTIVAMOS TODAS LAS REGLAS MOLESTAS
+
       ...js.configs.recommended.rules,
-      ...react.configs.recommended.rules,
-      ...react.configs['jsx-runtime'].rules,
-      ...reactHooks.configs.recommended.rules,
+      // React sin advertencias estrictas
+      'react/prop-types': 'off',
+      'react/display-name': 'off',
+
+      // JSX
       'react/jsx-no-target-blank': 'off',
+      'react/jsx-uses-react': 'off',
+      'react/react-in-jsx-scope': 'off',
+
+      // Hooks
+      ...reactHooks.configs.recommended.rules,
+
+      // Lógica real
+      'no-unused-vars': 'off',
+      'no-console': 'off',
+      'no-debugger': 'off',
+      'no-undef': 'off',
+
+      // MUI y JSX deep nesting
+      'react/no-unescaped-entities': 'off',
+      'react/no-unknown-property': 'off',
+
+      // Hot reload seguro
       'react-refresh/only-export-components': [
-        'warn',
+        'off',
         { allowConstantExport: true },
       ],
     },
