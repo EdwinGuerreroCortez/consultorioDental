@@ -132,7 +132,7 @@ const TratamientosPendientes = () => {
     }
   };
 
-  // 🔍 Filtro del buscador
+  //  Filtro del buscador
   const filteredTratamientos = tratamientos.filter((t) => {
     const nombreCompleto = `${t.nombre} ${t.apellido_paterno} ${t.apellido_materno}`.toLowerCase();
     const tratamientoNombre = t.tratamiento_nombre?.toLowerCase() || "";
@@ -174,7 +174,7 @@ const TratamientosPendientes = () => {
         backgroundColor: "#f9fbfd",
       }}
     >
-      {/* 🔍 Buscador */}
+      {/*  Buscador */}
       <Box
         sx={{
           width: "100%",

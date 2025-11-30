@@ -286,7 +286,7 @@ const AgendarCita = () => {
                 headers: { "X-XSRF-TOKEN": csrfToken },
             });
             const citas = response.data || [];
-            console.log("📌 Citas ocupadas desde la API:", citas);
+            console.log(" Citas ocupadas desde la API:", citas);
 
             const citasConHoraFormateada = citas.map(cita => {
                 const fechaUTC = new Date(cita.fecha_hora); // '2025-03-25T16:00:00.000Z'
@@ -298,7 +298,7 @@ const AgendarCita = () => {
                 return { ...cita, hora_formateada: horaFormateada };
             });
 
-            console.log("📌 Citas ocupadas con hora ajustada:", citasConHoraFormateada);
+            console.log(" Citas ocupadas con hora ajustada:", citasConHoraFormateada);
             setCitasOcupadas(citasConHoraFormateada);
         } catch (error) {
             console.error(' Error al obtener las citas ocupadas:', error);
@@ -373,7 +373,7 @@ const AgendarCita = () => {
             })
             .map(cita => cita.hora_formateada);
 
-        console.log("📌 Horas ocupadas para esta fecha:", horasOcupadas);
+        console.log(" Horas ocupadas para esta fecha:", horasOcupadas);
 
         return disponibilidad.map(hora => ({
             value: hora,

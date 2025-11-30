@@ -311,7 +311,7 @@ const HistorialMedicoSincuenta = ({ open, handleClose, paciente }) => {
             align="center"
             sx={{ color: "#03445e", fontFamily: "'Poppins', sans-serif" }}
           >
-            🔄 Cargando información del paciente...
+            Cargando información del paciente...
           </Typography>
         ) : (
           <>

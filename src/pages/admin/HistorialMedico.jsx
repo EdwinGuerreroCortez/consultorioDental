@@ -299,7 +299,7 @@ const HistorialMedico = ({ open, handleClose, paciente }) => {
       >
         {!paciente ? (
           <Typography variant="body1" align="center" sx={{ color: "#03445e", fontFamily: "'Poppins', sans-serif" }}>
-            🔄 Cargando información del paciente...
+            Cargando información del paciente...
           </Typography>
         ) : (
           <>

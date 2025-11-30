@@ -52,7 +52,7 @@ export default defineConfig({
 
           // 2️⃣ API del backend en Render → SIEMPRE datos actualizados
           {
-            urlPattern: /^https:\/\/backenddent\.onrender\.com\/api\/.*/, // ⚠️ cambia a tu dominio real de Render
+            urlPattern: /^https:\/\/backenddent\.onrender\.com\/api\/.*/, //  cambia a tu dominio real de Render
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',

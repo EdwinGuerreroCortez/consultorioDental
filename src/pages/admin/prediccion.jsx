@@ -55,11 +55,11 @@ const Prediccion = () => {
     setResultado(null);
     try {
       const datos = extraerDatosParaPrediccion(paciente);
-      console.log("📤 Enviando a Flask:", datos);
+      console.log(" Enviando a Flask:", datos);
 
       const res = await axios.post("https://predicciondentista.onrender.com/predict", datos);
 
-      console.log("📥 Respuesta de Flask:", res.data);
+      console.log(" Respuesta de Flask:", res.data);
 
       setResultado(res.data.asistira);
       setAlerta({

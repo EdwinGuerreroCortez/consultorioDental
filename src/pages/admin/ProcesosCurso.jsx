@@ -141,7 +141,7 @@ const TratamientosEnCurso = () => {
     }
   };
 
-  // 🔍 Filtro de búsqueda
+  //  Filtro de búsqueda
   const filteredTratamientos = tratamientos.filter((tratamiento) => {
     const nombreCompleto = tratamiento.nombre_completo.toLowerCase().trim();
     return nombreCompleto.startsWith(searchTerm.toLowerCase().trim());
@@ -173,7 +173,7 @@ const TratamientosEnCurso = () => {
         backgroundColor: "#f9fbfd",
       }}
     >
-      {/* 🔍 Buscador */}
+      {/*  Buscador */}
       <Box
         sx={{
           width: "100%",

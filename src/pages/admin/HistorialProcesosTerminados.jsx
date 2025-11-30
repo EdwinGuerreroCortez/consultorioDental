@@ -76,7 +76,7 @@ const HistorialProcesosTerminados = () => {
     setPagina(value);
   };
 
-  // 🔍 Filtrado por nombre o tratamiento
+  //  Filtrado por nombre o tratamiento
   const filteredTratamientos = tratamientos.filter((t) => {
     const nombreCompleto = `${t.nombre} ${t.apellido_paterno} ${t.apellido_materno}`.toLowerCase();
     const tratamientoNombre = t.tratamiento_nombre?.toLowerCase() || "";
@@ -122,7 +122,7 @@ const HistorialProcesosTerminados = () => {
         backgroundColor: "#f9fbfd",
       }}
     >
-      {/* 🔍 Buscador */}
+      {/*  Buscador */}
       <Box
         sx={{
           width: "100%",
