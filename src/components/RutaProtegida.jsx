@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { verificarAutenticacion } from '../utils/auth';
+//importa el loader 
+import Loader from './Loader';
 
 const RutaProtegida = ({ children, tiposPermitidos }) => {
     const [usuario, setUsuario] = useState(null);
@@ -15,7 +17,7 @@ const RutaProtegida = ({ children, tiposPermitidos }) => {
         verificar();
     }, []);
 
-    if (cargando) return <div>Cargando...</div>;
+    if (cargando) return <Loader />;
 
     if (!usuario) {
         return <Navigate to="/login" />;
